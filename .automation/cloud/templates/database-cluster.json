@@ -1,0 +1,123 @@
+{
+    "name": "database-cluster",
+    "description": "Managed database deployment across cloud providers",
+    "version": "1.0.0",
+    "providers": ["aws", "azure", "digitalocean"],
+    
+    "aws": {
+        "db_instance_identifier": "my-rds-db",
+        "engine": "postgres",
+        "engine_version": "14.9",
+        "instance_class": "db.t3.micro",
+        "allocated_storage": 20,
+        "storage_type": "gp2",
+        "multi_az": false,
+        "backup_retention_period": 7,
+        "backup_window": "03:00-04:00",
+        "maintenance_window": "sun:04:00-sun:05:00",
+        "deletion_protection": true,
+        "storage_encrypted": true,
+        "master_username": "dbadmin",
+        "database_name": "appdb",
+        "parameter_group": "default.postgres14",
+        "security_groups": ["db-sg"]
+    },
+    
+    "azure": {
+        "server_name": "my-postgres-server",
+        "resource_group": "database-rg",
+        "location": "eastus",
+        "administrator_login": "dbadmin",
+        "sku": {
+            "name": "B_Gen5_1",
+            "tier": "Basic",
+            "capacity": 1
+        },
+        "storage_profile": {
+            "storage_mb": 20480,
+            "backup_retention_days": 7,
+            "geo_redundant_backup": "Disabled",
+            "storage_autogrow": "Enabled"
+        },
+        "version": "11",
+        "ssl_enforcement": "Enabled",
+        "minimal_tls_version": "TLS1_2",
+        "databases": [
+            {
+                "name": "appdb",
+                "charset": "UTF8",
+                "collation": "English_United States.1252"
+            }
+        ]
+    },
+    
+    "digitalocean": {
+        "cluster_name": "my-postgres-cluster",
+        "engine": "pg",
+        "version": "14",
+        "size": "db-s-1vcpu-1gb",
+        "region": "nyc3",
+        "num_nodes": 1,
+        "databases": [
+            {
+                "name": "appdb"
+            }
+        ],
+        "users": [
+            {
+                "name": "appuser",
+                "mysql_settings": {}
+            }
+        ],
+        "private_network_uuid": null,
+        "tags": ["production", "postgres", "app-db"]
+    },
+    
+    "configuration": {
+        "database": {
+            "engine": "postgresql",
+            "version": "14",
+            "charset": "UTF8",
+            "collation": "en_US.UTF-8"
+        },
+        "security": {
+            "ssl_required": true,
+            "encryption_at_rest": true,
+            "firewall_rules": [
+                {
+                    "name": "allow-app-servers",
+                    "start_ip": "10.0.0.0",
+                    "end_ip": "10.0.255.255"
+                }
+            ]
+        },
+        "backup": {
+            "automated": true,
+            "retention_period": 7,
+            "backup_window": "03:00-04:00",
+            "point_in_time_recovery": true
+        },
+        "monitoring": {
+            "performance_insights": true,
+            "enhanced_monitoring": true,
+            "log_exports": ["postgresql"]
+        },
+        "maintenance": {
+            "auto_minor_version_upgrade": true,
+            "maintenance_window": "sun:04:00-sun:05:00"
+        }
+    },
+    
+    "connection": {
+        "connection_pooling": {
+            "enabled": true,
+            "pool_mode": "transaction",
+            "max_connections": 100
+        },
+        "read_replicas": {
+            "enabled": false,
+            "count": 0,
+            "regions": []
+        }
+    }
+}

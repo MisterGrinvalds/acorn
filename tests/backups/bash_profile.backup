@@ -32,3 +32,6 @@ fi
 for FILE in "$DOTFILES"/.bash_tools/*; do
     [ -r "$FILE" ] && . "$FILE"
 done
+
+# Automation Framework
+export PATH="/Users/mistergrinvalds/.automation:$PATH"

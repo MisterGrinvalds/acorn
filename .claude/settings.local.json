@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(/bin/bash --noprofile --norc -c \"git checkout -b feature/modernize-tech-stack\")",
+      "Bash(bash --version)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(./initialize.sh:*)",
+      "Bash(bash:*)",
+      "Bash(nvm use:*)",
+      "Bash(export DOTFILES=\"$PWD\")",
+      "Bash(./.automation/auto:*)",
+      "Bash(DOTFILES=\"$PWD\" bash ./.automation/auto --version)",
+      "Bash(/usr/bin/git status)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(brew install:*)",
+      "Bash(python3:*)"
+    ],
+    "deny": []
+  }
+}
