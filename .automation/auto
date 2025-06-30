@@ -1,0 +1,188 @@
+#!/bin/bash
+# Unified Automation CLI
+# Main entry point for all automation tools
+
+# Set script directory and load framework
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/framework/core.sh"
+source "$SCRIPT_DIR/framework/utils.sh"
+
+# CLI Configuration
+readonly PROGRAM_NAME="auto"
+readonly VERSION="1.0.0"
+
+# Available modules
+declare -A MODULES
+MODULES=(
+    ["dev"]="Development workflow automation"
+    ["k8s"]="Kubernetes automation and management"
+    ["github"]="GitHub automation and workflows"
+    ["system"]="System administration automation"
+    ["config"]="Configuration management"
+    ["secrets"]="Secrets and API key management"
+    ["tools"]="External tools management and updates"
+    ["cloud"]="Unified cloud management"
+    ["aws"]="Amazon Web Services automation"
+    ["azure"]="Microsoft Azure automation"
+    ["digitalocean"]="DigitalOcean automation"
+)
+
+# Helper functions
+show_version() {
+    echo "$PROGRAM_NAME version $VERSION"
+}
+
+show_help() {
+    cat << EOF
+$PROGRAM_NAME - Unified Automation CLI
+
+USAGE:
+    $PROGRAM_NAME <module> <command> [options]
+
+MODULES:
+EOF
+    
+    for module in "${!MODULES[@]}"; do
+        printf "    %-10s %s\n" "$module" "${MODULES[$module]}"
+    done
+    
+    cat << EOF
+
+GLOBAL OPTIONS:
+    -h, --help      Show this help message
+    -v, --version   Show version information
+    --verbose       Enable verbose logging
+    --dry-run       Show what would be done without executing
+
+EXAMPLES:
+    $PROGRAM_NAME dev init python my-fastapi-project
+    $PROGRAM_NAME k8s deploy my-app production
+    $PROGRAM_NAME github pr create feature/new-feature
+    $PROGRAM_NAME system backup /important/data
+    $PROGRAM_NAME secrets setup
+    $PROGRAM_NAME secrets validate
+    $PROGRAM_NAME tools check
+    $PROGRAM_NAME tools update
+    $PROGRAM_NAME cloud status
+    $PROGRAM_NAME aws ec2 create web-server
+    $PROGRAM_NAME azure vm create my-vm
+    $PROGRAM_NAME digitalocean droplets create web-app
+
+For module-specific help:
+    $PROGRAM_NAME <module> --help
+EOF
+}
+
+# Module loader
+load_module() {
+    local module="$1"
+    local module_file="$SCRIPT_DIR/modules/$module.sh"
+    
+    if [ ! -f "$module_file" ]; then
+        log "ERROR" "Module '$module' not found"
+        log "INFO" "Available modules: ${!MODULES[*]}"
+        exit 1
+    fi
+    
+    source "$module_file"
+}
+
+# Main CLI router
+main() {
+    # Parse global flags first
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -v|--version)
+                show_version
+                exit 0
+                ;;
+            --verbose)
+                export AUTO_LOG_LEVEL="DEBUG"
+                shift
+                ;;
+            --dry-run)
+                export AUTO_DRY_RUN=true
+                shift
+                ;;
+            -*)
+                log "ERROR" "Unknown global option: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    
+    # Check if module is provided
+    if [ $# -eq 0 ]; then
+        log "ERROR" "No module specified"
+        show_help
+        exit 1
+    fi
+    
+    local module="$1"
+    shift
+    
+    # Validate module exists
+    if [[ ! "${!MODULES[*]}" =~ $module ]]; then
+        log "ERROR" "Unknown module: $module"
+        log "INFO" "Available modules: ${!MODULES[*]}"
+        exit 1
+    fi
+    
+    # Load and execute module
+    load_module "$module"
+    
+    # Call module's main function with remaining arguments
+    if declare -f "${module}_main" >/dev/null; then
+        "${module}_main" "$@"
+    else
+        log "ERROR" "Module '$module' does not have a main function"
+        exit 1
+    fi
+}
+
+# Self-update functionality
+update_auto() {
+    log "INFO" "Updating automation framework..."
+    
+    local repo_dir="$(cd "$SCRIPT_DIR/.." && pwd)"
+    if [ -d "$repo_dir/.git" ]; then
+        (cd "$repo_dir" && git pull origin main)
+        log "SUCCESS" "Automation framework updated"
+    else
+        log "WARN" "Not in a git repository, cannot auto-update"
+    fi
+}
+
+# Check for updates (optional)
+check_updates() {
+    if [ -f "$AUTO_CONFIG/last_update_check" ]; then
+        local last_check=$(cat "$AUTO_CONFIG/last_update_check")
+        local current_time=$(date +%s)
+        local day_seconds=86400
+        
+        if [ $((current_time - last_check)) -gt $day_seconds ]; then
+            log "INFO" "Checking for updates... (run 'auto system update' to update)"
+            echo "$current_time" > "$AUTO_CONFIG/last_update_check"
+        fi
+    else
+        echo "$(date +%s)" > "$AUTO_CONFIG/last_update_check"
+    fi
+}
+
+# Initialize and run
+if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
+    # Only check for updates if not in help mode
+    if [[ ! "$*" =~ (help|--help|-h) ]]; then
+        check_updates
+    fi
+    
+    main "$@"
+fi
