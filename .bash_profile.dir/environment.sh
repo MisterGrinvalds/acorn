@@ -1,11 +1,9 @@
-#!/bin/bash
+#!/bin/sh
+# Shell-portable environment configuration
 
 # DOTFILES Dependent
 export DOTFILES="$HOME"
-export CONDARC="$DOTFILES/.condarc"
 export IPYTHONDIR="$DOTFILES/.ipython"
-export JUPYTER_CONFIG_DIR="$DOTFILES/.jupyter"
-export KAGGLE_CONFIG_DIR="$DOTFILES/.secure/.kaggle"
 export PYTHONSTARTUP="$DOTFILES/.python/startup.py"
 export R_PROFILE="$DOTFILES/.R/Rprofile.site"
 export R_PROFILE_USER="$DOTFILES/.R/.Rprofile"
