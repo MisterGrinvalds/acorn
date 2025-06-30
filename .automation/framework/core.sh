@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 # Automation Framework Core
 # Provides common utilities for all automation scripts
 
