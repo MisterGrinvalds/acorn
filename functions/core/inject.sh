@@ -205,6 +205,46 @@ dotfiles_link_configs() {
         echo "Linked: ~/.config/karabiner/karabiner.json"
     fi
 
+    # Ghostty config
+    if [ -f "$dotfiles_root/config/ghostty/config" ]; then
+        mkdir -p "$HOME/.config/ghostty"
+        ln -sf "$dotfiles_root/config/ghostty/config" "$HOME/.config/ghostty/config"
+        echo "Linked: ~/.config/ghostty/config"
+    fi
+
+    # VS Code config
+    if [ -d "$dotfiles_root/config/vscode" ]; then
+        local vscode_dir
+        if [ "$CURRENT_PLATFORM" = "darwin" ]; then
+            vscode_dir="$HOME/Library/Application Support/Code/User"
+        else
+            vscode_dir="$HOME/.config/Code/User"
+        fi
+        mkdir -p "$vscode_dir"
+
+        if [ -f "$dotfiles_root/config/vscode/settings.json" ]; then
+            ln -sf "$dotfiles_root/config/vscode/settings.json" "$vscode_dir/settings.json"
+            echo "Linked: VS Code settings.json"
+        fi
+        if [ -f "$dotfiles_root/config/vscode/keybindings.json" ]; then
+            ln -sf "$dotfiles_root/config/vscode/keybindings.json" "$vscode_dir/keybindings.json"
+            echo "Linked: VS Code keybindings.json"
+        fi
+    fi
+
+    # IntelliJ config (reference only - requires manual setup due to version directories)
+    if [ -d "$dotfiles_root/config/intellij" ]; then
+        echo "IntelliJ configs available at: $dotfiles_root/config/intellij/"
+        echo "  - Manual linking required due to version-specific paths"
+    fi
+
+    # Claude Code config
+    if [ -f "$dotfiles_root/config/claude/settings.json" ]; then
+        mkdir -p "$HOME/.claude"
+        ln -sf "$dotfiles_root/config/claude/settings.json" "$HOME/.claude/settings.json"
+        echo "Linked: ~/.claude/settings.json"
+    fi
+
     echo ""
     echo "Config linking complete!"
 }
@@ -217,6 +257,18 @@ dotfiles_unlink_configs() {
     [ -L "$HOME/.ssh/config" ] && rm "$HOME/.ssh/config" && echo "Unlinked: ~/.ssh/config"
     [ -L "$HOME/.condarc" ] && rm "$HOME/.condarc" && echo "Unlinked: ~/.condarc"
     [ -L "$HOME/.config/karabiner/karabiner.json" ] && rm "$HOME/.config/karabiner/karabiner.json" && echo "Unlinked: ~/.config/karabiner/karabiner.json"
+    [ -L "$HOME/.config/ghostty/config" ] && rm "$HOME/.config/ghostty/config" && echo "Unlinked: ~/.config/ghostty/config"
+    [ -L "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Unlinked: ~/.claude/settings.json"
+
+    # VS Code configs
+    local vscode_dir
+    if [ "$CURRENT_PLATFORM" = "darwin" ]; then
+        vscode_dir="$HOME/Library/Application Support/Code/User"
+    else
+        vscode_dir="$HOME/.config/Code/User"
+    fi
+    [ -L "$vscode_dir/settings.json" ] && rm "$vscode_dir/settings.json" && echo "Unlinked: VS Code settings.json"
+    [ -L "$vscode_dir/keybindings.json" ] && rm "$vscode_dir/keybindings.json" && echo "Unlinked: VS Code keybindings.json"
 
     echo ""
     echo "Config unlinking complete!"

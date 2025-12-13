@@ -1,0 +1,27 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(make:*)",
+      "Bash(python3:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(go:*)",
+      "Bash(cargo:*)",
+      "Bash(uv:*)"
+    ],
+    "deny": []
+  },
+  "preferences": {
+    "autoApproveReadOperations": true,
+    "preferredShell": "zsh"
+  }
+}

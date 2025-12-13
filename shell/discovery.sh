@@ -40,15 +40,17 @@ case "$OSTYPE" in
         ;;
 esac
 
-# Detect interactive shell
-case "$-" in
-    *i*)
-        export IS_INTERACTIVE="true"
-        ;;
-    *)
-        export IS_INTERACTIVE="false"
-        ;;
-esac
+# Detect interactive shell (skip if already set, for testing)
+if [ -z "$IS_INTERACTIVE" ]; then
+    case "$-" in
+        *i*)
+            export IS_INTERACTIVE="true"
+            ;;
+        *)
+            export IS_INTERACTIVE="false"
+            ;;
+    esac
+fi
 
 # Detect login shell
 if [ "$CURRENT_SHELL" = "bash" ]; then

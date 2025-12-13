@@ -1,6 +1,6 @@
 #!/bin/sh
-# Terminal configuration with git-aware prompt
-# Requires: shell/discovery.sh
+# Terminal configuration with git-aware prompt (Catppuccin Mocha theme)
+# Requires: shell/discovery.sh, shell/theme.sh
 
 # Get current git branch (portable)
 git_branch() {
@@ -20,7 +20,7 @@ git_branch() {
     fi
 }
 
-# Git status colors (portable)
+# Git status colors using theme variables
 git_color() {
     local git_status
     git_status=$(git status --porcelain 2>/dev/null)
@@ -29,40 +29,42 @@ git_color() {
     git rev-parse --git-dir >/dev/null 2>&1 || return
 
     if [ -n "$git_status" ]; then
-        # Dirty - has uncommitted changes
-        printf '\033[1;31m'  # red
+        # Dirty - has uncommitted changes (Peach)
+        printf '%b' "$THEME_GIT_DIRTY"
     elif git status 2>/dev/null | grep -q "Your branch is ahead"; then
-        # Clean but ahead of remote
-        printf '\033[1;33m'  # yellow
+        # Clean but ahead of remote (Red)
+        printf '%b' "$THEME_GIT_AHEAD"
     else
-        # Clean
-        printf '\033[1;32m'  # green
+        # Clean (Green)
+        printf '%b' "$THEME_GIT_CLEAN"
     fi
 }
 
 # Set prompt based on shell type
 case "$CURRENT_SHELL" in
     bash)
-        # Bash prompt with \[ \] escape sequences
-        PS1='\[\e[1;37m\]\n\[\e[1;37m\]\A \[\e[1;32m\]\u\[\e[1;37m\] on \[\e[1;33m\]\h\[\e[1;37m\] \[\e[1;34m\][\w]$(git_color)$(git_branch)\[\e[0m\]\n\$ '
+        # Bash prompt using theme colors
+        # Note: \[ \] are bash-specific escapes for non-printing chars
+        PS1='\['"$THEME_TEXT"'\]\n\['"$THEME_TEXT"'\]\A \['"$THEME_TEAL"'\]\u\['"$THEME_TEXT"'\] on \['"$THEME_SAPPHIRE"'\]\h\['"$THEME_TEXT"'\] \['"$THEME_BLUE"'\][\w]$(git_color)$(git_branch)\['"$THEME_RESET"'\]\n\$ '
         ;;
     zsh)
-        # Zsh prompt with %{ %} escape sequences
+        # Zsh prompt using theme colors
+        # Note: %{ %} are zsh-specific escapes for non-printing chars
         setopt PROMPT_SUBST
-        PROMPT='%{%F{white}%}
-%{%F{white}%}%T %{%F{green}%}%n%{%F{white}%} on %{%F{yellow}%}%m%{%F{white}%} %{%F{blue}%}[%~]$(git_color)$(git_branch)%{%f%}
+        PROMPT='%{'"$THEME_TEXT"'%}
+%{'"$THEME_TEXT"'%}%T %{'"$THEME_TEAL"'%}%n%{'"$THEME_TEXT"'%} on %{'"$THEME_SAPPHIRE"'%}%m%{'"$THEME_TEXT"'%} %{'"$THEME_BLUE"'%}[%~]$(git_color)$(git_branch)%{'"$THEME_RESET"'%}
 %# '
         ;;
 esac
 
-# Enable color support
+# Enable color support (LSCOLORS/LS_COLORS set in theme.sh)
 case "$CURRENT_PLATFORM" in
     darwin)
         export CLICOLOR=1
-        export LSCOLORS=ExFxBxDxCxegedabagacad
+        # LSCOLORS is set in theme.sh
         ;;
     linux)
-        # GNU ls colors
+        # GNU ls colors (LS_COLORS set in theme.sh)
         if command -v dircolors >/dev/null 2>&1; then
             eval "$(dircolors -b)"
         fi

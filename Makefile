@@ -110,17 +110,18 @@ test-dotfiles: test-dotfiles-basic test-dotfiles-advanced ## Test all dotfiles f
 
 test-dotfiles-basic: ## Test basic dotfiles functionality
 	@echo -e "$(BLUE)Testing basic dotfiles functionality...$(NC)"
+	@# Note: We set IS_INTERACTIVE=true to bypass early exit for non-interactive shells
 	@# Test shell detection
 	@echo "Testing shell detection..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; [ "$$CURRENT_SHELL" = "bash" ]' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; [ "$$CURRENT_SHELL" = "bash" ]' || \
 		(echo -e "$(RED)❌ Shell detection failed$(NC)" && exit 1)
 	@# Test environment loading
 	@echo "Testing environment loading..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; [ -n "$$DOTFILES_ROOT" ]' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; [ -n "$$DOTFILES_ROOT" ]' || \
 		(echo -e "$(RED)❌ DOTFILES_ROOT variable not set$(NC)" && exit 1)
 	@# Test aliases
 	@echo "Testing aliases..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; alias | grep -q "ll="' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; alias | grep -q "ll="' || \
 		(echo -e "$(RED)❌ Basic aliases not loaded$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Basic dotfiles tests passed$(NC)"
 
@@ -128,15 +129,15 @@ test-dotfiles-advanced: ## Test advanced dotfiles features
 	@echo -e "$(BLUE)Testing advanced dotfiles features...$(NC)"
 	@# Test git prompt functions
 	@echo "Testing git prompt functions..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f git_branch >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; declare -f git_branch >/dev/null' || \
 		(echo -e "$(RED)❌ git_branch function not defined$(NC)" && exit 1)
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f git_color >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; declare -f git_color >/dev/null' || \
 		(echo -e "$(RED)❌ git_color function not defined$(NC)" && exit 1)
 	@# Test custom functions
 	@echo "Testing custom functions..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f mkvenv >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; declare -f mkvenv >/dev/null' || \
 		(echo -e "$(RED)❌ mkvenv function not defined$(NC)" && exit 1)
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f h >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; declare -f h >/dev/null' || \
 		(echo -e "$(RED)❌ h function not defined$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Advanced dotfiles tests passed$(NC)"
 

@@ -5,14 +5,15 @@
 # Load order:
 #   1. discovery.sh  - detect shell type and platform
 #   2. xdg.sh        - set XDG directories
-#   3. environment.sh - core environment variables
-#   4. secrets.sh    - load secrets (silent)
-#   5. options.sh    - shell options (shopt/setopt)
-#   6. aliases.sh    - shell aliases
-#   7. functions/**  - all function modules
-#   8. completions.sh - tab completion
-#   9. prompt.sh     - shell prompt
-#  10. local.sh      - user overrides (optional)
+#   3. theme.sh      - Catppuccin Mocha color definitions
+#   4. environment.sh - core environment variables
+#   5. secrets.sh    - load secrets (silent)
+#   6. options.sh    - shell options (shopt/setopt)
+#   7. aliases.sh    - shell aliases
+#   8. functions/**  - all function modules
+#   9. completions.sh - tab completion
+#  10. prompt.sh     - shell prompt
+#  11. local.sh      - user overrides (optional)
 
 # Determine DOTFILES_ROOT if not already set
 if [ -z "$DOTFILES_ROOT" ]; then
@@ -46,27 +47,32 @@ _source_if_exists "$DOTFILES_ROOT/shell/discovery.sh"
 _source_if_exists "$DOTFILES_ROOT/shell/xdg.sh"
 
 # =============================================================================
-# 3. Environment Variables
+# 3. Theme (Catppuccin Mocha colors)
+# =============================================================================
+_source_if_exists "$DOTFILES_ROOT/shell/theme.sh"
+
+# =============================================================================
+# 4. Environment Variables
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/environment.sh"
 
 # =============================================================================
-# 4. Secrets (silent loading)
+# 5. Secrets (silent loading)
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/secrets.sh"
 
 # =============================================================================
-# 5. Shell Options
+# 6. Shell Options
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/options.sh"
 
 # =============================================================================
-# 6. Aliases
+# 7. Aliases
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/aliases.sh"
 
 # =============================================================================
-# 7. Functions - load all function modules
+# 8. Functions - load all function modules
 # =============================================================================
 
 # Core functions
@@ -92,17 +98,17 @@ done
 unset _func_file
 
 # =============================================================================
-# 8. Completions
+# 9. Completions
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/completions.sh"
 
 # =============================================================================
-# 9. Prompt
+# 10. Prompt
 # =============================================================================
 _source_if_exists "$DOTFILES_ROOT/shell/prompt.sh"
 
 # =============================================================================
-# 10. Local Overrides (user-specific, not in repo)
+# 11. Local Overrides (user-specific, not in repo)
 # =============================================================================
 _source_if_exists "$HOME/.config/shell/local.sh"
 _source_if_exists "$HOME/.shell_local"

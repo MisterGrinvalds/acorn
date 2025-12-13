@@ -185,8 +185,8 @@ create_backup() {
     log_info "Creating backup of existing configurations..."
     mkdir -p "$BACKUP_DIR"
 
-    # Backup existing dotfiles
-    for file in .bash_profile .bashrc .zshrc .bash_profile.dir .bash_tools; do
+    # Backup existing shell configs
+    for file in .bash_profile .bashrc .zshrc .zprofile; do
         if [ -e "$HOME/$file" ]; then
             cp -r "$HOME/$file" "$BACKUP_DIR/" 2>/dev/null || true
             log_info "Backed up ~/$file"
@@ -351,6 +351,7 @@ install_development_tools() {
             brew install go                       # Go programming language
             brew install node npm                 # Node.js and npm
             brew install python3                  # Python 3
+            brew install uv                       # Fast Python package manager
 
             # Optional but recommended
             brew install tmux neovim              # Terminal multiplexer and editor
@@ -469,7 +470,7 @@ setup_secrets_management() {
     fi
 }
 
-# Link app configs (git, ssh, etc.)
+# Link app configs (git, ssh, ghostty, vscode, claude, etc.)
 link_app_configs() {
     log_info "Linking application configurations..."
 
@@ -499,6 +500,46 @@ link_app_configs() {
         else
             log_info "SSH config already exists, skipping"
         fi
+    fi
+
+    # Ghostty config
+    if [ -f "$SCRIPT_DIR/config/ghostty/config" ]; then
+        mkdir -p "$HOME/.config/ghostty"
+        ln -sf "$SCRIPT_DIR/config/ghostty/config" "$HOME/.config/ghostty/config"
+        log_info "Linked Ghostty config"
+    fi
+
+    # VS Code config
+    if [ -d "$SCRIPT_DIR/config/vscode" ]; then
+        local vscode_dir
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            vscode_dir="$HOME/Library/Application Support/Code/User"
+        else
+            vscode_dir="$HOME/.config/Code/User"
+        fi
+        mkdir -p "$vscode_dir"
+
+        if [ -f "$SCRIPT_DIR/config/vscode/settings.json" ]; then
+            ln -sf "$SCRIPT_DIR/config/vscode/settings.json" "$vscode_dir/settings.json"
+            log_info "Linked VS Code settings.json"
+        fi
+        if [ -f "$SCRIPT_DIR/config/vscode/keybindings.json" ]; then
+            ln -sf "$SCRIPT_DIR/config/vscode/keybindings.json" "$vscode_dir/keybindings.json"
+            log_info "Linked VS Code keybindings.json"
+        fi
+    fi
+
+    # Claude Code config
+    if [ -f "$SCRIPT_DIR/config/claude/settings.json" ]; then
+        mkdir -p "$HOME/.claude"
+        ln -sf "$SCRIPT_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
+        log_info "Linked Claude Code settings"
+    fi
+
+    # IntelliJ config (reference only)
+    if [ -d "$SCRIPT_DIR/config/intellij" ]; then
+        log_info "IntelliJ configs available at: $SCRIPT_DIR/config/intellij/"
+        log_info "  - Manual linking required due to version-specific paths"
     fi
 
     log_success "Application configs linked!"
