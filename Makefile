@@ -1,7 +1,7 @@
 # Makefile for Testing Bash Profile and Automation Framework
 # Comprehensive test suite for all functionality
 
-.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status
+.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status
 
 # Default target
 help: ## Show this help message
@@ -46,6 +46,36 @@ help: ## Show this help message
 	@echo "  pnpm-install      - Install pnpm globally"
 	@echo "  pnpm-setup        - Setup pnpm with corepack"
 	@echo "  node-status       - Check Node.js ecosystem status"
+	@echo ""
+	@echo "Shell Layer Testing (DAG Parity):"
+	@echo "  shell-status      - Show all shell module status"
+	@echo "  shell-test-all    - Test complete shell loading sequence"
+	@echo "  shell-test-*      - Test individual modules (discovery, xdg, theme, etc.)"
+	@echo ""
+	@echo "Dotfiles Management:"
+	@echo "  dotfiles-install  - Run full dotfiles installation"
+	@echo "  dotfiles-inject   - Create shell bootstrap files"
+	@echo "  dotfiles-eject    - Remove shell bootstrap files"
+	@echo "  dotfiles-link     - Link app configurations"
+	@echo "  dotfiles-unlink   - Remove app configuration links"
+	@echo "  dotfiles-status   - Show installation status"
+	@echo "  dotfiles-update   - Git pull and reload"
+	@echo ""
+	@echo "Python/UV Management:"
+	@echo "  uv-install        - Install UV package manager"
+	@echo "  uv-setup          - Complete UV setup with Python"
+	@echo "  uv-status         - Check UV and Python status"
+	@echo "  venv-create       - Create virtual environment"
+	@echo "  venv-status       - Show active venv info"
+	@echo ""
+	@echo "Go Management:"
+	@echo "  go-install        - Install Go"
+	@echo "  go-setup          - Setup Go environment"
+	@echo "  go-status         - Check Go installation"
+	@echo "  go-tools          - Install common Go tools"
+	@echo ""
+	@echo "Comprehensive:"
+	@echo "  status            - Show complete environment status"
 
 # Variables
 SHELL := /bin/bash
@@ -1121,6 +1151,507 @@ node-update: ## Update Node.js to latest LTS and reinstall globals
 		nvm alias default lts/*; \
 		echo ""; \
 		echo "✅ Updated to: $$(node --version)"'
+
+# =============================================================================
+# Shell Layer Targets (DAG Parity)
+# =============================================================================
+# These targets correspond to the shell loading DAG:
+# discovery -> xdg -> theme -> env/secrets/options -> aliases -> functions -> prompt
+# =============================================================================
+
+shell-status: ## Show status of all shell modules
+	@echo -e "$(BLUE)Shell Module Status$(NC)"
+	@echo "==================="
+	@echo ""
+	@echo "📂 Shell Modules:"
+	@for file in shell/discovery.sh shell/xdg.sh shell/theme.sh shell/environment.sh shell/secrets.sh shell/options.sh shell/aliases.sh shell/prompt.sh shell/completions.sh shell/init.sh; do \
+		if [ -f "$$file" ]; then \
+			echo "   ✅ $$file"; \
+		else \
+			echo "   ❌ $$file (missing)"; \
+		fi; \
+	done
+	@echo ""
+	@echo "📂 Function Modules:"
+	@for dir in functions/core functions/dev functions/cloud functions/ai; do \
+		if [ -d "$$dir" ]; then \
+			count=$$(find "$$dir" -name "*.sh" 2>/dev/null | wc -l | tr -d ' '); \
+			echo "   ✅ $$dir ($$count files)"; \
+		else \
+			echo "   ❌ $$dir (missing)"; \
+		fi; \
+	done
+	@echo ""
+	@echo "🔧 Current Environment:"
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh 2>/dev/null; \
+		echo "   CURRENT_SHELL: $${CURRENT_SHELL:-not set}"; \
+		echo "   CURRENT_PLATFORM: $${CURRENT_PLATFORM:-not set}"; \
+		echo "   DOTFILES_ROOT: $${DOTFILES_ROOT:-not set}"; \
+		echo "   XDG_CONFIG_HOME: $${XDG_CONFIG_HOME:-not set}"; \
+		echo "   XDG_DATA_HOME: $${XDG_DATA_HOME:-not set}"'
+
+shell-test-discovery: ## Test shell/discovery.sh module
+	@echo -e "$(BLUE)Testing discovery.sh...$(NC)"
+	@# Test CURRENT_SHELL detection
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/discovery.sh; \
+		[ "$$CURRENT_SHELL" = "bash" ] || (echo "❌ CURRENT_SHELL not set to bash" && exit 1); \
+		echo "✅ CURRENT_SHELL=$$CURRENT_SHELL"'
+	@# Test CURRENT_PLATFORM detection
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/discovery.sh; \
+		[ -n "$$CURRENT_PLATFORM" ] || (echo "❌ CURRENT_PLATFORM not set" && exit 1); \
+		echo "✅ CURRENT_PLATFORM=$$CURRENT_PLATFORM"'
+	@# Test IS_INTERACTIVE override
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; \
+		[ "$$IS_INTERACTIVE" = "true" ] || (echo "❌ IS_INTERACTIVE override failed" && exit 1); \
+		echo "✅ IS_INTERACTIVE override works"'
+	@echo -e "$(GREEN)✅ discovery.sh tests passed$(NC)"
+
+shell-test-xdg: ## Test shell/xdg.sh module
+	@echo -e "$(BLUE)Testing xdg.sh...$(NC)"
+	@# Test XDG variables are set
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; \
+		[ -n "$$XDG_CONFIG_HOME" ] || (echo "❌ XDG_CONFIG_HOME not set" && exit 1); \
+		echo "✅ XDG_CONFIG_HOME=$$XDG_CONFIG_HOME"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; \
+		[ -n "$$XDG_DATA_HOME" ] || (echo "❌ XDG_DATA_HOME not set" && exit 1); \
+		echo "✅ XDG_DATA_HOME=$$XDG_DATA_HOME"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; \
+		[ -n "$$XDG_CACHE_HOME" ] || (echo "❌ XDG_CACHE_HOME not set" && exit 1); \
+		echo "✅ XDG_CACHE_HOME=$$XDG_CACHE_HOME"'
+	@echo -e "$(GREEN)✅ xdg.sh tests passed$(NC)"
+
+shell-test-theme: ## Test shell/theme.sh module
+	@echo -e "$(BLUE)Testing theme.sh...$(NC)"
+	@# Test theme color variables are set
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; source shell/theme.sh; \
+		[ -n "$$THEME_GREEN" ] || (echo "❌ THEME_GREEN not set" && exit 1); \
+		echo "✅ THEME_GREEN defined"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; source shell/theme.sh; \
+		[ -n "$$THEME_GIT_CLEAN" ] || (echo "❌ THEME_GIT_CLEAN not set" && exit 1); \
+		echo "✅ THEME_GIT_CLEAN defined"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/discovery.sh; source shell/xdg.sh; source shell/theme.sh; \
+		[ -n "$$THEME_RESET" ] || (echo "❌ THEME_RESET not set" && exit 1); \
+		echo "✅ THEME_RESET defined"'
+	@echo -e "$(GREEN)✅ theme.sh tests passed$(NC)"
+
+shell-test-env: ## Test shell/environment.sh module
+	@echo -e "$(BLUE)Testing environment.sh...$(NC)"
+	@# Test environment variables are set
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; \
+		source shell/discovery.sh; source shell/xdg.sh; source shell/environment.sh; \
+		[ -n "$$PYTHONSTARTUP" ] || (echo "❌ PYTHONSTARTUP not set" && exit 1); \
+		echo "✅ PYTHONSTARTUP=$$PYTHONSTARTUP"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; \
+		source shell/discovery.sh; source shell/xdg.sh; source shell/environment.sh; \
+		[ -n "$$NVM_DIR" ] || (echo "❌ NVM_DIR not set" && exit 1); \
+		echo "✅ NVM_DIR=$$NVM_DIR"'
+	@echo -e "$(GREEN)✅ environment.sh tests passed$(NC)"
+
+shell-test-options: ## Test shell/options.sh module
+	@echo -e "$(BLUE)Testing options.sh...$(NC)"
+	@# Test options file sources without error
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; \
+		source shell/discovery.sh; source shell/xdg.sh; source shell/options.sh' || \
+		(echo -e "$(RED)❌ options.sh failed to source$(NC)" && exit 1)
+	@echo "✅ options.sh sources without error"
+	@echo -e "$(GREEN)✅ options.sh tests passed$(NC)"
+
+shell-test-aliases: ## Test shell/aliases.sh module
+	@echo -e "$(BLUE)Testing aliases.sh...$(NC)"
+	@# Test key aliases are defined
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; \
+		source shell/discovery.sh; source shell/xdg.sh; source shell/aliases.sh; \
+		alias | grep -q "ll=" || (echo "❌ ll alias not defined" && exit 1); \
+		echo "✅ ll alias defined"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; \
+		source shell/discovery.sh; source shell/xdg.sh; source shell/aliases.sh; \
+		alias | grep -q "la=" || (echo "❌ la alias not defined" && exit 1); \
+		echo "✅ la alias defined"'
+	@echo -e "$(GREEN)✅ aliases.sh tests passed$(NC)"
+
+shell-test-functions: ## Test all function modules
+	@echo -e "$(BLUE)Testing function modules...$(NC)"
+	@# Test core functions
+	@echo "Testing core functions..."
+	@for file in functions/core/*.sh; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
+	@echo "✅ Core functions syntax OK"
+	@# Test dev functions
+	@echo "Testing dev functions..."
+	@for file in functions/dev/*.sh; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
+	@echo "✅ Dev functions syntax OK"
+	@# Test cloud functions
+	@echo "Testing cloud functions..."
+	@for file in functions/cloud/*.sh; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
+	@echo "✅ Cloud functions syntax OK"
+	@# Test ai functions
+	@echo "Testing AI functions..."
+	@for file in functions/ai/*.sh; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
+	@echo "✅ AI functions syntax OK"
+	@# Test functions are loaded
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; \
+		declare -f mkvenv >/dev/null || (echo "❌ mkvenv not loaded" && exit 1); \
+		echo "✅ mkvenv function loaded"'
+	@echo -e "$(GREEN)✅ Function modules tests passed$(NC)"
+
+shell-test-prompt: ## Test shell/prompt.sh module
+	@echo -e "$(BLUE)Testing prompt.sh...$(NC)"
+	@# Test prompt functions exist
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; \
+		declare -f git_branch >/dev/null || (echo "❌ git_branch not defined" && exit 1); \
+		echo "✅ git_branch function defined"'
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; \
+		declare -f git_color >/dev/null || (echo "❌ git_color not defined" && exit 1); \
+		echo "✅ git_color function defined"'
+	@# Test PS1 is set (bash)
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; \
+		[ -n "$$PS1" ] || (echo "❌ PS1 not set" && exit 1); \
+		echo "✅ PS1 is set"'
+	@echo -e "$(GREEN)✅ prompt.sh tests passed$(NC)"
+
+shell-test-all: shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt ## Test complete shell loading sequence
+	@echo -e "$(GREEN)✅ All shell layer tests passed$(NC)"
+
+# =============================================================================
+# Dotfiles Management Targets
+# =============================================================================
+
+dotfiles-install: ## Run full dotfiles installation (install.sh)
+	@echo -e "$(BLUE)Running dotfiles installation...$(NC)"
+	@bash install.sh
+	@echo -e "$(GREEN)✅ Dotfiles installation complete$(NC)"
+
+dotfiles-inject: ## Create shell bootstrap files (~/.bashrc, ~/.zshrc)
+	@echo -e "$(BLUE)Injecting shell bootstrap files...$(NC)"
+	@# Create ~/.bashrc bootstrap
+	@if [ ! -f ~/.bashrc ] || ! grep -q "DOTFILES_ROOT" ~/.bashrc 2>/dev/null; then \
+		echo "Creating ~/.bashrc..."; \
+		echo '# Dotfiles bootstrap - auto-generated' > ~/.bashrc; \
+		echo 'export DOTFILES_ROOT="$(DOTFILES_DIR)"' >> ~/.bashrc; \
+		echo '[ -f "$$DOTFILES_ROOT/shell/init.sh" ] && . "$$DOTFILES_ROOT/shell/init.sh"' >> ~/.bashrc; \
+		echo "✅ Created ~/.bashrc"; \
+	else \
+		echo "⚠️  ~/.bashrc already configured"; \
+	fi
+	@# Create ~/.zshrc bootstrap
+	@if [ ! -f ~/.zshrc ] || ! grep -q "DOTFILES_ROOT" ~/.zshrc 2>/dev/null; then \
+		echo "Creating ~/.zshrc..."; \
+		echo '# Dotfiles bootstrap - auto-generated' > ~/.zshrc; \
+		echo 'export DOTFILES_ROOT="$(DOTFILES_DIR)"' >> ~/.zshrc; \
+		echo '[ -f "$$DOTFILES_ROOT/shell/init.sh" ] && . "$$DOTFILES_ROOT/shell/init.sh"' >> ~/.zshrc; \
+		echo "✅ Created ~/.zshrc"; \
+	else \
+		echo "⚠️  ~/.zshrc already configured"; \
+	fi
+	@# Create ~/.bash_profile to source ~/.bashrc
+	@if [ ! -f ~/.bash_profile ] || ! grep -q "bashrc" ~/.bash_profile 2>/dev/null; then \
+		echo "Creating ~/.bash_profile..."; \
+		echo '# Source bashrc for login shells' > ~/.bash_profile; \
+		echo '[ -f ~/.bashrc ] && . ~/.bashrc' >> ~/.bash_profile; \
+		echo "✅ Created ~/.bash_profile"; \
+	else \
+		echo "⚠️  ~/.bash_profile already configured"; \
+	fi
+	@echo -e "$(GREEN)✅ Bootstrap files created$(NC)"
+
+dotfiles-eject: ## Remove shell bootstrap files
+	@echo -e "$(YELLOW)Removing shell bootstrap files...$(NC)"
+	@echo "This will remove:"
+	@echo "  - ~/.bashrc (if managed by dotfiles)"
+	@echo "  - ~/.zshrc (if managed by dotfiles)"
+	@echo "  - ~/.bash_profile (if managed by dotfiles)"
+	@read -p "Continue? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		if grep -q "DOTFILES_ROOT" ~/.bashrc 2>/dev/null; then rm ~/.bashrc && echo "Removed ~/.bashrc"; fi; \
+		if grep -q "DOTFILES_ROOT" ~/.zshrc 2>/dev/null; then rm ~/.zshrc && echo "Removed ~/.zshrc"; fi; \
+		if grep -q "bashrc" ~/.bash_profile 2>/dev/null; then rm ~/.bash_profile && echo "Removed ~/.bash_profile"; fi; \
+		echo -e "$(GREEN)✅ Bootstrap files removed$(NC)"; \
+	else \
+		echo "Cancelled"; \
+	fi
+
+dotfiles-link: ## Link app configurations (git, ghostty, vscode, claude)
+	@echo -e "$(BLUE)Linking app configurations...$(NC)"
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source functions/core/inject.sh; inject_configs'
+	@echo -e "$(GREEN)✅ App configurations linked$(NC)"
+
+dotfiles-unlink: ## Remove app configuration links
+	@echo -e "$(YELLOW)Removing app configuration links...$(NC)"
+	@# Git
+	@if [ -L ~/.gitconfig ]; then rm ~/.gitconfig && echo "Removed ~/.gitconfig"; fi
+	@if [ -L ~/.gitignore ]; then rm ~/.gitignore && echo "Removed ~/.gitignore"; fi
+	@# Ghostty
+	@if [ -L ~/.config/ghostty/config ]; then rm ~/.config/ghostty/config && echo "Removed ghostty config"; fi
+	@# VS Code
+	@if [ -L ~/Library/Application\ Support/Code/User/settings.json ]; then rm ~/Library/Application\ Support/Code/User/settings.json && echo "Removed VS Code settings"; fi
+	@# Claude
+	@if [ -L ~/.config/claude/settings.json ]; then rm ~/.config/claude/settings.json && echo "Removed Claude settings"; fi
+	@echo -e "$(GREEN)✅ App configuration links removed$(NC)"
+
+dotfiles-status: ## Show dotfiles installation status
+	@echo -e "$(BLUE)Dotfiles Installation Status$(NC)"
+	@echo "============================="
+	@echo ""
+	@echo "📂 Repository: $(DOTFILES_DIR)"
+	@echo ""
+	@echo "🔗 Bootstrap Files:"
+	@if grep -q "DOTFILES_ROOT" ~/.bashrc 2>/dev/null; then echo "   ✅ ~/.bashrc"; else echo "   ❌ ~/.bashrc"; fi
+	@if grep -q "DOTFILES_ROOT" ~/.zshrc 2>/dev/null; then echo "   ✅ ~/.zshrc"; else echo "   ❌ ~/.zshrc"; fi
+	@if [ -f ~/.bash_profile ]; then echo "   ✅ ~/.bash_profile"; else echo "   ❌ ~/.bash_profile"; fi
+	@echo ""
+	@echo "🔗 App Configs:"
+	@if [ -L ~/.gitconfig ]; then echo "   ✅ Git (~/.gitconfig)"; else echo "   ❌ Git (~/.gitconfig)"; fi
+	@if [ -L ~/.config/ghostty/config ]; then echo "   ✅ Ghostty"; else echo "   ❌ Ghostty"; fi
+	@if [ -L ~/Library/Application\ Support/Code/User/settings.json ] 2>/dev/null; then echo "   ✅ VS Code"; else echo "   ❌ VS Code"; fi
+	@if [ -L ~/.config/claude/settings.json ]; then echo "   ✅ Claude"; else echo "   ❌ Claude"; fi
+
+dotfiles-reload: ## Reload shell configuration
+	@echo -e "$(BLUE)Reloading shell configuration...$(NC)"
+	@echo "Run this command to reload:"
+	@echo ""
+	@echo "  source ~/.bashrc   # for bash"
+	@echo "  source ~/.zshrc    # for zsh"
+	@echo ""
+	@echo "Or start a new shell session."
+
+dotfiles-update: ## Git pull and show reload instructions
+	@echo -e "$(BLUE)Updating dotfiles...$(NC)"
+	@git pull --rebase
+	@echo ""
+	@echo -e "$(GREEN)✅ Dotfiles updated$(NC)"
+	@echo "Run 'source ~/.bashrc' or 'source ~/.zshrc' to reload."
+
+# =============================================================================
+# Python/UV Management Targets
+# =============================================================================
+
+uv-install: ## Install UV package manager
+	@echo -e "$(BLUE)Installing UV...$(NC)"
+	@if command -v uv >/dev/null 2>&1; then \
+		echo -e "$(GREEN)✅ UV already installed: $$(uv --version)$(NC)"; \
+	else \
+		echo "Downloading UV installer..."; \
+		curl -LsSf https://astral.sh/uv/install.sh | sh; \
+		echo -e "$(GREEN)✅ UV installed$(NC)"; \
+		echo ""; \
+		echo "⚠️  Add UV to your PATH or restart your shell"; \
+	fi
+
+uv-setup: uv-install ## Complete UV setup with Python
+	@echo -e "$(BLUE)Setting up UV environment...$(NC)"
+	@# Ensure UV is in PATH for this session
+	@export PATH="$$HOME/.local/bin:$$PATH"; \
+	if command -v uv >/dev/null 2>&1; then \
+		echo "Installing Python via UV..."; \
+		uv python install 3.12 2>/dev/null || echo "Python 3.12 already installed or use system Python"; \
+		echo ""; \
+		echo -e "$(GREEN)✅ UV setup complete$(NC)"; \
+	else \
+		echo -e "$(RED)❌ UV not found in PATH$(NC)"; \
+		exit 1; \
+	fi
+
+uv-status: ## Check UV and Python status
+	@echo -e "$(BLUE)UV/Python Status$(NC)"
+	@echo "================"
+	@echo ""
+	@echo "📦 UV:"
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "   ✅ Installed: $$(uv --version)"; \
+		echo "   Path: $$(which uv)"; \
+	elif [ -f "$$HOME/.local/bin/uv" ]; then \
+		echo "   ✅ Installed: $$($$HOME/.local/bin/uv --version)"; \
+		echo "   Path: $$HOME/.local/bin/uv"; \
+		echo "   ⚠️  Not in PATH"; \
+	else \
+		echo "   ❌ Not installed"; \
+	fi
+	@echo ""
+	@echo "🐍 Python:"
+	@if command -v python3 >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(python3 --version)"; \
+		echo "   Path: $$(which python3)"; \
+	else \
+		echo "   ❌ Not installed"; \
+	fi
+	@echo ""
+	@echo "📦 pip:"
+	@if command -v pip3 >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(pip3 --version | awk '{print $$2}')"; \
+	elif python3 -m pip --version >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(python3 -m pip --version | awk '{print $$2}')"; \
+	else \
+		echo "   ❌ Not available"; \
+	fi
+	@echo ""
+	@echo "🔧 Virtual Environment:"
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "   ✅ Active: $$VIRTUAL_ENV"; \
+	else \
+		echo "   ❌ None active"; \
+	fi
+
+python-status: uv-status ## Alias for uv-status
+
+venv-create: ## Create a virtual environment using UV or venv
+	@echo -e "$(BLUE)Creating virtual environment...$(NC)"
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "Using UV to create .venv..."; \
+		uv venv .venv; \
+	else \
+		echo "Using python3 -m venv..."; \
+		python3 -m venv .venv; \
+	fi
+	@echo -e "$(GREEN)✅ Virtual environment created at .venv$(NC)"
+	@echo ""
+	@echo "Activate with: source .venv/bin/activate"
+
+venv-status: ## Show active virtual environment info
+	@echo -e "$(BLUE)Virtual Environment Status$(NC)"
+	@echo "=========================="
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "✅ Active: $$VIRTUAL_ENV"; \
+		echo "   Python: $$(python --version)"; \
+		if command -v uv >/dev/null 2>&1; then \
+			echo "   UV: $$(uv --version)"; \
+		fi; \
+		echo ""; \
+		echo "📦 Installed packages:"; \
+		pip list 2>/dev/null | head -15 || echo "   (none)"; \
+	else \
+		echo "❌ No virtual environment active"; \
+		echo ""; \
+		echo "To create: make venv-create"; \
+		echo "To activate: source .venv/bin/activate"; \
+	fi
+
+# =============================================================================
+# Go Management Targets
+# =============================================================================
+
+go-install: ## Install Go via Homebrew (macOS) or download (Linux)
+	@echo -e "$(BLUE)Installing Go...$(NC)"
+	@if command -v go >/dev/null 2>&1; then \
+		echo -e "$(GREEN)✅ Go already installed: $$(go version)$(NC)"; \
+	elif [ "$$(uname -s)" = "Darwin" ]; then \
+		echo "Installing Go via Homebrew..."; \
+		brew install go; \
+		echo -e "$(GREEN)✅ Go installed$(NC)"; \
+	else \
+		echo "Installing Go from official source..."; \
+		curl -LO https://go.dev/dl/go1.22.0.linux-amd64.tar.gz; \
+		sudo rm -rf /usr/local/go; \
+		sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz; \
+		rm go1.22.0.linux-amd64.tar.gz; \
+		echo "Add to PATH: export PATH=\$$PATH:/usr/local/go/bin"; \
+		echo -e "$(GREEN)✅ Go installed$(NC)"; \
+	fi
+
+go-setup: go-install ## Setup Go environment
+	@echo -e "$(BLUE)Setting up Go environment...$(NC)"
+	@# Create Go workspace directories
+	@mkdir -p ~/go/{bin,src,pkg}
+	@echo "✅ Go workspace created at ~/go"
+	@# Show environment
+	@if command -v go >/dev/null 2>&1; then \
+		echo ""; \
+		echo "Go Environment:"; \
+		go env GOROOT GOPATH GOBIN; \
+	fi
+	@echo -e "$(GREEN)✅ Go setup complete$(NC)"
+
+go-status: ## Check Go installation status
+	@echo -e "$(BLUE)Go Status$(NC)"
+	@echo "========="
+	@echo ""
+	@if command -v go >/dev/null 2>&1; then \
+		echo "✅ Go installed"; \
+		echo "   Version: $$(go version | awk '{print $$3}')"; \
+		echo "   Path: $$(which go)"; \
+		echo "   GOROOT: $$(go env GOROOT)"; \
+		echo "   GOPATH: $$(go env GOPATH)"; \
+		echo ""; \
+		echo "📦 Installed tools:"; \
+		ls $$(go env GOPATH)/bin 2>/dev/null | head -10 || echo "   (none)"; \
+	else \
+		echo "❌ Go not installed"; \
+		echo "   Run: make go-install"; \
+	fi
+
+go-tools: ## Install common Go development tools
+	@echo -e "$(BLUE)Installing Go tools...$(NC)"
+	@if ! command -v go >/dev/null 2>&1; then \
+		echo -e "$(RED)❌ Go not installed. Run: make go-install$(NC)"; \
+		exit 1; \
+	fi
+	@echo "Installing golangci-lint..."
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@echo "Installing gopls (language server)..."
+	@go install golang.org/x/tools/gopls@latest
+	@echo "Installing goimports..."
+	@go install golang.org/x/tools/cmd/goimports@latest
+	@echo "Installing dlv (debugger)..."
+	@go install github.com/go-delve/delve/cmd/dlv@latest
+	@echo -e "$(GREEN)✅ Go tools installed$(NC)"
+
+# =============================================================================
+# Comprehensive Status Target
+# =============================================================================
+
+status: ## Show complete environment status
+	@echo -e "$(BLUE)╔════════════════════════════════════════════════════════════════╗$(NC)"
+	@echo -e "$(BLUE)║          Complete Environment Status                           ║$(NC)"
+	@echo -e "$(BLUE)╚════════════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@# Shell Detection
+	@echo -e "$(BLUE)🐚 Shell Environment$(NC)"
+	@echo "==================="
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh 2>/dev/null; \
+		echo "   Shell: $${CURRENT_SHELL:-unknown}"; \
+		echo "   Platform: $${CURRENT_PLATFORM:-unknown}"; \
+		echo "   Interactive: $${IS_INTERACTIVE:-unknown}"; \
+		echo "   DOTFILES_ROOT: $${DOTFILES_ROOT:-not set}"'
+	@echo ""
+	@# XDG Directories
+	@echo -e "$(BLUE)📁 XDG Directories$(NC)"
+	@echo "=================="
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh 2>/dev/null; \
+		echo "   XDG_CONFIG_HOME: $${XDG_CONFIG_HOME:-not set}"; \
+		echo "   XDG_DATA_HOME: $${XDG_DATA_HOME:-not set}"; \
+		echo "   XDG_CACHE_HOME: $${XDG_CACHE_HOME:-not set}"'
+	@echo ""
+	@# Development Tools
+	@echo -e "$(BLUE)🛠️  Development Tools$(NC)"
+	@echo "===================="
+	@printf "   Git: "; command -v git >/dev/null && echo "✅ $$(git --version | awk '{print $$3}')" || echo "❌"
+	@printf "   Node.js: "; command -v node >/dev/null && echo "✅ $$(node --version)" || echo "❌"
+	@printf "   Python: "; command -v python3 >/dev/null && echo "✅ $$(python3 --version | awk '{print $$2}')" || echo "❌"
+	@printf "   Go: "; command -v go >/dev/null && echo "✅ $$(go version | awk '{print $$3}')" || echo "❌"
+	@printf "   UV: "; command -v uv >/dev/null && echo "✅ $$(uv --version 2>/dev/null)" || echo "❌"
+	@printf "   pnpm: "; command -v pnpm >/dev/null && echo "✅ $$(pnpm --version)" || echo "❌"
+	@echo ""
+	@# AI/ML Tools
+	@echo -e "$(BLUE)🤖 AI/ML Tools$(NC)"
+	@echo "=============="
+	@printf "   Ollama: "; command -v ollama >/dev/null && echo "✅ installed" || echo "❌"
+	@printf "   HuggingFace: "; python3 -c "import transformers" 2>/dev/null && echo "✅ installed" || echo "❌"
+	@echo ""
+	@# Installation Status
+	@echo -e "$(BLUE)📦 Installation Status$(NC)"
+	@echo "====================="
+	@printf "   ~/.bashrc: "; grep -q "DOTFILES_ROOT" ~/.bashrc 2>/dev/null && echo "✅" || echo "❌"
+	@printf "   ~/.zshrc: "; grep -q "DOTFILES_ROOT" ~/.zshrc 2>/dev/null && echo "✅" || echo "❌"
+	@printf "   Git config: "; [ -L ~/.gitconfig ] && echo "✅" || echo "❌"
+	@printf "   Ghostty: "; [ -L ~/.config/ghostty/config ] && echo "✅" || echo "❌"
+	@echo ""
+	@echo -e "$(GREEN)Run 'make help' for available commands$(NC)"
 
 # Default test for CI
 .DEFAULT_GOAL := test-quick
