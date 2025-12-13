@@ -1,0 +1,8 @@
+# R site-wide profile
+# https://www.r-bloggers.com/setting-your-working-directory-permanently-in-r/
+.First <- function(){
+    cat("\n   Loading Site-wide Profile\n\n")
+    setwd(Sys.getenv("XDG_CACHE_HOME"))
+    cat(getwd())
+}
+.Last <- function()  cat("\n   Work done!\n\n")
