@@ -1,7 +1,7 @@
 # Reorganization Progress Tracker
 
 > Last updated: 2025-12-12
-> Status: **Phase 0 - Planning Complete**
+> Status: **Phase 6 - Create Injection Functions (next)**
 
 ---
 
@@ -27,141 +27,131 @@ Shell strategy: Unified init.sh with discovery
 
 ---
 
-## Phase 1: Create Directory Structure
+## Phase 1: Create Directory Structure ✅
 
-**Status:** Not started
+**Status:** Complete (commit 6550a1f)
 
-```bash
-# Commands to run:
-mkdir -p shell
-mkdir -p functions/{core,dev,cloud,ai}
-mkdir -p config/{git,ssh,python/ipython,r,conda,karabiner,wget}
-mkdir -p secrets
-mkdir -p docs/automation
-```
-
-- [ ] Create `shell/` directory
-- [ ] Create `functions/` with subdirectories
-- [ ] Create `config/` with subdirectories
-- [ ] Create `secrets/` directory
-- [ ] Create `docs/automation/` directory
-- [ ] Commit: `create new directory structure`
+- [x] Create `shell/` directory
+- [x] Create `functions/` with subdirectories
+- [x] Create `config/` with subdirectories
+- [x] Create `secrets/` directory with .gitignore
+- [x] Create `docs/automation/` directory
+- [x] Commit: `create new directory structure`
 
 ---
 
-## Phase 2: Shell Discovery & XDG (Critical Path)
+## Phase 2: Shell Discovery & XDG (Critical Path) ✅
 
-**Status:** Not started
-
-These files MUST be created first - everything else depends on them.
+**Status:** Complete (commit 380a02f)
 
 ### 2.1 Create shell/discovery.sh
-- [ ] Detect `$CURRENT_SHELL` (bash/zsh/unknown)
-- [ ] Detect `$CURRENT_PLATFORM` (darwin/linux/unknown)
-- [ ] Detect `$IS_INTERACTIVE`
-- [ ] Detect `$IS_LOGIN_SHELL`
-- [ ] Early exit for non-interactive shells
+- [x] Detect `$CURRENT_SHELL` (bash/zsh/unknown)
+- [x] Detect `$CURRENT_PLATFORM` (darwin/linux/unknown)
+- [x] Detect `$IS_INTERACTIVE`
+- [x] Detect `$IS_LOGIN_SHELL`
+- [x] Early exit for non-interactive shells
 
 ### 2.2 Create shell/xdg.sh
-- [ ] Set `$DOTFILES_ROOT` (repo location)
-- [ ] Set `$XDG_CONFIG_HOME` (default: ~/.config)
-- [ ] Set `$XDG_DATA_HOME` (default: ~/.local/share)
-- [ ] Set `$XDG_CACHE_HOME` (default: ~/.cache)
-- [ ] Set `$XDG_STATE_HOME` (default: ~/.local/state)
-- [ ] Platform-specific `$XDG_RUNTIME_DIR`
-- [ ] Create directories if missing
+- [x] Set `$DOTFILES_ROOT` (repo location)
+- [x] Set `$XDG_CONFIG_HOME` (default: ~/.config)
+- [x] Set `$XDG_DATA_HOME` (default: ~/.local/share)
+- [x] Set `$XDG_CACHE_HOME` (default: ~/.cache)
+- [x] Set `$XDG_STATE_HOME` (default: ~/.local/state)
+- [x] Platform-specific `$XDG_RUNTIME_DIR`
+- [x] Create directories if missing
+- [x] Set `$HISTFILE` to XDG-compliant location
 
 ### 2.3 Commit
-- [ ] Commit: `add shell discovery and XDG setup`
+- [x] Commit: `add shell discovery and XDG setup`
 
 ---
 
-## Phase 3: Move Shell Configuration
+## Phase 3: Move Shell Configuration ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 3.1 Move existing files
-- [ ] `environment.sh` → `shell/environment.sh`
-- [ ] `environment_darwin.sh` → `shell/environment.darwin.sh`
-- [ ] `environment_linux-gnu.sh` → `shell/environment.linux.sh`
-- [ ] `aliases.sh` → `shell/aliases.sh`
-- [ ] `terminal.sh` → `shell/prompt.sh`
+- [x] `environment.sh` → `shell/environment.sh` (updated for XDG)
+- [x] `environment_darwin.sh` → `shell/environment.darwin.sh`
+- [x] `environment_linux-gnu.sh` → `shell/environment.linux.sh`
+- [x] `aliases.sh` → `shell/aliases.sh` (made portable)
+- [x] `terminal.sh` → `shell/prompt.sh`
 
 ### 3.2 Create new files
-- [ ] Create `shell/options.sh` (shopt/setopt)
-- [ ] Create `shell/secrets.sh` (silent loading)
-- [ ] Create `shell/completions.sh` (bash-completion/compinit)
+- [x] Create `shell/options.sh` (shopt/setopt)
+- [x] Create `shell/secrets.sh` (silent loading)
+- [x] Create `shell/completions.sh` (bash-completion/compinit)
 
 ### 3.3 Fix zsh compatibility in prompt.sh
-- [ ] Replace `BASH_REMATCH` with portable pattern
-- [ ] Add zsh `PROMPT` alongside bash `PS1`
-- [ ] Fix color escape sequences for zsh
+- [x] Replace `BASH_REMATCH` with git symbolic-ref (portable)
+- [x] Add zsh `PROMPT` alongside bash `PS1`
+- [x] Fix color escape sequences for zsh
 
 ### 3.4 Commit
 - [ ] Commit: `move shell configuration to shell/`
 
 ---
 
-## Phase 4: Move Functions
+## Phase 4: Move Functions ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 4.1 Core functions
-- [ ] `cd.sh` → `functions/core/cd.sh`
-- [ ] `history.sh` → `functions/core/history.sh`
-- [ ] Merge `mktar.sh` + `mkzip.sh` → `functions/core/archive.sh`
-- [ ] `bash_as.sh` → `functions/core/utils.sh`
-- [ ] `tools.sh` → `functions/core/tools.sh`
-- [ ] `tmux_helpers.sh` → `functions/core/tmux.sh`
+- [x] `cd.sh` → `functions/core/cd.sh`
+- [x] `history.sh` → `functions/core/history.sh`
+- [x] Merge `mktar.sh` + `mkzip.sh` → `functions/core/archive.sh`
+- [x] `bash_as.sh` → `functions/core/utils.sh`
+- [x] `tools.sh` → `functions/core/tools.sh`
+- [x] `tmux_helpers.sh` → `functions/core/tmux.sh`
 
 ### 4.2 Dev functions
-- [ ] Merge `mkvenv.sh` + `venv.sh` + `rmenv.sh` → `functions/dev/python.sh`
-- [ ] `golang.sh` → `functions/dev/golang.sh`
-- [ ] `github.sh` → `functions/dev/github.sh`
-- [ ] `vscode.sh` → `functions/dev/vscode.sh`
+- [x] Merge `mkvenv.sh` + `venv.sh` + `rmenv.sh` → `functions/dev/python.sh`
+- [x] `golang.sh` → `functions/dev/golang.sh`
+- [x] `github.sh` → `functions/dev/github.sh`
+- [x] `vscode.sh` → `functions/dev/vscode.sh`
 
 ### 4.3 Cloud functions
-- [ ] `kubernetes.sh` → `functions/cloud/kubernetes.sh`
-- [ ] `automation.sh` → `functions/cloud/automation.sh`
-- [ ] `secrets.sh` → `functions/cloud/secrets.sh`
+- [x] `kubernetes.sh` → `functions/cloud/kubernetes.sh`
+- [x] `automation.sh` → `functions/cloud/automation.sh`
+- [x] `secrets.sh` → `functions/cloud/secrets.sh`
 
 ### 4.4 AI functions
-- [ ] `ollama.sh` → `functions/ai/ollama.sh`
-- [ ] `huggingface.sh` → `functions/ai/huggingface.sh`
-- [ ] `ai_aliases.sh` → `functions/ai/aliases.sh`
+- [x] `ollama.sh` → `functions/ai/ollama.sh`
+- [x] `huggingface.sh` → `functions/ai/huggingface.sh`
+- [x] `ai_aliases.sh` → `functions/ai/aliases.sh`
 
 ### 4.5 Completion-related (move to shell/)
-- [ ] `bash_completion.sh` → merge into `shell/completions.sh`
-- [ ] `fzf.sh` → merge into `shell/completions.sh`
+- [x] `bash_completion.sh` → merge into `shell/completions.sh`
+- [x] `fzf.sh` → merge into `shell/completions.sh`
 
 ### 4.6 Commit
 - [ ] Commit: `move functions to functions/`
 
 ---
 
-## Phase 5: Import App Configs from tmp-dotfiles
+## Phase 5: Import App Configs from tmp-dotfiles ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 5.1 Git config
-- [ ] `.gitconfig` → `config/git/config`
-- [ ] `.gitconfig.alias` → `config/git/config.alias`
-- [ ] `.gitconfig.color` → `config/git/config.color`
-- [ ] `.gitconfig.work` → `config/git/config.work`
-- [ ] Update include paths in config
+- [x] `.gitconfig` → `config/git/config`
+- [x] `.gitconfig.alias` → `config/git/config.alias`
+- [x] `.gitconfig.color` → `config/git/config.color`
+- [x] `.gitconfig.work` → `config/git/config.work`
+- [x] Update include paths in config
 
 ### 5.2 SSH config
-- [ ] `.ssh/config` → `config/ssh/config`
+- [x] `.ssh/config` → `config/ssh/config`
 
 ### 5.3 Python config
-- [ ] `.python/*` → `config/python/`
-- [ ] `.ipython/*` → `config/python/ipython/`
+- [x] `.python/*` → `config/python/`
+- [ ] `.ipython/*` → `config/python/ipython/` (skipped - empty)
 
 ### 5.4 Other configs
-- [ ] `.R/*` → `config/r/`
-- [ ] `.condarc` → `config/conda/condarc`
-- [ ] `.karabiner/*` → `config/karabiner/`
-- [ ] `.wgetrc` → `config/wget/wgetrc`
+- [x] `.R/*` → `config/r/`
+- [x] `.condarc` → `config/conda/condarc`
+- [x] `.karabiner/*` → `config/karabiner/`
+- [x] `.wgetrc` → `config/wget/wgetrc`
 
 ### 5.5 Commit
 - [ ] Commit: `import app configs from tmp-dotfiles`
