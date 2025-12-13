@@ -1,0 +1,340 @@
+# Reorganization Progress Tracker
+
+> Last updated: 2025-12-12
+> Status: **Phase 0 - Planning Complete**
+
+---
+
+## Quick Reference
+
+```
+Current branch: fix/automation-framework-compatibility
+Target structure: ~/.config/dotfiles/ (XDG-compliant)
+Shell strategy: Unified init.sh with discovery
+```
+
+---
+
+## Phase 0: Planning ✅
+
+- [x] Investigate repository structure
+- [x] Create dependency DAG (shell-injection-dag.excalidraw)
+- [x] Define XDG source chain strategy
+- [x] Create work plan (WORKPLAN.md)
+- [x] Create reorganization mapping (REORGANIZATION.md)
+- [x] Commit existing AI integration work
+- [x] Create this progress tracker
+
+---
+
+## Phase 1: Create Directory Structure
+
+**Status:** Not started
+
+```bash
+# Commands to run:
+mkdir -p shell
+mkdir -p functions/{core,dev,cloud,ai}
+mkdir -p config/{git,ssh,python/ipython,r,conda,karabiner,wget}
+mkdir -p secrets
+mkdir -p docs/automation
+```
+
+- [ ] Create `shell/` directory
+- [ ] Create `functions/` with subdirectories
+- [ ] Create `config/` with subdirectories
+- [ ] Create `secrets/` directory
+- [ ] Create `docs/automation/` directory
+- [ ] Commit: `create new directory structure`
+
+---
+
+## Phase 2: Shell Discovery & XDG (Critical Path)
+
+**Status:** Not started
+
+These files MUST be created first - everything else depends on them.
+
+### 2.1 Create shell/discovery.sh
+- [ ] Detect `$CURRENT_SHELL` (bash/zsh/unknown)
+- [ ] Detect `$CURRENT_PLATFORM` (darwin/linux/unknown)
+- [ ] Detect `$IS_INTERACTIVE`
+- [ ] Detect `$IS_LOGIN_SHELL`
+- [ ] Early exit for non-interactive shells
+
+### 2.2 Create shell/xdg.sh
+- [ ] Set `$DOTFILES_ROOT` (repo location)
+- [ ] Set `$XDG_CONFIG_HOME` (default: ~/.config)
+- [ ] Set `$XDG_DATA_HOME` (default: ~/.local/share)
+- [ ] Set `$XDG_CACHE_HOME` (default: ~/.cache)
+- [ ] Set `$XDG_STATE_HOME` (default: ~/.local/state)
+- [ ] Platform-specific `$XDG_RUNTIME_DIR`
+- [ ] Create directories if missing
+
+### 2.3 Commit
+- [ ] Commit: `add shell discovery and XDG setup`
+
+---
+
+## Phase 3: Move Shell Configuration
+
+**Status:** Not started
+
+### 3.1 Move existing files
+- [ ] `environment.sh` → `shell/environment.sh`
+- [ ] `environment_darwin.sh` → `shell/environment.darwin.sh`
+- [ ] `environment_linux-gnu.sh` → `shell/environment.linux.sh`
+- [ ] `aliases.sh` → `shell/aliases.sh`
+- [ ] `terminal.sh` → `shell/prompt.sh`
+
+### 3.2 Create new files
+- [ ] Create `shell/options.sh` (shopt/setopt)
+- [ ] Create `shell/secrets.sh` (silent loading)
+- [ ] Create `shell/completions.sh` (bash-completion/compinit)
+
+### 3.3 Fix zsh compatibility in prompt.sh
+- [ ] Replace `BASH_REMATCH` with portable pattern
+- [ ] Add zsh `PROMPT` alongside bash `PS1`
+- [ ] Fix color escape sequences for zsh
+
+### 3.4 Commit
+- [ ] Commit: `move shell configuration to shell/`
+
+---
+
+## Phase 4: Move Functions
+
+**Status:** Not started
+
+### 4.1 Core functions
+- [ ] `cd.sh` → `functions/core/cd.sh`
+- [ ] `history.sh` → `functions/core/history.sh`
+- [ ] Merge `mktar.sh` + `mkzip.sh` → `functions/core/archive.sh`
+- [ ] `bash_as.sh` → `functions/core/utils.sh`
+- [ ] `tools.sh` → `functions/core/tools.sh`
+- [ ] `tmux_helpers.sh` → `functions/core/tmux.sh`
+
+### 4.2 Dev functions
+- [ ] Merge `mkvenv.sh` + `venv.sh` + `rmenv.sh` → `functions/dev/python.sh`
+- [ ] `golang.sh` → `functions/dev/golang.sh`
+- [ ] `github.sh` → `functions/dev/github.sh`
+- [ ] `vscode.sh` → `functions/dev/vscode.sh`
+
+### 4.3 Cloud functions
+- [ ] `kubernetes.sh` → `functions/cloud/kubernetes.sh`
+- [ ] `automation.sh` → `functions/cloud/automation.sh`
+- [ ] `secrets.sh` → `functions/cloud/secrets.sh`
+
+### 4.4 AI functions
+- [ ] `ollama.sh` → `functions/ai/ollama.sh`
+- [ ] `huggingface.sh` → `functions/ai/huggingface.sh`
+- [ ] `ai_aliases.sh` → `functions/ai/aliases.sh`
+
+### 4.5 Completion-related (move to shell/)
+- [ ] `bash_completion.sh` → merge into `shell/completions.sh`
+- [ ] `fzf.sh` → merge into `shell/completions.sh`
+
+### 4.6 Commit
+- [ ] Commit: `move functions to functions/`
+
+---
+
+## Phase 5: Import App Configs from tmp-dotfiles
+
+**Status:** Not started
+
+### 5.1 Git config
+- [ ] `.gitconfig` → `config/git/config`
+- [ ] `.gitconfig.alias` → `config/git/config.alias`
+- [ ] `.gitconfig.color` → `config/git/config.color`
+- [ ] `.gitconfig.work` → `config/git/config.work`
+- [ ] Update include paths in config
+
+### 5.2 SSH config
+- [ ] `.ssh/config` → `config/ssh/config`
+
+### 5.3 Python config
+- [ ] `.python/*` → `config/python/`
+- [ ] `.ipython/*` → `config/python/ipython/`
+
+### 5.4 Other configs
+- [ ] `.R/*` → `config/r/`
+- [ ] `.condarc` → `config/conda/condarc`
+- [ ] `.karabiner/*` → `config/karabiner/`
+- [ ] `.wgetrc` → `config/wget/wgetrc`
+
+### 5.5 Commit
+- [ ] Commit: `import app configs from tmp-dotfiles`
+
+---
+
+## Phase 6: Create Injection Functions
+
+**Status:** Not started
+
+### 6.1 Create functions/core/inject.sh
+- [ ] `dotfiles_inject()` - install bootstrap files
+- [ ] `dotfiles_eject()` - remove all injected config
+- [ ] `dotfiles_update()` - git pull + reload
+- [ ] `dotfiles_reload()` - reload without restart
+- [ ] `dotfiles_status()` - show current state
+- [ ] `dotfiles_link_configs()` - symlink app configs
+
+### 6.2 Commit
+- [ ] Commit: `add dotfiles injection functions`
+
+---
+
+## Phase 7: Create Main Entry Point
+
+**Status:** Not started
+
+### 7.1 Create shell/init.sh
+- [ ] Source in correct order:
+  1. discovery.sh
+  2. xdg.sh
+  3. environment.sh + platform-specific
+  4. secrets.sh
+  5. options.sh
+  6. aliases.sh
+  7. All functions/**/*.sh
+  8. completions.sh
+  9. prompt.sh
+  10. Local overrides (~/.config/shell/local.sh)
+
+### 7.2 Create bootstrap templates
+- [ ] Template for ~/.bashrc (3 lines)
+- [ ] Template for ~/.zshrc (3 lines)
+
+### 7.3 Commit
+- [ ] Commit: `create unified shell/init.sh entry point`
+
+---
+
+## Phase 8: Move Documentation
+
+**Status:** Not started
+
+- [ ] `INSTALL.md` → `docs/INSTALL.md`
+- [ ] `.automation/README.md` → `docs/automation/README.md`
+- [ ] `.automation/AI.md` → `docs/automation/AI.md`
+- [ ] `.automation/SECRETS.md` → `docs/automation/SECRETS.md`
+- [ ] `.automation/TOOLS.md` → `docs/automation/TOOLS.md`
+- [ ] Commit: `move documentation to docs/`
+
+---
+
+## Phase 9: Rename & Cleanup
+
+**Status:** Not started
+
+### 9.1 Rename
+- [ ] `initialize.sh` → `install.sh`
+
+### 9.2 Delete temp files
+- [ ] Remove `create_branch_and_commits.sh`
+- [ ] Remove `execute_git.sh`
+- [ ] Remove `git_operations.py`
+- [ ] Remove `run_git_commands.py`
+
+### 9.3 Delete node_modules (if not needed)
+- [ ] Check if package.json is needed
+- [ ] Remove `node_modules/`, `package.json`, `package-lock.json` if not
+
+### 9.4 Delete legacy directories
+- [ ] Remove `.bash_profile.dir/` (after migration verified)
+- [ ] Remove `.bash_tools/` (after migration verified)
+- [ ] Remove `tmp-dotfiles/` (after migration verified)
+
+### 9.5 Commit
+- [ ] Commit: `rename install.sh and remove legacy files`
+
+---
+
+## Phase 10: Update References
+
+**Status:** Not started
+
+- [ ] Update `Makefile` paths for new structure
+- [ ] Update `CLAUDE.md` with new architecture
+- [ ] Update `README.md` with new structure
+- [ ] Update `install.sh` for new paths
+- [ ] Commit: `update all references for new structure`
+
+---
+
+## Phase 11: Testing
+
+**Status:** Not started
+
+### 11.1 Add new test targets
+- [ ] `test-discovery` - shell/platform detection
+- [ ] `test-xdg` - XDG variable setup
+- [ ] `test-zsh` - full zsh compatibility
+- [ ] `test-shell-compat` - both shells
+- [ ] `verify` - quick smoke test
+
+### 11.2 Run tests
+- [ ] `make test-syntax` passes
+- [ ] `make test-quick` passes
+- [ ] Shell loads in bash without errors
+- [ ] Shell loads in zsh without errors
+- [ ] All functions are defined
+- [ ] Git prompt works in both shells
+- [ ] Completions load in both shells
+
+### 11.3 Commit
+- [ ] Commit: `add shell compatibility tests`
+
+---
+
+## Phase 12: Final Documentation
+
+**Status:** Not started
+
+- [ ] Update `README.md` with final structure
+- [ ] Update `CLAUDE.md` for AI assistant
+- [ ] Create `docs/MIGRATION.md` for existing users
+- [ ] Remove or archive planning docs (WORKPLAN.md, REORGANIZATION.md)
+- [ ] Commit: `finalize documentation`
+
+---
+
+## Blocking Issues
+
+*Track any issues that block progress here*
+
+| Issue | Status | Resolution |
+|-------|--------|------------|
+| *(none yet)* | | |
+
+---
+
+## Notes
+
+*Running notes and decisions made during implementation*
+
+- **2025-12-12**: Created planning documents, committed AI integration work
+- XDG source chain chosen: `~/.bashrc` → `~/.config/shell/init.sh` → repo
+- Repo target location: `~/.config/dotfiles`
+
+---
+
+## Commands Cheatsheet
+
+```bash
+# Test current syntax
+make test-syntax
+
+# Test in bash
+bash --noprofile --norc -c 'source shell/init.sh'
+
+# Test in zsh
+zsh -f -c 'source shell/init.sh'
+
+# Check what's changed
+git status
+
+# Commit current phase
+git add -A && git commit -m "phase X: description"
+```
