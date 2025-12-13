@@ -67,6 +67,13 @@ auto dev init python my-fastapi-app
 auto dev init go my-cli --cobra
 auto dev init typescript my-app
 
+# AI/ML workflows (Make targets work reliably)
+make ai-setup                    # Install Ollama + Hugging Face
+make ai-chat                     # Interactive AI chat
+ai ask "Hello world"             # Quick AI question (with ai aliases)
+make ollama-install              # Install Ollama only
+make hf-setup                    # Setup Hugging Face only
+
 # Kubernetes operations  
 auto k8s deploy my-app production
 auto k8s logs my-pod --follow
@@ -93,6 +100,7 @@ auto secrets check-requirements
 
 **Cloud Providers**: AWS, Azure, DigitalOcean  
 **Development**: GitHub, GitLab, Docker Hub  
+**AI/ML Platforms**: Ollama, Hugging Face, OpenAI  
 **Databases**: PostgreSQL, MySQL, MongoDB, Redis  
 **Monitoring**: DataDog, New Relic, Grafana  
 **Communication**: Slack, Discord  
@@ -119,11 +127,17 @@ make test-quick
 make test-api-keys
 make test-auth-status
 
+# AI/ML functionality
+make ai-test
+make ai-status
+make ai-benchmark
+
 # Comprehensive test suite
 make test-comprehensive
 
 # Check what tools are installed
 make test-required-tools
+make test-ai-tools
 ```
 
 ## Third-Party Tools
@@ -131,6 +145,7 @@ make test-required-tools
 **macOS (via Homebrew):**
 - **Core**: bash-completion, fd, fzf, git, gh (GitHub CLI)
 - **Languages**: go, node, npm, python3  
+- **AI/ML**: ollama, python3-pip (for transformers, torch)
 - **Kubernetes**: kubectl, helm, k9s
 - **Editors**: tmux, neovim, visual-studio-code
 - **System**: xclip, xquartz
@@ -138,6 +153,7 @@ make test-required-tools
 **Linux (via apt/yum):**
 - **Core**: bash-completion, fd-find, fzf, git
 - **Languages**: python3, python3-pip, nodejs, npm
+- **AI/ML**: Manual Ollama installation, pip packages (transformers, torch)
 - **Additional**: Manual installation guides provided for Go, k8s tools, VS Code
 
 ## 📁 Architecture
