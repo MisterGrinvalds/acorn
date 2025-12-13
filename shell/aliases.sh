@@ -81,3 +81,123 @@ esac
 
 # Tree alternative using ls
 alias tree='ls -R | grep ":$" | sed -e "s/:$//" -e "s/[^-][^\/]*\//--/g" -e "s/^/   /" -e "s/-/|/"'
+
+# =============================================================================
+# Kubernetes
+# =============================================================================
+alias k='kubectl'
+alias kgp='kubectl get pods'
+alias kgpa='kubectl get pods --all-namespaces'
+alias kgs='kubectl get svc'
+alias kgn='kubectl get nodes'
+alias kga='kubectl get all'
+alias kgaa='kubectl get all --all-namespaces'
+alias kd='kubectl describe'
+alias kdp='kubectl describe pod'
+alias kds='kubectl describe svc'
+alias kdn='kubectl describe node'
+alias kl='kubectl logs'
+alias klf='kubectl logs -f'
+alias kex='kubectl exec -it'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl delete -f'
+alias kctx='kubectl config use-context'
+alias kns='kubectl config set-context --current --namespace'
+alias ktop='kubectl top pods'
+alias ktopn='kubectl top nodes'
+
+# Helm
+alias hls='helm list'
+alias hlsa='helm list --all-namespaces'
+alias hi='helm install'
+alias hu='helm upgrade'
+alias hd='helm delete'
+alias hs='helm status'
+alias hh='helm history'
+alias hr='helm rollback'
+alias ht='helm template'
+
+# k9s (TUI)
+alias k9='k9s'
+alias k9a='k9s --all-namespaces'
+
+# ArgoCD
+alias argocd-login='argocd login --grpc-web'
+alias argocd-apps='argocd app list'
+alias argocd-sync='argocd app sync'
+
+# Kind (Kubernetes in Docker)
+alias kind-clusters='kind get clusters'
+alias kind-nodes='kind get nodes'
+
+# =============================================================================
+# Terraform
+# =============================================================================
+alias tf='terraform'
+alias tfi='terraform init'
+alias tfp='terraform plan'
+alias tfa='terraform apply'
+alias tfaa='terraform apply -auto-approve'
+alias tfd='terraform destroy'
+alias tfda='terraform destroy -auto-approve'
+alias tff='terraform fmt'
+alias tfv='terraform validate'
+alias tfs='terraform state'
+alias tfsl='terraform state list'
+alias tfo='terraform output'
+alias tfw='terraform workspace'
+alias tfwl='terraform workspace list'
+alias tfws='terraform workspace select'
+
+# =============================================================================
+# Cloud CLIs
+# =============================================================================
+# AWS
+alias awsw='aws sts get-caller-identity'
+alias awsr='aws configure list'
+alias awsp='aws configure list-profiles'
+alias s3ls='aws s3 ls'
+alias s3cp='aws s3 cp'
+alias s3sync='aws s3 sync'
+
+# Azure
+alias azw='az account show'
+alias azl='az login'
+alias azs='az account set --subscription'
+alias azls='az account list --output table'
+
+# DigitalOcean
+alias dow='doctl account get'
+alias dols='doctl compute droplet list'
+alias dok8s='doctl kubernetes cluster list'
+
+# Vault (HashiCorp)
+alias vst='vault status'
+alias vlogin='vault login'
+alias vread='vault read'
+alias vwrite='vault write'
+alias vlist='vault list'
+
+# Cloudflare Tunnel
+alias cft='cloudflared tunnel'
+alias cftls='cloudflared tunnel list'
+alias cftr='cloudflared tunnel run'
+
+# =============================================================================
+# Data Processing
+# =============================================================================
+alias jqc='jq -C'
+alias jqr='jq -r'
+alias yqc='yq -C'
+alias yqr='yq -r'
+
+# =============================================================================
+# Lazygit
+# =============================================================================
+alias lg='lazygit'
+
+# =============================================================================
+# Shellcheck
+# =============================================================================
+alias sc='shellcheck'
+alias scf='shellcheck -f diff'

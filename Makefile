@@ -1,7 +1,7 @@
 # Makefile for Testing Bash Profile and Automation Framework
 # Comprehensive test suite for all functionality
 
-.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status
+.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status brew-status brew-update brew-install-devops brew-install-dev brew-install-db brew-install-all db-install-mysql db-install-mongo db-install-redis db-install-neo4j db-install-kafka
 
 # Default target
 help: ## Show this help message
@@ -73,6 +73,21 @@ help: ## Show this help message
 	@echo "  go-setup          - Setup Go environment"
 	@echo "  go-status         - Check Go installation"
 	@echo "  go-tools          - Install common Go tools"
+	@echo ""
+	@echo "Brew Package Management:"
+	@echo "  brew-status       - Show status of all managed brew packages"
+	@echo "  brew-update       - Update all brew packages"
+	@echo "  brew-install-devops - Install all DevOps tools"
+	@echo "  brew-install-dev  - Install all dev tools"
+	@echo "  brew-install-db   - Install all database tools"
+	@echo "  brew-install-all  - Install all managed packages"
+	@echo ""
+	@echo "Database Tool Installs:"
+	@echo "  db-install-mysql  - Install MySQL client + mycli"
+	@echo "  db-install-mongo  - Install MongoDB shell + mongocli"
+	@echo "  db-install-redis  - Install Redis + iredis"
+	@echo "  db-install-neo4j  - Install Neo4j"
+	@echo "  db-install-kafka  - Install Kafka"
 	@echo ""
 	@echo "Comprehensive:"
 	@echo "  status            - Show complete environment status"
@@ -1602,6 +1617,100 @@ go-tools: ## Install common Go development tools
 	@echo -e "$(GREEN)✅ Go tools installed$(NC)"
 
 # =============================================================================
+# Brew Package Management
+# =============================================================================
+
+# Lists of managed packages
+BREW_DEVOPS := argocd awscli azure-cli cloudflared doctl helm k9s kind kubernetes-cli kustomize terraform vault
+BREW_DEV := bash bash-completion ctags fd fzf gh jq lazygit neovim shellcheck tmux yq
+BREW_DB := kafka mongocli mongosh mycli neo4j pgcli postgresql@14 redis iredis
+
+brew-status: ## Show status of all managed brew packages
+	@echo -e "$(BLUE)Brew Package Status$(NC)"
+	@echo "==================="
+	@echo ""
+	@echo -e "$(BLUE)DevOps Tools:$(NC)"
+	@for pkg in $(BREW_DEVOPS); do \
+		if brew list --formula 2>/dev/null | grep -q "^$$pkg$$"; then \
+			version=$$(brew info $$pkg 2>/dev/null | head -1 | awk '{print $$3}'); \
+			printf "   ✅ $$pkg ($$version)\n"; \
+		else \
+			printf "   ❌ $$pkg\n"; \
+		fi; \
+	done
+	@echo ""
+	@echo -e "$(BLUE)Dev Tools:$(NC)"
+	@for pkg in $(BREW_DEV); do \
+		if brew list --formula 2>/dev/null | grep -q "^$$pkg$$"; then \
+			version=$$(brew info $$pkg 2>/dev/null | head -1 | awk '{print $$3}'); \
+			printf "   ✅ $$pkg ($$version)\n"; \
+		else \
+			printf "   ❌ $$pkg\n"; \
+		fi; \
+	done
+	@echo ""
+	@echo -e "$(BLUE)Database Tools:$(NC)"
+	@for pkg in $(BREW_DB); do \
+		if brew list --formula 2>/dev/null | grep -q "^$$pkg$$"; then \
+			version=$$(brew info $$pkg 2>/dev/null | head -1 | awk '{print $$3}'); \
+			printf "   ✅ $$pkg ($$version)\n"; \
+		else \
+			printf "   ❌ $$pkg\n"; \
+		fi; \
+	done
+
+brew-update: ## Update all brew packages
+	@echo -e "$(BLUE)Updating Homebrew and packages...$(NC)"
+	@brew update
+	@brew upgrade
+	@brew cleanup
+	@echo -e "$(GREEN)✅ Brew packages updated$(NC)"
+
+brew-install-devops: ## Install all DevOps tools via brew
+	@echo -e "$(BLUE)Installing DevOps tools...$(NC)"
+	@brew install $(BREW_DEVOPS) || true
+	@echo -e "$(GREEN)✅ DevOps tools installed$(NC)"
+
+brew-install-dev: ## Install all dev tools via brew
+	@echo -e "$(BLUE)Installing dev tools...$(NC)"
+	@brew install $(BREW_DEV) || true
+	@echo -e "$(GREEN)✅ Dev tools installed$(NC)"
+
+brew-install-db: ## Install all database tools via brew
+	@echo -e "$(BLUE)Installing database tools...$(NC)"
+	@brew install $(BREW_DB) || true
+	@echo -e "$(GREEN)✅ Database tools installed$(NC)"
+
+brew-install-all: brew-install-devops brew-install-dev brew-install-db ## Install all managed brew packages
+	@echo -e "$(GREEN)✅ All brew packages installed$(NC)"
+
+# Individual database tool installs
+db-install-mysql: ## Install MySQL client + mycli
+	@echo -e "$(BLUE)Installing MySQL tools...$(NC)"
+	@brew install mysql-client mycli
+	@echo -e "$(GREEN)✅ MySQL tools installed$(NC)"
+
+db-install-mongo: ## Install MongoDB shell + mongocli
+	@echo -e "$(BLUE)Installing MongoDB tools...$(NC)"
+	@brew install mongosh mongocli
+	@echo -e "$(GREEN)✅ MongoDB tools installed$(NC)"
+
+db-install-redis: ## Install Redis + iredis
+	@echo -e "$(BLUE)Installing Redis tools...$(NC)"
+	@brew install redis iredis
+	@echo -e "$(GREEN)✅ Redis tools installed$(NC)"
+
+db-install-neo4j: ## Install Neo4j
+	@echo -e "$(BLUE)Installing Neo4j...$(NC)"
+	@brew install neo4j
+	@echo -e "$(GREEN)✅ Neo4j installed$(NC)"
+
+db-install-kafka: ## Install Kafka
+	@echo -e "$(BLUE)Installing Kafka...$(NC)"
+	@brew install kafka
+	@echo -e "$(GREEN)✅ Kafka installed$(NC)"
+
+# =============================================================================
 # Comprehensive Status Target
 # =============================================================================
 
@@ -1636,6 +1745,33 @@ status: ## Show complete environment status
 	@printf "   Go: "; command -v go >/dev/null && echo "✅ $$(go version | awk '{print $$3}')" || echo "❌"
 	@printf "   UV: "; command -v uv >/dev/null && echo "✅ $$(uv --version 2>/dev/null)" || echo "❌"
 	@printf "   pnpm: "; command -v pnpm >/dev/null && echo "✅ $$(pnpm --version)" || echo "❌"
+	@printf "   fzf: "; command -v fzf >/dev/null && echo "✅ $$(fzf --version | cut -d' ' -f1)" || echo "❌"
+	@printf "   fd: "; command -v fd >/dev/null && echo "✅ $$(fd --version | awk '{print $$2}')" || echo "❌"
+	@printf "   jq: "; command -v jq >/dev/null && echo "✅ $$(jq --version)" || echo "❌"
+	@printf "   lazygit: "; command -v lazygit >/dev/null && echo "✅ installed" || echo "❌"
+	@echo ""
+	@# DevOps Tools
+	@echo -e "$(BLUE)☸️  DevOps Tools$(NC)"
+	@echo "==============="
+	@printf "   kubectl: "; command -v kubectl >/dev/null && echo "✅ $$(kubectl version --client -o yaml 2>/dev/null | grep gitVersion | awk '{print $$2}')" || echo "❌"
+	@printf "   helm: "; command -v helm >/dev/null && echo "✅ $$(helm version --short 2>/dev/null)" || echo "❌"
+	@printf "   terraform: "; command -v terraform >/dev/null && echo "✅ $$(terraform version -json 2>/dev/null | jq -r '.terraform_version' 2>/dev/null || terraform version | head -1 | awk '{print $$2}')" || echo "❌"
+	@printf "   aws: "; command -v aws >/dev/null && echo "✅ $$(aws --version 2>/dev/null | awk '{print $$1}' | cut -d/ -f2)" || echo "❌"
+	@printf "   az: "; command -v az >/dev/null && echo "✅ $$(az version 2>/dev/null | jq -r '.\"azure-cli\"' 2>/dev/null)" || echo "❌"
+	@printf "   doctl: "; command -v doctl >/dev/null && echo "✅ $$(doctl version 2>/dev/null | head -1 | awk '{print $$3}')" || echo "❌"
+	@printf "   vault: "; command -v vault >/dev/null && echo "✅ $$(vault version 2>/dev/null | awk '{print $$2}')" || echo "❌"
+	@printf "   k9s: "; command -v k9s >/dev/null && echo "✅ installed" || echo "❌"
+	@printf "   argocd: "; command -v argocd >/dev/null && echo "✅ installed" || echo "❌"
+	@echo ""
+	@# Database Tools
+	@echo -e "$(BLUE)🗄️  Database Tools$(NC)"
+	@echo "================="
+	@printf "   pgcli: "; command -v pgcli >/dev/null && echo "✅ $$(pgcli --version 2>/dev/null | awk '{print $$2}')" || echo "❌"
+	@printf "   psql: "; command -v psql >/dev/null && echo "✅ $$(psql --version 2>/dev/null | awk '{print $$3}')" || echo "❌"
+	@printf "   mycli: "; command -v mycli >/dev/null && echo "✅ installed" || echo "❌"
+	@printf "   mongosh: "; command -v mongosh >/dev/null && echo "✅ installed" || echo "❌"
+	@printf "   redis-cli: "; command -v redis-cli >/dev/null && echo "✅ $$(redis-cli --version 2>/dev/null | awk '{print $$2}')" || echo "❌"
+	@printf "   sqlite3: "; command -v sqlite3 >/dev/null && echo "✅ $$(sqlite3 --version 2>/dev/null | awk '{print $$1}')" || echo "❌"
 	@echo ""
 	@# AI/ML Tools
 	@echo -e "$(BLUE)🤖 AI/ML Tools$(NC)"
