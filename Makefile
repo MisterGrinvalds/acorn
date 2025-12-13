@@ -1,7 +1,7 @@
 # Makefile for Testing Bash Profile and Automation Framework
 # Comprehensive test suite for all functionality
 
-.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup
+.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples
 
 # Default target
 help: ## Show this help message
@@ -26,6 +26,16 @@ help: ## Show this help message
 	@echo "  tools-update      - Interactive tool updates"
 	@echo "  tools-update-all  - Update all tools without prompting"
 	@echo "  tools-update-yes  - Update all tools with auto-yes prompts"
+	@echo ""
+	@echo "AI/ML Management:"
+	@echo "  ai-setup          - Setup AI/ML environment (Ollama + Hugging Face)"
+	@echo "  ai-status         - Check AI/ML tools status"
+	@echo "  ai-test           - Test AI/ML functionality"
+	@echo "  ai-models         - List available AI models"
+	@echo "  ai-chat           - Start interactive AI chat"
+	@echo "  ai-benchmark      - Run AI performance benchmarks"
+	@echo "  ai-examples       - Show AI usage examples"
+	@echo "  ai-cleanup        - Clean AI model caches and stop services"
 
 # Variables
 SHELL := /bin/bash
@@ -678,6 +688,223 @@ stress-test: ## Run stress tests
 test-comprehensive: setup test-syntax test-dotfiles test-automation test-modules test-cloud test-api-keys test-auth-status test-required-tools test-install test-installer-components test-integration test-security test-performance test-workflows analyze-logs test-report ## Run all tests and generate report
 	@echo -e "$(GREEN)🎉 Comprehensive test suite completed successfully!$(NC)"
 	@echo -e "$(BLUE)📊 Test report available at: $(TEST_DIR)/test-report.md$(NC)"
+
+# AI/ML Management Targets
+# ========================
+
+ai-setup: ## Setup complete AI/ML environment (Ollama + Hugging Face)
+	@echo -e "$(BLUE)Setting up AI/ML environment...$(NC)"
+	@echo "📊 Installing Ollama..."
+	@bash -c 'source .bash_tools/ollama.sh && ollama_setup'
+	@echo ""
+	@echo "🤗 Installing Hugging Face..."
+	@bash -c 'source .bash_tools/huggingface.sh && hf_setup'
+	@echo -e "$(GREEN)✅ AI/ML environment setup complete$(NC)"
+
+ai-status: ## Check AI/ML tools and models status
+	@echo -e "$(BLUE)Checking AI/ML status...$(NC)"
+	@echo "🤖 AI/ML Environment Status"
+	@echo "==========================="
+	@echo ""
+	@# Check Python
+	@command -v python3 >/dev/null && echo "✅ Python 3: $$(python3 --version)" || echo "❌ Python 3 not found"
+	@command -v pip3 >/dev/null && echo "✅ pip3 available" || echo "❌ pip3 not found"
+	@echo ""
+	@echo "📊 Ollama Status:"
+	@echo "================"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_status' 2>/dev/null || echo "❌ Ollama not available"
+	@echo ""
+	@echo "🤗 Hugging Face Status:"
+	@echo "======================"
+	@bash -c 'source .bash_tools/huggingface.sh && hf_status' 2>/dev/null || echo "❌ Hugging Face not available"
+	@echo -e "$(GREEN)✅ AI/ML status check complete$(NC)"
+
+ai-test: ## Test AI/ML functionality
+	@echo -e "$(BLUE)Testing AI/ML functionality...$(NC)"
+	@mkdir -p $(LOG_DIR)
+	@# Test Ollama functionality
+	@echo "Testing Ollama integration..."
+	@chmod +x $(AUTO_DIR)/auto
+	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai ollama status > $(LOG_DIR)/ai-ollama-test.log 2>&1 || \
+		echo -e "$(YELLOW)⚠️ Ollama test completed (may not be installed)$(NC)"
+	@# Test Hugging Face functionality
+	@echo "Testing Hugging Face integration..."
+	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai hf status > $(LOG_DIR)/ai-hf-test.log 2>&1 || \
+		echo -e "$(YELLOW)⚠️ Hugging Face test completed (may not be installed)$(NC)"
+	@# Test AI module syntax
+	@echo "Testing AI module syntax..."
+	@bash -n $(AUTO_DIR)/modules/ai.sh || (echo -e "$(RED)❌ AI module syntax error$(NC)" && exit 1)
+	@bash -n .bash_tools/ollama.sh || (echo -e "$(RED)❌ Ollama tools syntax error$(NC)" && exit 1)
+	@bash -n .bash_tools/huggingface.sh || (echo -e "$(RED)❌ Hugging Face tools syntax error$(NC)" && exit 1)
+	@echo -e "$(GREEN)✅ AI/ML tests completed$(NC)"
+
+ai-models: ## List all available AI models
+	@echo -e "$(BLUE)Listing AI models...$(NC)"
+	@echo "🤖 Available AI Models"
+	@echo "====================="
+	@echo ""
+	@echo "📊 Ollama Models:"
+	@echo "================"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_models' 2>/dev/null || echo "❌ Ollama not installed"
+	@echo ""
+	@echo "🤗 Hugging Face Models:"
+	@echo "======================"
+	@bash -c 'source .bash_tools/huggingface.sh && hf_models'
+
+ai-chat: ## Start interactive AI chat (auto-detects best available model)
+	@echo -e "$(BLUE)Starting AI chat...$(NC)"
+	@if command -v ollama >/dev/null 2>&1; then \
+		echo "🤖 Starting Ollama chat (llama3.2)..."; \
+		bash -c 'source .bash_tools/ollama.sh && ollama_run llama3.2'; \
+	elif python3 -c "import transformers" 2>/dev/null; then \
+		echo "🤗 Starting Hugging Face chat..."; \
+		bash -c 'source .bash_tools/huggingface.sh && hf_chat'; \
+	else \
+		echo "❌ No AI platforms available. Run: make ai-setup"; \
+		exit 1; \
+	fi
+
+ai-chat-ollama: ## Start Ollama chat with Llama 3.2
+	@echo -e "$(BLUE)Starting Ollama chat...$(NC)"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_run llama3.2'
+
+ai-chat-hf: ## Start Hugging Face chat
+	@echo -e "$(BLUE)Starting Hugging Face chat...$(NC)"
+	@bash -c 'source .bash_tools/huggingface.sh && hf_chat'
+
+ai-benchmark: ## Run AI performance benchmarks
+	@echo -e "$(BLUE)Running AI benchmarks...$(NC)"
+	@mkdir -p $(LOG_DIR)
+	@chmod +x $(AUTO_DIR)/auto
+	@echo "=== AI/ML Performance Benchmark ===" > $(LOG_DIR)/ai-benchmark.log
+	@echo "Generated: $$(date)" >> $(LOG_DIR)/ai-benchmark.log
+	@echo "" >> $(LOG_DIR)/ai-benchmark.log
+	@$(AUTO_DIR)/auto ai benchmark all >> $(LOG_DIR)/ai-benchmark.log 2>&1 || \
+		echo -e "$(YELLOW)⚠️ Benchmark completed (some platforms may not be available)$(NC)"
+	@echo "📊 Benchmark results saved to: $(LOG_DIR)/ai-benchmark.log"
+	@echo -e "$(GREEN)✅ AI benchmarks completed$(NC)"
+
+ai-examples: ## Show AI usage examples
+	@echo -e "$(BLUE)AI/ML Usage Examples$(NC)"
+	@echo "🎯 AI/ML Usage Examples"
+	@echo "======================"
+	@echo ""
+	@echo "🚀 Quick Start:"
+	@echo "  make ai-setup                    # Install everything"
+	@echo "  make ai-chat                     # Start interactive chat"
+	@echo "  ollama_chat llama3.2 'Hello'     # Quick Ollama question"
+	@echo ""
+	@echo "📊 Ollama Examples:"
+	@echo "  ollama_install                   # Install Ollama"
+	@echo "  ollama_pull llama3.2             # Download model"
+	@echo "  ollama_run llama3.2              # Interactive chat"
+	@echo "  ollama_code python 'sort list'   # Generate code"
+	@echo ""
+	@echo "🤗 Hugging Face Examples:"
+	@echo "  hf_setup                         # Setup environment"
+	@echo "  hf_generate 'Once upon'          # Generate text"
+	@echo "  hf_sentiment 'I love AI'         # Sentiment analysis"
+	@echo "  hf_summarize 'Long text'         # Summarize text"
+	@echo ""
+	@echo "🛠️ Management:"
+	@echo "  make ai-status                   # Check all systems"
+	@echo "  make ai-models                   # List all models"
+	@echo "  make ai-cleanup                  # Clean up resources"
+
+ai-examples-run: ## Run live AI examples (requires models)
+	@echo -e "$(BLUE)Running live AI examples...$(NC)"
+	@if command -v ollama >/dev/null 2>&1; then \
+		echo "📊 Ollama example:"; \
+		bash -c 'source .bash_tools/ollama.sh && ollama_examples'; \
+	fi
+	@if python3 -c "import transformers" 2>/dev/null; then \
+		echo "🤗 Hugging Face example:"; \
+		bash -c 'source .bash_tools/huggingface.sh && hf_examples'; \
+	fi
+
+ai-cleanup: ## Clean AI model caches and stop services
+	@echo -e "$(BLUE)Cleaning up AI/ML resources...$(NC)"
+	@# Stop Ollama service
+	@if command -v ollama >/dev/null 2>&1; then \
+		echo "🛑 Stopping Ollama service..."; \
+		bash -c 'source .bash_tools/ollama.sh && ollama_stop'; \
+	fi
+	@# Clean Hugging Face cache
+	@if [ -d ~/.cache/huggingface ]; then \
+		echo "🗑️ Cleaning Hugging Face cache..."; \
+		bash -c 'source .bash_tools/huggingface.sh && hf_clear_cache'; \
+	fi
+	@echo -e "$(GREEN)✅ AI/ML cleanup complete$(NC)"
+
+# Ollama specific targets
+ollama-install: ## Install Ollama
+	@echo -e "$(BLUE)Installing Ollama...$(NC)"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_install'
+
+ollama-setup: ## Setup Ollama with recommended models
+	@echo -e "$(BLUE)Setting up Ollama...$(NC)"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_setup'
+
+ollama-start: ## Start Ollama service
+	@echo -e "$(BLUE)Starting Ollama service...$(NC)"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_start'
+
+ollama-stop: ## Stop Ollama service
+	@echo -e "$(BLUE)Stopping Ollama service...$(NC)"
+	@bash -c 'source .bash_tools/ollama.sh && ollama_stop'
+
+ollama-status: ## Check Ollama status
+	@bash -c 'source .bash_tools/ollama.sh && ollama_status'
+
+ollama-models: ## List Ollama models
+	@bash -c 'source .bash_tools/ollama.sh && ollama_models'
+
+# Hugging Face specific targets
+hf-setup: ## Setup Hugging Face environment
+	@echo -e "$(BLUE)Setting up Hugging Face...$(NC)"
+	@bash -c 'source .bash_tools/huggingface.sh && hf_setup'
+
+hf-status: ## Check Hugging Face status
+	@bash -c 'source .bash_tools/huggingface.sh && hf_status'
+
+hf-models: ## List popular Hugging Face models
+	@bash -c 'source .bash_tools/huggingface.sh && hf_models'
+
+hf-examples: ## Run Hugging Face examples
+	@bash -c 'source .bash_tools/huggingface.sh && hf_examples'
+
+hf-clear-cache: ## Clear Hugging Face model cache
+	@echo -e "$(BLUE)Clearing Hugging Face cache...$(NC)"
+	@bash -c 'source .bash_tools/huggingface.sh && hf_clear_cache'
+
+# AI testing in main test suite
+test-ai-module: ## Test AI module specifically
+	@echo -e "$(BLUE)Testing AI/ML module...$(NC)"
+	@# Test AI module help
+	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai --help > $(LOG_DIR)/ai-help.log 2>&1 || \
+		(echo -e "$(RED)❌ AI module help failed$(NC)" && exit 1)
+	@# Test AI status (non-destructive)
+	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai status > $(LOG_DIR)/ai-status.log 2>&1 || \
+		echo -e "$(YELLOW)⚠️ AI status test completed (some tools may not be installed)$(NC)"
+	@# Test AI examples
+	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai examples > $(LOG_DIR)/ai-examples.log 2>&1 || \
+		(echo -e "$(RED)❌ AI examples failed$(NC)" && exit 1)
+	@echo -e "$(GREEN)✅ AI module tests passed$(NC)"
+
+# Extended module tests to include AI
+test-modules: test-dev-module test-k8s-module test-github-module test-system-module test-config-module test-secrets-module test-tools-module test-ai-module ## Test all automation modules
+
+# AI tools status in required tools check
+test-ai-tools: ## Test if AI/ML tools are available
+	@echo -e "$(BLUE)Checking AI/ML tools...$(NC)"
+	@echo "=== AI/ML Tools Status ===" >> $(LOG_DIR)/cli-tools-status.log
+	@command -v python3 >/dev/null && echo "✅ Python 3 installed" || echo "❌ Python 3 not installed" | tee -a $(LOG_DIR)/cli-tools-status.log
+	@python3 -c "import pip" 2>/dev/null && echo "✅ pip available" || echo "❌ pip not available" | tee -a $(LOG_DIR)/cli-tools-status.log
+	@command -v ollama >/dev/null && echo "✅ Ollama installed" || echo "❌ Ollama not installed" | tee -a $(LOG_DIR)/cli-tools-status.log
+	@python3 -c "import transformers" 2>/dev/null && echo "✅ Hugging Face transformers installed" || echo "❌ Hugging Face transformers not installed" | tee -a $(LOG_DIR)/cli-tools-status.log
+	@python3 -c "import torch" 2>/dev/null && echo "✅ PyTorch installed" || echo "❌ PyTorch not installed" | tee -a $(LOG_DIR)/cli-tools-status.log
+	@echo "" >> $(LOG_DIR)/cli-tools-status.log
+	@echo -e "$(GREEN)✅ AI/ML tools check completed$(NC)"
 
 # Default test for CI
 .DEFAULT_GOAL := test-quick
