@@ -19,7 +19,7 @@ SECRETS_DIR="${DOTFILES_ROOT}/secrets"
 [ -d "$SECRETS_DIR" ] || return 0
 
 # Load .env files (KEY=value format)
-for env_file in "$SECRETS_DIR"/*.env 2>/dev/null; do
+for env_file in "$SECRETS_DIR"/*.env; do
     [ -f "$env_file" ] || continue
     # Read each line, skip comments and empty lines
     while IFS='=' read -r key value; do
@@ -31,11 +31,11 @@ for env_file in "$SECRETS_DIR"/*.env 2>/dev/null; do
         key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         # Export the variable (value can contain = signs)
         [ -n "$key" ] && export "$key=$value"
-    done < "$env_file"
-done 2>/dev/null
+    done < "$env_file" 2>/dev/null
+done
 
 # Source .sh files
-for sh_file in "$SECRETS_DIR"/*.sh 2>/dev/null; do
+for sh_file in "$SECRETS_DIR"/*.sh; do
     [ -f "$sh_file" ] || continue
     . "$sh_file" 2>/dev/null
 done

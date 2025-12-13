@@ -64,8 +64,7 @@ setup: ## Setup test environment
 	@echo "Test directories created"
 	@# Backup existing configurations
 	@if [ -f ~/.bash_profile ]; then cp ~/.bash_profile $(BACKUP_DIR)/bash_profile.backup; fi
-	@if [ -d ~/.bash_profile.dir ]; then cp -r ~/.bash_profile.dir $(BACKUP_DIR)/; fi
-	@if [ -d ~/.bash_tools ]; then cp -r ~/.bash_tools $(BACKUP_DIR)/; fi
+	@if [ -d ~/.config/shell ]; then cp -r ~/.config/shell $(BACKUP_DIR)/; fi
 	@echo -e "$(GREEN)Test environment setup complete$(NC)"
 
 # Quick tests - syntax and basic functionality
@@ -82,15 +81,13 @@ test: test-quick ## Alias for test-quick
 # Test syntax of all shell files
 test-syntax: ## Test syntax of all shell scripts
 	@echo -e "$(BLUE)Testing shell script syntax...$(NC)"
-	@echo "Testing main bash profile..."
-	@bash -n .bash_profile || (echo -e "$(RED)❌ Syntax error in .bash_profile$(NC)" && exit 1)
-	@echo "Testing profile modules..."
-	@for file in .bash_profile.dir/*.sh; do \
+	@echo "Testing shell modules..."
+	@for file in shell/*.sh; do \
 		echo "  Testing $$file..."; \
 		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
 	done
-	@echo "Testing bash tools..."
-	@for file in .bash_tools/*.sh; do \
+	@echo "Testing function modules..."
+	@for file in functions/**/*.sh; do \
 		echo "  Testing $$file..."; \
 		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
 	done
@@ -104,6 +101,8 @@ test-syntax: ## Test syntax of all shell scripts
 		echo "  Testing $$file..."; \
 		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
 	done
+	@# Legacy files (if they exist)
+	@if [ -f .bash_profile ]; then bash -n .bash_profile; fi
 	@echo -e "$(GREEN)✅ All syntax tests passed$(NC)"
 
 # Test dotfiles functionality
@@ -113,15 +112,15 @@ test-dotfiles-basic: ## Test basic dotfiles functionality
 	@echo -e "$(BLUE)Testing basic dotfiles functionality...$(NC)"
 	@# Test shell detection
 	@echo "Testing shell detection..."
-	@bash -c 'export BASH_VERSION="test"; source .bash_profile; [ "$$CURRENT_SHELL" = "bash" ]' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; [ "$$CURRENT_SHELL" = "bash" ]' || \
 		(echo -e "$(RED)❌ Shell detection failed$(NC)" && exit 1)
 	@# Test environment loading
 	@echo "Testing environment loading..."
-	@bash -c 'source .bash_profile; [ -n "$$DOTFILES" ]' || \
-		(echo -e "$(RED)❌ DOTFILES variable not set$(NC)" && exit 1)
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; [ -n "$$DOTFILES_ROOT" ]' || \
+		(echo -e "$(RED)❌ DOTFILES_ROOT variable not set$(NC)" && exit 1)
 	@# Test aliases
 	@echo "Testing aliases..."
-	@bash -c 'source .bash_profile; alias | grep -q "ll="' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; alias | grep -q "ll="' || \
 		(echo -e "$(RED)❌ Basic aliases not loaded$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Basic dotfiles tests passed$(NC)"
 
@@ -129,15 +128,15 @@ test-dotfiles-advanced: ## Test advanced dotfiles features
 	@echo -e "$(BLUE)Testing advanced dotfiles features...$(NC)"
 	@# Test git prompt functions
 	@echo "Testing git prompt functions..."
-	@bash -c 'source .bash_profile; declare -f git_branch >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f git_branch >/dev/null' || \
 		(echo -e "$(RED)❌ git_branch function not defined$(NC)" && exit 1)
-	@bash -c 'source .bash_profile; declare -f git_color >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f git_color >/dev/null' || \
 		(echo -e "$(RED)❌ git_color function not defined$(NC)" && exit 1)
 	@# Test custom functions
 	@echo "Testing custom functions..."
-	@bash -c 'source .bash_profile; declare -f mkvenv >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f mkvenv >/dev/null' || \
 		(echo -e "$(RED)❌ mkvenv function not defined$(NC)" && exit 1)
-	@bash -c 'source .bash_profile; declare -f h >/dev/null' || \
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f h >/dev/null' || \
 		(echo -e "$(RED)❌ h function not defined$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Advanced dotfiles tests passed$(NC)"
 
@@ -477,16 +476,16 @@ test-install: ## Test installation process
 	@# Dry run of setup (skip actual installation)
 	@echo "Testing setup script syntax..."
 	@bash -n $(AUTO_DIR)/setup.sh || (echo -e "$(RED)❌ Setup script syntax error$(NC)" && exit 1)
-	@# Test initialize.sh script
-	@echo "Testing initialize.sh script..."
-	@bash -n initialize.sh || (echo -e "$(RED)❌ Initialize script syntax error$(NC)" && exit 1)
+	@# Test install.sh script
+	@echo "Testing install.sh script..."
+	@bash -n install.sh || (echo -e "$(RED)❌ Install script syntax error$(NC)" && exit 1)
 	@# Test installer help
 	@echo "Testing installer help..."
-	@bash initialize.sh --help > $(LOG_DIR)/installer-help.log 2>&1 || \
+	@bash install.sh --help > $(LOG_DIR)/installer-help.log 2>&1 || \
 		(echo -e "$(RED)❌ Installer help failed$(NC)" && exit 1)
 	@# Test installer options validation
 	@echo "Testing installer argument parsing..."
-	@bash initialize.sh --test > $(LOG_DIR)/installer-test.log 2>&1 || \
+	@bash install.sh --test > $(LOG_DIR)/installer-test.log 2>&1 || \
 		echo -e "$(YELLOW)⚠️ Installer test mode completed$(NC)"
 	@echo -e "$(GREEN)✅ Installation tests passed$(NC)"
 
@@ -496,11 +495,12 @@ test-installer-components: ## Test individual installer components
 	@echo "Testing backup creation..."
 	@mkdir -p $(TEST_DIR)/installer-test
 	@touch $(TEST_DIR)/installer-test/.bash_profile
-	@# Test dotfiles validation
+	@# Test dotfiles structure (new organization)
 	@echo "Testing dotfiles structure..."
-	@[ -f .bash_profile ] || (echo -e "$(RED)❌ Main bash profile missing$(NC)" && exit 1)
-	@[ -d .bash_profile.dir ] || (echo -e "$(RED)❌ Bash profile directory missing$(NC)" && exit 1)
-	@[ -d .bash_tools ] || (echo -e "$(RED)❌ Bash tools directory missing$(NC)" && exit 1)
+	@[ -d shell ] || (echo -e "$(RED)❌ Shell directory missing$(NC)" && exit 1)
+	@[ -f shell/init.sh ] || (echo -e "$(RED)❌ Shell init.sh missing$(NC)" && exit 1)
+	@[ -d functions ] || (echo -e "$(RED)❌ Functions directory missing$(NC)" && exit 1)
+	@[ -d config ] || (echo -e "$(RED)❌ Config directory missing$(NC)" && exit 1)
 	@[ -d .automation ] || (echo -e "$(RED)❌ Automation directory missing$(NC)" && exit 1)
 	@# Test automation framework structure
 	@echo "Testing automation framework structure..."
@@ -508,9 +508,9 @@ test-installer-components: ## Test individual installer components
 	@[ -f .automation/setup.sh ] || (echo -e "$(RED)❌ Setup script missing$(NC)" && exit 1)
 	@[ -d .automation/modules ] || (echo -e "$(RED)❌ Modules directory missing$(NC)" && exit 1)
 	@[ -d .automation/framework ] || (echo -e "$(RED)❌ Framework directory missing$(NC)" && exit 1)
-	@# Test secrets module
-	@[ -f .automation/modules/secrets.sh ] || (echo -e "$(RED)❌ Secrets module missing$(NC)" && exit 1)
-	@[ -f .bash_tools/secrets.sh ] || (echo -e "$(RED)❌ Secrets tools missing$(NC)" && exit 1)
+	@# Test function modules
+	@[ -f functions/cloud/secrets.sh ] || (echo -e "$(RED)❌ Secrets function missing$(NC)" && exit 1)
+	@[ -f functions/ai/ollama.sh ] || (echo -e "$(RED)❌ Ollama function missing$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Installer components tests passed$(NC)"
 
 # Integration tests
@@ -518,11 +518,11 @@ test-integration: ## Test integration between components
 	@echo -e "$(BLUE)Testing component integration...$(NC)"
 	@# Test dotfiles + automation integration
 	@echo "Testing dotfiles + automation integration..."
-	@bash -c 'source .bash_profile; declare -f auto_status >/dev/null' || \
-		(echo -e "$(RED)❌ Automation integration not loaded$(NC)" && exit 1)
-	@# Test automation aliases
-	@bash -c 'source .bash_profile; alias | grep -q "auto="' || \
-		(echo -e "$(RED)❌ Automation aliases not loaded$(NC)" && exit 1)
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f dotfiles_status >/dev/null' || \
+		(echo -e "$(RED)❌ Dotfiles integration not loaded$(NC)" && exit 1)
+	@# Test cloud functions loaded
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f load_secrets >/dev/null' || \
+		(echo -e "$(RED)❌ Cloud functions not loaded$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Integration tests passed$(NC)"
 
 # Security tests
@@ -534,7 +534,7 @@ test-security: ## Test for security issues
 		(echo -e "$(YELLOW)⚠️ Potential hardcoded secrets found$(NC)")
 	@# Check file permissions
 	@echo "Checking file permissions..."
-	@find . -name "*.sh" -perm +111 | grep -v ".automation/auto" | grep -v "initialize.sh" | grep -v "setup.sh" && \
+	@find . -name "*.sh" -perm +111 | grep -v ".automation/auto" | grep -v "install.sh" | grep -v "setup.sh" && \
 		echo -e "$(YELLOW)⚠️ Unexpected executable permissions found$(NC)" || true
 	@echo -e "$(GREEN)✅ Security tests passed$(NC)"
 
@@ -542,8 +542,8 @@ test-security: ## Test for security issues
 test-performance: ## Test performance of shell loading
 	@echo -e "$(BLUE)Testing shell loading performance...$(NC)"
 	@# Time shell loading
-	@echo "Testing bash profile load time..."
-	@time bash -c 'source .bash_profile; exit 0' > $(LOG_DIR)/perf-load.log 2>&1 || \
+	@echo "Testing shell init load time..."
+	@time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' > $(LOG_DIR)/perf-load.log 2>&1 || \
 		(echo -e "$(RED)❌ Performance test failed$(NC)" && exit 1)
 	@# Test automation CLI response time
 	@echo "Testing automation CLI response time..."
@@ -558,10 +558,11 @@ test-workflows: ## Test complete workflows
 	@# Test development workflow
 	@echo "Testing development workflow..."
 	@cd $(TEST_PROJECT_DIR) && bash -c '\
-		source $(DOTFILES_DIR)/.bash_profile; \
+		export DOTFILES_ROOT="$(DOTFILES_DIR)"; \
+		source $(DOTFILES_DIR)/shell/init.sh; \
 		export AUTO_DRY_RUN=true; \
-		echo "Testing quick project creation..."; \
-		quick_project python test-workflow-app || echo "Workflow test informational only"; \
+		echo "Testing python environment creation..."; \
+		mkvenv test-workflow-env || echo "Workflow test informational only"; \
 	' > $(LOG_DIR)/workflow-dev.log 2>&1
 	@echo -e "$(GREEN)✅ Workflow tests completed$(NC)"
 
@@ -618,13 +619,9 @@ clean: ## Clean test artifacts and restore backups
 		cp $(BACKUP_DIR)/bash_profile.backup ~/.bash_profile; \
 		echo "Restored ~/.bash_profile"; \
 	fi
-	@if [ -d $(BACKUP_DIR)/.bash_profile.dir ]; then \
-		cp -r $(BACKUP_DIR)/.bash_profile.dir ~/; \
-		echo "Restored ~/.bash_profile.dir"; \
-	fi
-	@if [ -d $(BACKUP_DIR)/.bash_tools ]; then \
-		cp -r $(BACKUP_DIR)/.bash_tools ~/; \
-		echo "Restored ~/.bash_tools"; \
+	@if [ -d $(BACKUP_DIR)/shell ]; then \
+		cp -r $(BACKUP_DIR)/shell ~/.config/; \
+		echo "Restored ~/.config/shell"; \
 	fi
 	@echo -e "$(GREEN)✅ Cleanup completed$(NC)"
 
@@ -661,9 +658,9 @@ test-dev-env: ## Test development environment setup
 benchmark: ## Run performance benchmarks
 	@echo -e "$(BLUE)Running performance benchmarks...$(NC)"
 	@mkdir -p $(LOG_DIR)
-	@echo "Benchmarking shell profile loading..."
+	@echo "Benchmarking shell init loading..."
 	@for i in {1..10}; do \
-		time bash -c 'source .bash_profile; exit 0' 2>> $(LOG_DIR)/benchmark-load.log; \
+		time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' 2>> $(LOG_DIR)/benchmark-load.log; \
 	done
 	@echo "Benchmarking automation CLI..."
 	@chmod +x $(AUTO_DIR)/auto
@@ -679,7 +676,7 @@ stress-test: ## Run stress tests
 	@# Test rapid shell loading
 	@echo "Testing rapid shell loading..."
 	@for i in {1..50}; do \
-		bash -c 'source .bash_profile; exit 0' >/dev/null 2>&1 || \
+		bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' >/dev/null 2>&1 || \
 		(echo -e "$(RED)❌ Stress test failed at iteration $$i$(NC)" && exit 1); \
 	done
 	@echo -e "$(GREEN)✅ Stress tests passed$(NC)"
@@ -695,10 +692,10 @@ test-comprehensive: setup test-syntax test-dotfiles test-automation test-modules
 ai-setup: ## Setup complete AI/ML environment (Ollama + Hugging Face)
 	@echo -e "$(BLUE)Setting up AI/ML environment...$(NC)"
 	@echo "📊 Installing Ollama..."
-	@bash -c 'source .bash_tools/ollama.sh && ollama_setup'
+	@bash -c 'source functions/ai/ollama.sh && ollama_setup'
 	@echo ""
 	@echo "🤗 Installing Hugging Face..."
-	@bash -c 'source .bash_tools/huggingface.sh && hf_setup'
+	@bash -c 'source functions/ai/huggingface.sh && hf_setup'
 	@echo -e "$(GREEN)✅ AI/ML environment setup complete$(NC)"
 
 ai-status: ## Check AI/ML tools and models status
@@ -712,11 +709,11 @@ ai-status: ## Check AI/ML tools and models status
 	@echo ""
 	@echo "📊 Ollama Status:"
 	@echo "================"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_status' 2>/dev/null || echo "❌ Ollama not available"
+	@bash -c 'source functions/ai/ollama.sh && ollama_status' 2>/dev/null || echo "❌ Ollama not available"
 	@echo ""
 	@echo "🤗 Hugging Face Status:"
 	@echo "======================"
-	@bash -c 'source .bash_tools/huggingface.sh && hf_status' 2>/dev/null || echo "❌ Hugging Face not available"
+	@bash -c 'source functions/ai/huggingface.sh && hf_status' 2>/dev/null || echo "❌ Hugging Face not available"
 	@echo -e "$(GREEN)✅ AI/ML status check complete$(NC)"
 
 ai-test: ## Test AI/ML functionality
@@ -734,8 +731,8 @@ ai-test: ## Test AI/ML functionality
 	@# Test AI module syntax
 	@echo "Testing AI module syntax..."
 	@bash -n $(AUTO_DIR)/modules/ai.sh || (echo -e "$(RED)❌ AI module syntax error$(NC)" && exit 1)
-	@bash -n .bash_tools/ollama.sh || (echo -e "$(RED)❌ Ollama tools syntax error$(NC)" && exit 1)
-	@bash -n .bash_tools/huggingface.sh || (echo -e "$(RED)❌ Hugging Face tools syntax error$(NC)" && exit 1)
+	@bash -n functions/ai/ollama.sh || (echo -e "$(RED)❌ Ollama tools syntax error$(NC)" && exit 1)
+	@bash -n functions/ai/huggingface.sh || (echo -e "$(RED)❌ Hugging Face tools syntax error$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ AI/ML tests completed$(NC)"
 
 ai-models: ## List all available AI models
@@ -745,20 +742,20 @@ ai-models: ## List all available AI models
 	@echo ""
 	@echo "📊 Ollama Models:"
 	@echo "================"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_models' 2>/dev/null || echo "❌ Ollama not installed"
+	@bash -c 'source functions/ai/ollama.sh && ollama_models' 2>/dev/null || echo "❌ Ollama not installed"
 	@echo ""
 	@echo "🤗 Hugging Face Models:"
 	@echo "======================"
-	@bash -c 'source .bash_tools/huggingface.sh && hf_models'
+	@bash -c 'source functions/ai/huggingface.sh && hf_models'
 
 ai-chat: ## Start interactive AI chat (auto-detects best available model)
 	@echo -e "$(BLUE)Starting AI chat...$(NC)"
 	@if command -v ollama >/dev/null 2>&1; then \
 		echo "🤖 Starting Ollama chat (llama3.2)..."; \
-		bash -c 'source .bash_tools/ollama.sh && ollama_run llama3.2'; \
+		bash -c 'source functions/ai/ollama.sh && ollama_run llama3.2'; \
 	elif python3 -c "import transformers" 2>/dev/null; then \
 		echo "🤗 Starting Hugging Face chat..."; \
-		bash -c 'source .bash_tools/huggingface.sh && hf_chat'; \
+		bash -c 'source functions/ai/huggingface.sh && hf_chat'; \
 	else \
 		echo "❌ No AI platforms available. Run: make ai-setup"; \
 		exit 1; \
@@ -766,11 +763,11 @@ ai-chat: ## Start interactive AI chat (auto-detects best available model)
 
 ai-chat-ollama: ## Start Ollama chat with Llama 3.2
 	@echo -e "$(BLUE)Starting Ollama chat...$(NC)"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_run llama3.2'
+	@bash -c 'source functions/ai/ollama.sh && ollama_run llama3.2'
 
 ai-chat-hf: ## Start Hugging Face chat
 	@echo -e "$(BLUE)Starting Hugging Face chat...$(NC)"
-	@bash -c 'source .bash_tools/huggingface.sh && hf_chat'
+	@bash -c 'source functions/ai/huggingface.sh && hf_chat'
 
 ai-benchmark: ## Run AI performance benchmarks
 	@echo -e "$(BLUE)Running AI benchmarks...$(NC)"
@@ -815,11 +812,11 @@ ai-examples-run: ## Run live AI examples (requires models)
 	@echo -e "$(BLUE)Running live AI examples...$(NC)"
 	@if command -v ollama >/dev/null 2>&1; then \
 		echo "📊 Ollama example:"; \
-		bash -c 'source .bash_tools/ollama.sh && ollama_examples'; \
+		bash -c 'source functions/ai/ollama.sh && ollama_examples'; \
 	fi
 	@if python3 -c "import transformers" 2>/dev/null; then \
 		echo "🤗 Hugging Face example:"; \
-		bash -c 'source .bash_tools/huggingface.sh && hf_examples'; \
+		bash -c 'source functions/ai/huggingface.sh && hf_examples'; \
 	fi
 
 ai-cleanup: ## Clean AI model caches and stop services
@@ -827,55 +824,55 @@ ai-cleanup: ## Clean AI model caches and stop services
 	@# Stop Ollama service
 	@if command -v ollama >/dev/null 2>&1; then \
 		echo "🛑 Stopping Ollama service..."; \
-		bash -c 'source .bash_tools/ollama.sh && ollama_stop'; \
+		bash -c 'source functions/ai/ollama.sh && ollama_stop'; \
 	fi
 	@# Clean Hugging Face cache
 	@if [ -d ~/.cache/huggingface ]; then \
 		echo "🗑️ Cleaning Hugging Face cache..."; \
-		bash -c 'source .bash_tools/huggingface.sh && hf_clear_cache'; \
+		bash -c 'source functions/ai/huggingface.sh && hf_clear_cache'; \
 	fi
 	@echo -e "$(GREEN)✅ AI/ML cleanup complete$(NC)"
 
 # Ollama specific targets
 ollama-install: ## Install Ollama
 	@echo -e "$(BLUE)Installing Ollama...$(NC)"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_install'
+	@bash -c 'source functions/ai/ollama.sh && ollama_install'
 
 ollama-setup: ## Setup Ollama with recommended models
 	@echo -e "$(BLUE)Setting up Ollama...$(NC)"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_setup'
+	@bash -c 'source functions/ai/ollama.sh && ollama_setup'
 
 ollama-start: ## Start Ollama service
 	@echo -e "$(BLUE)Starting Ollama service...$(NC)"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_start'
+	@bash -c 'source functions/ai/ollama.sh && ollama_start'
 
 ollama-stop: ## Stop Ollama service
 	@echo -e "$(BLUE)Stopping Ollama service...$(NC)"
-	@bash -c 'source .bash_tools/ollama.sh && ollama_stop'
+	@bash -c 'source functions/ai/ollama.sh && ollama_stop'
 
 ollama-status: ## Check Ollama status
-	@bash -c 'source .bash_tools/ollama.sh && ollama_status'
+	@bash -c 'source functions/ai/ollama.sh && ollama_status'
 
 ollama-models: ## List Ollama models
-	@bash -c 'source .bash_tools/ollama.sh && ollama_models'
+	@bash -c 'source functions/ai/ollama.sh && ollama_models'
 
 # Hugging Face specific targets
 hf-setup: ## Setup Hugging Face environment
 	@echo -e "$(BLUE)Setting up Hugging Face...$(NC)"
-	@bash -c 'source .bash_tools/huggingface.sh && hf_setup'
+	@bash -c 'source functions/ai/huggingface.sh && hf_setup'
 
 hf-status: ## Check Hugging Face status
-	@bash -c 'source .bash_tools/huggingface.sh && hf_status'
+	@bash -c 'source functions/ai/huggingface.sh && hf_status'
 
 hf-models: ## List popular Hugging Face models
-	@bash -c 'source .bash_tools/huggingface.sh && hf_models'
+	@bash -c 'source functions/ai/huggingface.sh && hf_models'
 
 hf-examples: ## Run Hugging Face examples
-	@bash -c 'source .bash_tools/huggingface.sh && hf_examples'
+	@bash -c 'source functions/ai/huggingface.sh && hf_examples'
 
 hf-clear-cache: ## Clear Hugging Face model cache
 	@echo -e "$(BLUE)Clearing Hugging Face cache...$(NC)"
-	@bash -c 'source .bash_tools/huggingface.sh && hf_clear_cache'
+	@bash -c 'source functions/ai/huggingface.sh && hf_clear_cache'
 
 # AI testing in main test suite
 test-ai-module: ## Test AI module specifically

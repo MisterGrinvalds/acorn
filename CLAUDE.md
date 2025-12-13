@@ -4,55 +4,113 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a **shell-portable dotfiles system** compatible with both **bash** and **zsh** on macOS and Linux. The system implements a modular configuration approach with automatic shell detection.
+This is a **shell-portable dotfiles system** compatible with both **bash** and **zsh** on macOS and Linux. The system implements a modular, XDG-compliant configuration approach with automatic shell detection.
 
 ### Key Components:
-- **Main entry point**: `.bash_profile` - detects shell type and sources all configuration files
-- **Configuration modules**: `.bash_profile.dir/` - environment, aliases, terminal customization
-- **Custom utilities**: `.bash_tools/` - 10 custom shell functions for development workflow
-- **Installation script**: `initialize.sh` - deploys dotfiles and creates appropriate shell links
+- **Main entry point**: `shell/init.sh` - unified loader that sources all modules
+- **Shell modules**: `shell/` - discovery, XDG setup, environment, aliases, prompt, completions
+- **Function modules**: `functions/` - organized by domain (core, dev, cloud, ai)
+- **App configs**: `config/` - git, ssh, python, and other tool configurations
+- **Installation script**: `install.sh` - deploys dotfiles and creates shell bootstrap files
 
 ### Shell Compatibility Features:
-- **Automatic shell detection** - Sets `$CURRENT_SHELL` (bash/zsh/unknown)
+- **Automatic shell detection** - `shell/discovery.sh` sets `$CURRENT_SHELL` and `$CURRENT_PLATFORM`
 - **Shell-specific prompts** - Bash uses `PS1`, zsh uses `PROMPT` with proper escaping
-- **Portable git integration** - Uses case statements instead of bash regex
-- **History management** - Configures shell-appropriate history settings
+- **Portable git integration** - Uses `git symbolic-ref` instead of bash regex
+- **History management** - Configures shell-appropriate history in XDG-compliant locations
 - **Completion systems** - Loads bash-completion or zsh compinit as needed
 
-The system honors `$DOTFILES` (defaults to `$HOME`) and XDG Base Directory specification.
+The system follows the XDG Base Directory specification with `$DOTFILES_ROOT` as the repo location.
+
+## Directory Structure
+
+```
+shell/                    # Shell initialization modules
+├── init.sh              # Main entry point (load order controller)
+├── discovery.sh         # Shell/platform detection
+├── xdg.sh              # XDG base directory setup
+├── environment.sh       # Core environment variables
+├── environment.darwin.sh # macOS-specific
+├── environment.linux.sh # Linux-specific
+├── aliases.sh          # Shell aliases
+├── options.sh          # shopt/setopt options
+├── secrets.sh          # Secrets loader
+├── completions.sh      # Completion systems + FZF
+└── prompt.sh           # Git-aware prompt
+
+functions/               # Function modules by domain
+├── core/               # Essential utilities
+│   ├── cd.sh          # Enhanced cd
+│   ├── history.sh     # History functions
+│   ├── archive.sh     # mktar, mkzip
+│   ├── utils.sh       # bash_as, misc
+│   ├── tools.sh       # Tool management
+│   ├── tmux.sh        # Tmux helpers
+│   └── inject.sh      # Dotfiles management
+├── dev/                # Development tools
+│   ├── python.sh      # mkvenv, venv, rmenv
+│   ├── golang.sh      # Go helpers
+│   ├── github.sh      # GitHub functions
+│   └── vscode.sh      # VS Code functions
+├── cloud/              # Cloud/DevOps
+│   ├── kubernetes.sh  # K8s functions
+│   ├── automation.sh  # Automation helpers
+│   └── secrets.sh     # Secret management
+└── ai/                 # AI/ML tools
+    ├── ollama.sh      # Ollama integration
+    ├── huggingface.sh # Hugging Face
+    └── aliases.sh     # AI command aliases
+
+config/                  # Application configs
+├── git/                # Git configuration
+├── ssh/                # SSH config
+├── python/             # Python startup
+├── r/                  # R profile
+├── conda/              # Conda config
+├── wget/               # Wget config
+└── karabiner/          # macOS keyboard
+
+secrets/                 # Secure storage (gitignored)
+docs/                    # Documentation
+.automation/             # Automation CLI framework
+```
 
 ## Loading Sequence
 
-Configuration loads in this order:
-1. **Shell detection** - Sets `$CURRENT_SHELL` variable
-2. **`environment.sh`** - Core environment variables and paths
-3. **`aliases.sh`** - Shell-agnostic command aliases
-4. **`terminal.sh`** - Shell-specific prompt and color configuration
-5. **`.bash_tools/*`** - Custom utility functions (all files)
+Configuration loads in this order (see `shell/init.sh`):
+1. **`discovery.sh`** - Detects shell type and platform
+2. **`xdg.sh`** - Sets XDG base directories
+3. **`environment.sh`** - Core environment variables (sources platform-specific)
+4. **`secrets.sh`** - Loads credentials silently
+5. **`options.sh`** - Shell options (shopt/setopt)
+6. **`aliases.sh`** - Command aliases
+7. **`functions/**/*.sh`** - All function modules
+8. **`completions.sh`** - Completion systems and FZF
+9. **`prompt.sh`** - Git-aware prompt
+10. **`~/.config/shell/local.sh`** - Local overrides (optional)
 
 ## Installation and Setup
 
 ### Quick Install
 ```bash
 # Clone and install
-git clone <repo-url> ~/.dotfiles
-cd ~/.dotfiles
-./initialize.sh
+git clone <repo-url> ~/.config/dotfiles
+cd ~/.config/dotfiles
+./install.sh
 ```
 
-The installer will:
-- Copy files to `$HOME` using rsync
-- Create `~/.bashrc` → `~/.bash_profile` symlink
-- Create `~/.zshrc` → `~/.bash_profile` symlink  
-- Optionally install third-party tools via package manager
+The installer creates bootstrap files that source the main init.sh:
+- `~/.bashrc` - Sources `$DOTFILES_ROOT/shell/init.sh`
+- `~/.zshrc` - Sources `$DOTFILES_ROOT/shell/init.sh`
 
-### Manual Setup
+### Dotfiles Management Functions
 ```bash
-# For bash users
-echo 'source ~/.bash_profile' >> ~/.bashrc
-
-# For zsh users  
-echo 'source ~/.bash_profile' >> ~/.zshrc
+dotfiles_inject     # Install bootstrap files
+dotfiles_eject      # Remove all injected config
+dotfiles_update     # Git pull + reload
+dotfiles_reload     # Reload without restart
+dotfiles_status     # Show current state
+dotfiles_link_configs # Symlink app configs
 ```
 
 ### Third-Party Tools
@@ -62,98 +120,102 @@ echo 'source ~/.bash_profile' >> ~/.zshrc
 **Linux (via apt/yum):**
 - bash-completion, fd-find, fzf
 
-## Configuration Structure
+## Custom Functions
 
-### Environment Files
-- **`environment.sh`** - Base environment variables
-- **`environment_darwin.sh`** - macOS-specific settings
-- **`environment_linux-gnu.sh`** - Linux-specific settings
-
-### Shell-Specific Features
-- **History**: Bash uses `HISTCONTROL`, zsh uses `setopt` commands
-- **Completion**: Loads appropriate completion system per shell
-- **Prompts**: Shell-aware color escaping and variable substitution
-- **FZF Integration**: Loads shell-specific key bindings and completion
-
-## Custom Functions (.bash_tools/)
-
-### Python Development
-- **`mkvenv([name])`** - Create virtual environment (local .venv or named in $ENVS_LOCATION)
-- **`venv([name])`** - Activate virtual environment
-- **`rmenv([pattern])`** - Remove environment variables matching pattern
-
-### Navigation & Files  
+### Core (functions/core/)
 - **`cd()`** - Enhanced cd that runs `ll` after directory change
 - **`h(pattern)`** - History search with grep
 - **`mktar(path)`** - Create .tar.gz archive
 - **`mkzip(path)`** - Create .zip archive
+- **`bash_as(user)`** - Run bash shell as another user
 
-### System Tools
-- **`bash-as(user)`** - Run bash shell as another user
+### Development (functions/dev/)
+- **`mkvenv([name])`** - Create virtual environment
+- **`venv([name])`** - Activate virtual environment
+- **`rmenv([pattern])`** - Remove environment variables
+
+### Cloud (functions/cloud/)
+- **`load_secrets`** - Load secrets into environment
+- **`validate_secrets`** - Validate API keys
+- **Kubernetes helpers** - Pod logs, context switching
+
+### AI (functions/ai/)
+- **`ollama_setup`** - Install and configure Ollama
+- **`ollama_chat`** - Interactive AI chat
+- **`hf_setup`** - Setup Hugging Face environment
 
 ## Testing and Development
 
-### Manual Testing Approach
+### Test with Makefile
+```bash
+make test-quick          # Syntax and basic tests
+make test-dotfiles       # Dotfiles functionality
+make test-syntax         # All shell script syntax
+make test-comprehensive  # Full test suite
+```
+
+### Manual Testing
 ```bash
 # Test in clean shell
 bash --noprofile --norc
-source ~/.bash_profile
+export DOTFILES_ROOT="$PWD"
+source shell/init.sh
 
-# Verify shell detection
-echo "Current shell: $CURRENT_SHELL"
+# Verify detection
+echo "Shell: $CURRENT_SHELL"
+echo "Platform: $CURRENT_PLATFORM"
 
-# Test git prompt in different repo states
-cd /path/to/git/repo
-# Verify colors: clean (green), dirty (yellow), ahead (red)
-
-# Test custom functions
+# Test functions
 mkvenv test-env
-venv test-env
-cd /some/path  # Should auto-run ll
-h git          # Should search history
+h git
 ```
 
 ### Key Test Cases
 1. **Shell detection** works in bash and zsh
 2. **Git prompt** shows correct colors and branch info
-3. **History** settings work per shell
-4. **Completion** loads without errors
-5. **Custom functions** work in both shells
-6. **FZF integration** provides key bindings
+3. **XDG directories** created correctly
+4. **Custom functions** work in both shells
+5. **Completions** load without errors
 
 ## Environment Variables
 
+### XDG Directories
+- **`DOTFILES_ROOT`** - Repository location
+- **`XDG_CONFIG_HOME`** - ~/.config
+- **`XDG_DATA_HOME`** - ~/.local/share
+- **`XDG_CACHE_HOME`** - ~/.cache
+- **`XDG_STATE_HOME`** - ~/.local/state
+
+### Shell Detection
+- **`CURRENT_SHELL`** - bash/zsh/unknown
+- **`CURRENT_PLATFORM`** - darwin/linux/unknown
+- **`IS_INTERACTIVE`** - true/false
+- **`IS_LOGIN_SHELL`** - true/false
+
 ### Development Paths
-- **Python**: `PYTHONSTARTUP`, `IPYTHONDIR`, `JUPYTER_CONFIG_DIR`
-- **Node.js**: `NVM_DIR` with automatic loading
-- **R**: `R_PROFILE`, `R_PROFILE_USER` 
+- **Python**: `PYTHONSTARTUP`, `IPYTHONDIR`
+- **Node.js**: `NVM_DIR` (XDG-compliant)
 - **Neovim**: `NEOVIM_VIRTUALENV`, `VIM_PLUGGED`
-
-### XDG Compliance
-- **`XDG_CONFIG_HOME`** - Configuration directory
-- **`XDG_CACHE_HOME`** - Cache directory  
-- **`XDG_DATA_HOME`** - Data directory
-
-### Security
-- **Secrets loading**: Automatically sources files from `~/.secrets/`
-- **No hardcoded credentials**: All sensitive data externalized
 
 ## Troubleshooting
 
 ### Common Issues
-1. **Shell not detected**: Check `$BASH_VERSION` / `$ZSH_VERSION` variables
-2. **Prompt broken**: Verify color escaping for your shell
-3. **Completion not working**: Check if completion files exist and are sourced
-4. **Git colors wrong**: Test `git status` output format changes
+1. **Shell not detected**: Check `$BASH_VERSION` / `$ZSH_VERSION`
+2. **Prompt broken**: Verify shell-specific color escaping
+3. **Functions missing**: Ensure `functions/` is sourced
+4. **XDG not set**: Check `shell/xdg.sh` sourcing
 
 ### Debug Commands
 ```bash
-# Check shell detection
-echo "Shell: $CURRENT_SHELL"
+# Check detection
+echo "Shell: $CURRENT_SHELL, Platform: $CURRENT_PLATFORM"
 
 # Test git functions
 git_branch; git_color
 
-# Verify environment loading
-env | grep -E "(HIST|XDG|DOTFILES)"
+# Verify XDG
+env | grep XDG
+
+# List loaded functions
+declare -F | grep -E "(mkvenv|dotfiles)"
 ```
