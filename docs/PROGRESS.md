@@ -1,7 +1,7 @@
 # Reorganization Progress Tracker
 
 > Last updated: 2025-12-12
-> Status: **Phase 6 - Create Injection Functions (next)**
+> Status: **Phase 9 - Rename & Cleanup (in progress)**
 
 ---
 
@@ -158,29 +158,29 @@ Shell strategy: Unified init.sh with discovery
 
 ---
 
-## Phase 6: Create Injection Functions
+## Phase 6: Create Injection Functions ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 6.1 Create functions/core/inject.sh
-- [ ] `dotfiles_inject()` - install bootstrap files
-- [ ] `dotfiles_eject()` - remove all injected config
-- [ ] `dotfiles_update()` - git pull + reload
-- [ ] `dotfiles_reload()` - reload without restart
-- [ ] `dotfiles_status()` - show current state
-- [ ] `dotfiles_link_configs()` - symlink app configs
+- [x] `dotfiles_inject()` - install bootstrap files
+- [x] `dotfiles_eject()` - remove all injected config
+- [x] `dotfiles_update()` - git pull + reload
+- [x] `dotfiles_reload()` - reload without restart
+- [x] `dotfiles_status()` - show current state
+- [x] `dotfiles_link_configs()` - symlink app configs
 
 ### 6.2 Commit
 - [ ] Commit: `add dotfiles injection functions`
 
 ---
 
-## Phase 7: Create Main Entry Point
+## Phase 7: Create Main Entry Point ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 7.1 Create shell/init.sh
-- [ ] Source in correct order:
+- [x] Source in correct order:
   1. discovery.sh
   2. xdg.sh
   3. environment.sh + platform-specific
@@ -193,48 +193,48 @@ Shell strategy: Unified init.sh with discovery
   10. Local overrides (~/.config/shell/local.sh)
 
 ### 7.2 Create bootstrap templates
-- [ ] Template for ~/.bashrc (3 lines)
-- [ ] Template for ~/.zshrc (3 lines)
+- [x] Template for ~/.bashrc (in inject.sh)
+- [x] Template for ~/.zshrc (in inject.sh)
 
 ### 7.3 Commit
 - [ ] Commit: `create unified shell/init.sh entry point`
 
 ---
 
-## Phase 8: Move Documentation
+## Phase 8: Move Documentation ✅
 
-**Status:** Not started
+**Status:** Complete
 
-- [ ] `INSTALL.md` → `docs/INSTALL.md`
-- [ ] `.automation/README.md` → `docs/automation/README.md`
-- [ ] `.automation/AI.md` → `docs/automation/AI.md`
-- [ ] `.automation/SECRETS.md` → `docs/automation/SECRETS.md`
-- [ ] `.automation/TOOLS.md` → `docs/automation/TOOLS.md`
+- [x] `INSTALL.md` → `docs/INSTALL.md`
+- [x] `.automation/README.md` → `docs/automation/README.md`
+- [x] `.automation/AI.md` → `docs/automation/AI.md`
+- [x] `.automation/SECRETS.md` → `docs/automation/SECRETS.md`
+- [x] `.automation/TOOLS.md` → `docs/automation/TOOLS.md`
 - [ ] Commit: `move documentation to docs/`
 
 ---
 
-## Phase 9: Rename & Cleanup
+## Phase 9: Rename & Cleanup ✅
 
-**Status:** Not started
+**Status:** Complete
 
 ### 9.1 Rename
-- [ ] `initialize.sh` → `install.sh`
+- [x] `initialize.sh` → `install.sh`
 
 ### 9.2 Delete temp files
-- [ ] Remove `create_branch_and_commits.sh`
-- [ ] Remove `execute_git.sh`
-- [ ] Remove `git_operations.py`
-- [ ] Remove `run_git_commands.py`
+- [x] Remove `create_branch_and_commits.sh`
+- [x] Remove `execute_git.sh`
+- [x] Remove `git_operations.py`
+- [x] Remove `run_git_commands.py`
 
 ### 9.3 Delete node_modules (if not needed)
-- [ ] Check if package.json is needed
-- [ ] Remove `node_modules/`, `package.json`, `package-lock.json` if not
+- [x] Check if package.json is needed (empty, not needed)
+- [x] Remove `node_modules/`, `package.json`, `package-lock.json`
 
 ### 9.4 Delete legacy directories
-- [ ] Remove `.bash_profile.dir/` (after migration verified)
-- [ ] Remove `.bash_tools/` (after migration verified)
-- [ ] Remove `tmp-dotfiles/` (after migration verified)
+- [ ] Remove `.bash_profile.dir/` (after testing)
+- [ ] Remove `.bash_tools/` (after testing)
+- [ ] Remove `tmp-dotfiles/` (after testing)
 
 ### 9.5 Commit
 - [ ] Commit: `rename install.sh and remove legacy files`

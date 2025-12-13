@@ -19,7 +19,19 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(brew install:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(make:*)",
+      "Bash(echo $SHELL)",
+      "Bash(source:*)",
+      "Bash(ollama_status:*)",
+      "Bash(hf_status:*)",
+      "Bash(ollama_examples)",
+      "Bash(ai help)",
+      "Bash(ai status)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(git mv:*)"
     ],
     "deny": []
   }
