@@ -1,7 +1,7 @@
 # Makefile for Testing Bash Profile and Automation Framework
 # Comprehensive test suite for all functionality
 
-.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples
+.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status
 
 # Default target
 help: ## Show this help message
@@ -36,6 +36,16 @@ help: ## Show this help message
 	@echo "  ai-benchmark      - Run AI performance benchmarks"
 	@echo "  ai-examples       - Show AI usage examples"
 	@echo "  ai-cleanup        - Clean AI model caches and stop services"
+	@echo ""
+	@echo "Node.js/NVM Management:"
+	@echo "  nvm-install       - Install NVM (Node Version Manager)"
+	@echo "  nvm-setup         - Install NVM + latest LTS Node + pnpm"
+	@echo "  nvm-status        - Check NVM and Node.js status"
+	@echo "  node-install      - Install latest Node.js via NVM"
+	@echo "  node-lts          - Install latest LTS Node.js via NVM"
+	@echo "  pnpm-install      - Install pnpm globally"
+	@echo "  pnpm-setup        - Setup pnpm with corepack"
+	@echo "  node-status       - Check Node.js ecosystem status"
 
 # Variables
 SHELL := /bin/bash
@@ -903,6 +913,214 @@ test-ai-tools: ## Test if AI/ML tools are available
 	@python3 -c "import torch" 2>/dev/null && echo "✅ PyTorch installed" || echo "❌ PyTorch not installed" | tee -a $(LOG_DIR)/cli-tools-status.log
 	@echo "" >> $(LOG_DIR)/cli-tools-status.log
 	@echo -e "$(GREEN)✅ AI/ML tools check completed$(NC)"
+
+# =============================================================================
+# Node.js/NVM Management Targets
+# =============================================================================
+
+# NVM directory (XDG-compliant)
+NVM_DIR := $(XDG_DATA_HOME)/nvm
+ifeq ($(NVM_DIR),/nvm)
+NVM_DIR := $(HOME)/.local/share/nvm
+endif
+
+nvm-install: ## Install NVM (Node Version Manager)
+	@echo -e "$(BLUE)Installing NVM...$(NC)"
+	@if [ -d "$(NVM_DIR)" ] && [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo -e "$(GREEN)✅ NVM already installed at $(NVM_DIR)$(NC)"; \
+	else \
+		echo "Downloading NVM installer..."; \
+		mkdir -p "$(NVM_DIR)"; \
+		export NVM_DIR="$(NVM_DIR)"; \
+		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash; \
+		echo -e "$(GREEN)✅ NVM installed successfully$(NC)"; \
+		echo ""; \
+		echo "⚠️  Restart your shell or run:"; \
+		echo "   source ~/.bashrc"; \
+	fi
+
+nvm-setup: nvm-install node-lts pnpm-install ## Complete NVM setup: install NVM + LTS Node + pnpm
+	@echo -e "$(GREEN)✅ NVM setup complete!$(NC)"
+	@echo ""
+	@echo "🎉 Node.js environment ready:"
+	@echo "   - NVM installed at: $(NVM_DIR)"
+	@echo "   - Node.js LTS installed"
+	@echo "   - pnpm available globally"
+	@echo ""
+	@echo "Restart your shell to apply changes."
+
+nvm-status: ## Check NVM installation status
+	@echo -e "$(BLUE)Checking NVM status...$(NC)"
+	@echo "📦 NVM Status"
+	@echo "============="
+	@if [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo "✅ NVM installed at: $(NVM_DIR)"; \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; echo "   Version: $$(nvm --version)"'; \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; echo "   Current Node: $$(nvm current)"'; \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; echo "   Installed versions:"; nvm ls --no-colors 2>/dev/null | head -10'; \
+	else \
+		echo "❌ NVM not installed"; \
+		echo "   Run: make nvm-install"; \
+	fi
+
+node-install: ## Install latest Node.js via NVM
+	@echo -e "$(BLUE)Installing latest Node.js...$(NC)"
+	@if [ ! -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo -e "$(RED)❌ NVM not installed. Run: make nvm-install$(NC)"; \
+		exit 1; \
+	fi
+	@bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+		echo "Installing latest Node.js..."; \
+		nvm install node; \
+		nvm use node; \
+		nvm alias default node; \
+		echo ""; \
+		echo "✅ Node.js installed:"; \
+		node --version; \
+		npm --version'
+
+node-lts: ## Install latest LTS Node.js via NVM
+	@echo -e "$(BLUE)Installing Node.js LTS...$(NC)"
+	@if [ ! -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo -e "$(RED)❌ NVM not installed. Run: make nvm-install$(NC)"; \
+		exit 1; \
+	fi
+	@bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+		echo "Installing Node.js LTS..."; \
+		nvm install --lts; \
+		nvm use --lts; \
+		nvm alias default lts/*; \
+		echo ""; \
+		echo "✅ Node.js LTS installed:"; \
+		node --version; \
+		npm --version'
+
+pnpm-install: ## Install pnpm globally via npm
+	@echo -e "$(BLUE)Installing pnpm...$(NC)"
+	@if ! command -v node >/dev/null 2>&1; then \
+		if [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+			bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+				if ! command -v pnpm >/dev/null 2>&1; then \
+					echo "Installing pnpm via npm..."; \
+					npm install -g pnpm; \
+					echo "✅ pnpm installed: $$(pnpm --version)"; \
+				else \
+					echo "✅ pnpm already installed: $$(pnpm --version)"; \
+				fi'; \
+		else \
+			echo -e "$(RED)❌ Node.js not available. Run: make nvm-setup$(NC)"; \
+			exit 1; \
+		fi; \
+	else \
+		if ! command -v pnpm >/dev/null 2>&1; then \
+			echo "Installing pnpm via npm..."; \
+			npm install -g pnpm; \
+			echo -e "$(GREEN)✅ pnpm installed: $$(pnpm --version)$(NC)"; \
+		else \
+			echo -e "$(GREEN)✅ pnpm already installed: $$(pnpm --version)$(NC)"; \
+		fi; \
+	fi
+
+pnpm-setup: ## Setup pnpm with corepack (Node 16.13+)
+	@echo -e "$(BLUE)Setting up pnpm with corepack...$(NC)"
+	@if ! command -v node >/dev/null 2>&1; then \
+		if [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+			bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+				echo "Enabling corepack..."; \
+				corepack enable 2>/dev/null || npm install -g corepack; \
+				corepack prepare pnpm@latest --activate; \
+				echo "✅ pnpm setup via corepack: $$(pnpm --version)"'; \
+		else \
+			echo -e "$(RED)❌ Node.js not available. Run: make nvm-setup$(NC)"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Enabling corepack..."; \
+		corepack enable 2>/dev/null || npm install -g corepack; \
+		corepack prepare pnpm@latest --activate 2>/dev/null || npm install -g pnpm; \
+		echo -e "$(GREEN)✅ pnpm ready: $$(pnpm --version)$(NC)"; \
+	fi
+
+node-status: ## Check complete Node.js ecosystem status
+	@echo -e "$(BLUE)Node.js Ecosystem Status$(NC)"
+	@echo "========================="
+	@echo ""
+	@echo "📦 NVM:"
+	@if [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo "   ✅ Installed at: $(NVM_DIR)"; \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh" 2>/dev/null; echo "   Version: $$(nvm --version 2>/dev/null || echo "unknown")"'; \
+	else \
+		echo "   ❌ Not installed"; \
+	fi
+	@echo ""
+	@echo "🟢 Node.js:"
+	@if command -v node >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(node --version)"; \
+		echo "   Path: $$(which node)"; \
+	elif [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+			if command -v node >/dev/null 2>&1; then \
+				echo "   ✅ Version: $$(node --version)"; \
+				echo "   Path: $$(which node)"; \
+			else \
+				echo "   ❌ Not installed (run: make node-lts)"; \
+			fi'; \
+	else \
+		echo "   ❌ Not installed"; \
+	fi
+	@echo ""
+	@echo "📦 npm:"
+	@if command -v npm >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(npm --version)"; \
+	elif [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+			if command -v npm >/dev/null 2>&1; then \
+				echo "   ✅ Version: $$(npm --version)"; \
+			else \
+				echo "   ❌ Not available"; \
+			fi'; \
+	else \
+		echo "   ❌ Not available"; \
+	fi
+	@echo ""
+	@echo "🚀 pnpm:"
+	@if command -v pnpm >/dev/null 2>&1; then \
+		echo "   ✅ Version: $$(pnpm --version)"; \
+		echo "   Path: $$(which pnpm)"; \
+	elif [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+			if command -v pnpm >/dev/null 2>&1; then \
+				echo "   ✅ Version: $$(pnpm --version)"; \
+			else \
+				echo "   ❌ Not installed (run: make pnpm-install)"; \
+			fi'; \
+	else \
+		echo "   ❌ Not installed"; \
+	fi
+	@echo ""
+	@echo "📦 Global packages:"
+	@if command -v npm >/dev/null 2>&1; then \
+		npm list -g --depth=0 2>/dev/null | tail -n +2 | head -10 || echo "   (none)"; \
+	elif [ -f "$(NVM_DIR)/nvm.sh" ]; then \
+		bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+			npm list -g --depth=0 2>/dev/null | tail -n +2 | head -10 || echo "   (none)"'; \
+	else \
+		echo "   (npm not available)"; \
+	fi
+
+node-update: ## Update Node.js to latest LTS and reinstall globals
+	@echo -e "$(BLUE)Updating Node.js...$(NC)"
+	@if [ ! -f "$(NVM_DIR)/nvm.sh" ]; then \
+		echo -e "$(RED)❌ NVM not installed$(NC)"; \
+		exit 1; \
+	fi
+	@bash -c 'export NVM_DIR="$(NVM_DIR)"; source "$(NVM_DIR)/nvm.sh"; \
+		echo "Current: $$(node --version 2>/dev/null || echo "none")"; \
+		echo "Installing latest LTS..."; \
+		nvm install --lts --reinstall-packages-from=current; \
+		nvm alias default lts/*; \
+		echo ""; \
+		echo "✅ Updated to: $$(node --version)"'
 
 # Default test for CI
 .DEFAULT_GOAL := test-quick
