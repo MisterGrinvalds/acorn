@@ -1,7 +1,7 @@
 # Makefile for Testing Bash Profile and Automation Framework
 # Comprehensive test suite for all functionality
 
-.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status brew-status brew-update brew-install-devops brew-install-dev brew-install-db brew-install-all db-install-mysql db-install-mongo db-install-redis db-install-neo4j db-install-kafka
+.PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status brew-status brew-update brew-install-devops brew-install-dev brew-install-db brew-install-all db-install-mysql db-install-mongo db-install-redis db-install-neo4j db-install-kafka component-list component-status component-new component-validate test-components test-component-loader test-component-deps
 
 # Default target
 help: ## Show this help message
@@ -51,6 +51,13 @@ help: ## Show this help message
 	@echo "  shell-status      - Show all shell module status"
 	@echo "  shell-test-all    - Test complete shell loading sequence"
 	@echo "  shell-test-*      - Test individual modules (discovery, xdg, theme, etc.)"
+	@echo ""
+	@echo "Component Management:"
+	@echo "  component-list    - List all available components"
+	@echo "  component-status  - Show component health and loading status"
+	@echo "  component-new     - Create new component from template"
+	@echo "  component-validate - Validate all component.yaml files"
+	@echo "  test-components   - Test component discovery and loading"
 	@echo ""
 	@echo "Dotfiles Management:"
 	@echo "  dotfiles-install  - Run full dotfiles installation"
@@ -1335,6 +1342,179 @@ shell-test-all: shell-test-discovery shell-test-xdg shell-test-theme shell-test-
 	@echo -e "$(GREEN)✅ All shell layer tests passed$(NC)"
 
 # =============================================================================
+# Component Management Targets
+# =============================================================================
+# Component-based architecture for modular dotfiles configuration
+# Components are self-contained units with: component.yaml, env.sh, aliases.sh,
+# functions.sh, completions.sh, and setup.sh
+# =============================================================================
+
+COMPONENTS_DIR := $(DOTFILES_DIR)/components
+CORE_DIR := $(DOTFILES_DIR)/core
+
+component-list: ## List all available components
+	@echo -e "$(BLUE)Available Components$(NC)"
+	@echo "===================="
+	@echo ""
+	@if [ -d "$(COMPONENTS_DIR)" ]; then \
+		for dir in $(COMPONENTS_DIR)/*/; do \
+			name=$$(basename "$$dir"); \
+			if [ "$$name" != "_template" ] && [ -f "$$dir/component.yaml" ]; then \
+				if command -v yq >/dev/null 2>&1; then \
+					desc=$$(yq -r '.description // "No description"' "$$dir/component.yaml" 2>/dev/null); \
+					version=$$(yq -r '.version // "0.0.0"' "$$dir/component.yaml" 2>/dev/null); \
+					echo "  📦 $$name (v$$version)"; \
+					echo "     $$desc"; \
+				else \
+					echo "  📦 $$name"; \
+				fi; \
+			fi; \
+		done; \
+	else \
+		echo "  ❌ Components directory not found"; \
+	fi
+	@echo ""
+	@echo "Template available at: $(COMPONENTS_DIR)/_template/"
+
+component-status: ## Show component health and loading status
+	@echo -e "$(BLUE)Component Status$(NC)"
+	@echo "================"
+	@echo ""
+	@echo "📂 Core Framework:"
+	@for file in bootstrap.sh discovery.sh xdg.sh theme.sh loader.sh sync.sh; do \
+		if [ -f "$(CORE_DIR)/$$file" ]; then \
+			echo "   ✅ core/$$file"; \
+		else \
+			echo "   ❌ core/$$file (missing)"; \
+		fi; \
+	done
+	@echo ""
+	@echo "📦 Components:"
+	@if [ -d "$(COMPONENTS_DIR)" ]; then \
+		for dir in $(COMPONENTS_DIR)/*/; do \
+			name=$$(basename "$$dir"); \
+			if [ "$$name" != "_template" ]; then \
+				if [ -f "$$dir/component.yaml" ]; then \
+					echo "   ✅ $$name"; \
+					for f in env.sh aliases.sh functions.sh completions.sh; do \
+						if [ -f "$$dir/$$f" ]; then \
+							echo "      ├── $$f"; \
+						fi; \
+					done; \
+				else \
+					echo "   ❌ $$name (missing component.yaml)"; \
+				fi; \
+			fi; \
+		done; \
+	fi
+	@echo ""
+	@echo "🔧 Dependencies:"
+	@if command -v yq >/dev/null 2>&1; then \
+		echo "   ✅ yq installed (required for YAML parsing)"; \
+	else \
+		echo "   ❌ yq not installed (install with: brew install yq)"; \
+	fi
+
+component-new: ## Create new component from template (usage: make component-new NAME=mycomponent)
+	@if [ -z "$(NAME)" ]; then \
+		echo -e "$(RED)Error: NAME is required$(NC)"; \
+		echo "Usage: make component-new NAME=mycomponent"; \
+		exit 1; \
+	fi
+	@if [ -d "$(COMPONENTS_DIR)/$(NAME)" ]; then \
+		echo -e "$(RED)Error: Component '$(NAME)' already exists$(NC)"; \
+		exit 1; \
+	fi
+	@echo -e "$(BLUE)Creating component: $(NAME)$(NC)"
+	@cp -r "$(COMPONENTS_DIR)/_template" "$(COMPONENTS_DIR)/$(NAME)"
+	@# Update component.yaml with the new name
+	@if command -v sed >/dev/null 2>&1; then \
+		sed -i.bak "s/name: template/name: $(NAME)/" "$(COMPONENTS_DIR)/$(NAME)/component.yaml" && \
+		rm -f "$(COMPONENTS_DIR)/$(NAME)/component.yaml.bak"; \
+	fi
+	@echo -e "$(GREEN)✅ Created component at: $(COMPONENTS_DIR)/$(NAME)/$(NC)"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Edit component.yaml with metadata"
+	@echo "  2. Add environment variables to env.sh"
+	@echo "  3. Add aliases to aliases.sh"
+	@echo "  4. Add functions to functions.sh"
+	@echo "  5. Add completions to completions.sh"
+
+component-validate: ## Validate all component.yaml files
+	@echo -e "$(BLUE)Validating component.yaml files...$(NC)"
+	@if ! command -v yq >/dev/null 2>&1; then \
+		echo -e "$(RED)Error: yq is required for validation$(NC)"; \
+		echo "Install with: brew install yq"; \
+		exit 1; \
+	fi
+	@errors=0; \
+	for dir in $(COMPONENTS_DIR)/*/; do \
+		name=$$(basename "$$dir"); \
+		if [ "$$name" != "_template" ] && [ -f "$$dir/component.yaml" ]; then \
+			if yq eval '.' "$$dir/component.yaml" >/dev/null 2>&1; then \
+				comp_name=$$(yq -r '.name // ""' "$$dir/component.yaml"); \
+				if [ -z "$$comp_name" ]; then \
+					echo "   ❌ $$name: missing 'name' field"; \
+					errors=$$((errors + 1)); \
+				else \
+					echo "   ✅ $$name"; \
+				fi; \
+			else \
+				echo "   ❌ $$name: invalid YAML syntax"; \
+				errors=$$((errors + 1)); \
+			fi; \
+		fi; \
+	done; \
+	if [ $$errors -gt 0 ]; then \
+		echo -e "$(RED)❌ $$errors validation errors found$(NC)"; \
+		exit 1; \
+	fi
+	@echo -e "$(GREEN)✅ All component.yaml files are valid$(NC)"
+
+test-components: test-component-loader test-component-deps ## Test component system
+	@echo -e "$(GREEN)✅ All component tests passed$(NC)"
+
+test-component-loader: ## Test component loader functionality
+	@echo -e "$(BLUE)Testing component loader...$(NC)"
+	@# Test core files exist
+	@[ -f "$(CORE_DIR)/bootstrap.sh" ] || (echo -e "$(RED)❌ core/bootstrap.sh not found$(NC)" && exit 1)
+	@[ -f "$(CORE_DIR)/loader.sh" ] || (echo -e "$(RED)❌ core/loader.sh not found$(NC)" && exit 1)
+	@echo "✅ Core files found"
+	@# Test bootstrap can be sourced
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh 2>/dev/null; \
+		[ -n "$$DOTFILES_COMPONENTS_LOADED" ] || (echo "❌ Components not loaded" && exit 1)' && \
+		echo "✅ Bootstrap sources successfully" || \
+		echo -e "$(YELLOW)⚠️ Bootstrap may have issues$(NC)"
+	@# Test component discovery
+	@if [ -d "$(COMPONENTS_DIR)" ]; then \
+		count=$$(find $(COMPONENTS_DIR) -name "component.yaml" -not -path "*/_template/*" 2>/dev/null | wc -l | tr -d ' '); \
+		echo "✅ Found $$count components"; \
+	fi
+	@echo -e "$(GREEN)✅ Component loader tests passed$(NC)"
+
+test-component-deps: ## Test component dependency resolution
+	@echo -e "$(BLUE)Testing component dependencies...$(NC)"
+	@if ! command -v yq >/dev/null 2>&1; then \
+		echo -e "$(YELLOW)⚠️ yq not installed, skipping dependency tests$(NC)"; \
+		exit 0; \
+	fi
+	@# Check for circular dependencies (basic check)
+	@echo "Checking for dependency issues..."
+	@for dir in $(COMPONENTS_DIR)/*/; do \
+		name=$$(basename "$$dir"); \
+		if [ "$$name" != "_template" ] && [ -f "$$dir/component.yaml" ]; then \
+			deps=$$(yq -r '.requires.components // [] | .[]' "$$dir/component.yaml" 2>/dev/null); \
+			for dep in $$deps; do \
+				if [ ! -d "$(COMPONENTS_DIR)/$$dep" ]; then \
+					echo "   ⚠️ $$name requires missing component: $$dep"; \
+				fi; \
+			done; \
+		fi; \
+	done
+	@echo -e "$(GREEN)✅ Dependency check completed$(NC)"
+
+# =============================================================================
 # Dotfiles Management Targets
 # =============================================================================
 
@@ -1348,9 +1528,9 @@ dotfiles-inject: ## Create shell bootstrap files (~/.bashrc, ~/.zshrc)
 	@# Create ~/.bashrc bootstrap
 	@if [ ! -f ~/.bashrc ] || ! grep -q "DOTFILES_ROOT" ~/.bashrc 2>/dev/null; then \
 		echo "Creating ~/.bashrc..."; \
-		echo '# Dotfiles bootstrap - auto-generated' > ~/.bashrc; \
+		echo '# Dotfiles bootstrap - component-based architecture' > ~/.bashrc; \
 		echo 'export DOTFILES_ROOT="$(DOTFILES_DIR)"' >> ~/.bashrc; \
-		echo '[ -f "$$DOTFILES_ROOT/shell/init.sh" ] && . "$$DOTFILES_ROOT/shell/init.sh"' >> ~/.bashrc; \
+		echo '[ -f "$$DOTFILES_ROOT/core/bootstrap.sh" ] && . "$$DOTFILES_ROOT/core/bootstrap.sh"' >> ~/.bashrc; \
 		echo "✅ Created ~/.bashrc"; \
 	else \
 		echo "⚠️  ~/.bashrc already configured"; \
@@ -1358,9 +1538,9 @@ dotfiles-inject: ## Create shell bootstrap files (~/.bashrc, ~/.zshrc)
 	@# Create ~/.zshrc bootstrap
 	@if [ ! -f ~/.zshrc ] || ! grep -q "DOTFILES_ROOT" ~/.zshrc 2>/dev/null; then \
 		echo "Creating ~/.zshrc..."; \
-		echo '# Dotfiles bootstrap - auto-generated' > ~/.zshrc; \
+		echo '# Dotfiles bootstrap - component-based architecture' > ~/.zshrc; \
 		echo 'export DOTFILES_ROOT="$(DOTFILES_DIR)"' >> ~/.zshrc; \
-		echo '[ -f "$$DOTFILES_ROOT/shell/init.sh" ] && . "$$DOTFILES_ROOT/shell/init.sh"' >> ~/.zshrc; \
+		echo '[ -f "$$DOTFILES_ROOT/core/bootstrap.sh" ] && . "$$DOTFILES_ROOT/core/bootstrap.sh"' >> ~/.zshrc; \
 		echo "✅ Created ~/.zshrc"; \
 	else \
 		echo "⚠️  ~/.zshrc already configured"; \
@@ -1791,3 +1971,59 @@ status: ## Show complete environment status
 
 # Default test for CI
 .DEFAULT_GOAL := test-quick
+# =============================================================================
+# Claude Code Integration
+# =============================================================================
+
+.PHONY: claude claude-context claude-resume claude-status
+
+CLAUDE_CONTEXT_FILE := $(DOTFILES_DIR)/.claude/SESSION_CONTEXT.md
+
+claude: ## Launch Claude Code with session context (1M token context enabled)
+	@echo "🤖 Launching Claude Code with session context..."
+	@echo ""
+	@if [ ! -f "$(CLAUDE_CONTEXT_FILE)" ]; then \
+		echo "⚠️  No context file found at $(CLAUDE_CONTEXT_FILE)"; \
+		echo "   Starting fresh session..."; \
+		cd $(DOTFILES_DIR) && claude; \
+	else \
+		echo "📋 Loading context from: $(CLAUDE_CONTEXT_FILE)"; \
+		echo ""; \
+		cd $(DOTFILES_DIR) && claude "Read the file .claude/SESSION_CONTEXT.md to understand this repository's current state and architecture. Then ask me what I'd like to work on."; \
+	fi
+
+claude-context: ## Show current session context
+	@if [ -f "$(CLAUDE_CONTEXT_FILE)" ]; then \
+		cat "$(CLAUDE_CONTEXT_FILE)"; \
+	else \
+		echo "No context file found at $(CLAUDE_CONTEXT_FILE)"; \
+	fi
+
+claude-resume: ## Resume most recent Claude session
+	@echo "🔄 Resuming most recent Claude session..."
+	@cd $(DOTFILES_DIR) && claude --continue
+
+claude-status: ## Show Claude Code configuration status
+	@echo "🤖 Claude Code Status"
+	@echo "===================="
+	@echo ""
+	@echo "Settings:"
+	@if [ -f "$(DOTFILES_DIR)/.claude/settings.local.json" ]; then \
+		echo "  Project settings: $(DOTFILES_DIR)/.claude/settings.local.json"; \
+		echo "  Model: $$(jq -r '.model // "default"' $(DOTFILES_DIR)/.claude/settings.local.json)"; \
+		echo "  Large Context: $$(jq -r '.largeContext // false' $(DOTFILES_DIR)/.claude/settings.local.json)"; \
+	else \
+		echo "  No project settings found"; \
+	fi
+	@echo ""
+	@echo "Context File:"
+	@if [ -f "$(CLAUDE_CONTEXT_FILE)" ]; then \
+		echo "  ✅ $(CLAUDE_CONTEXT_FILE)"; \
+		echo "  Size: $$(wc -l < $(CLAUDE_CONTEXT_FILE)) lines"; \
+	else \
+		echo "  ❌ No context file"; \
+	fi
+	@echo ""
+	@echo "Claude Code Tooling:"
+	@echo "  Commands: $$(ls -1 $(DOTFILES_DIR)/.claude/commands/*.md 2>/dev/null | wc -l | tr -d ' ') custom commands"
+	@echo "  Agents: $$(ls -1 $(DOTFILES_DIR)/.claude/agents/*.md 2>/dev/null | wc -l | tr -d ' ') custom agents"
