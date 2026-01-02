@@ -31,6 +31,14 @@ shell-integration = detect
 shell-integration-features = cursor,sudo,title
 
 # =============================================================================
+# Tab/Window Title
+# =============================================================================
+# Use working directory as title (no Ghostty logo)
+title = " "
+window-inherit-working-directory = true
+gtk-tabs-location = top
+
+# =============================================================================
 # Cursor
 # =============================================================================
 cursor-style = block
