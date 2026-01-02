@@ -4,90 +4,104 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a **shell-portable dotfiles system** compatible with both **bash** and **zsh** on macOS and Linux. The system implements a modular, XDG-compliant configuration approach with automatic shell detection.
+This is a **component-based dotfiles system** compatible with both **bash** and **zsh** on macOS and Linux. The system implements a modular, XDG-compliant configuration approach with automatic shell detection and dependency resolution.
 
 ### Key Components:
-- **Main entry point**: `shell/init.sh` - unified loader that sources all modules
-- **Shell modules**: `shell/` - discovery, XDG setup, environment, aliases, prompt, completions
-- **Function modules**: `functions/` - organized by domain (core, dev, cloud, ai)
+
+- **Main entry point**: `core/bootstrap.sh` - unified loader that initializes the component system
+- **Core modules**: `core/` - discovery, XDG setup, theme, loader, sync
+- **Components**: `components/` - self-contained feature modules with metadata
 - **App configs**: `config/` - git, ssh, python, and other tool configurations
 - **Installation script**: `install.sh` - deploys dotfiles and creates shell bootstrap files
 
-### Shell Compatibility Features:
-- **Automatic shell detection** - `shell/discovery.sh` sets `$CURRENT_SHELL` and `$CURRENT_PLATFORM`
-- **Shell-specific prompts** - Bash uses `PS1`, zsh uses `PROMPT` with proper escaping
-- **Portable git integration** - Uses `git symbolic-ref` instead of bash regex
-- **History management** - Configures shell-appropriate history in XDG-compliant locations
-- **Completion systems** - Loads bash-completion or zsh compinit as needed
-
-The system follows the XDG Base Directory specification with `$DOTFILES_ROOT` as the repo location.
+### Component Architecture:
+- **Self-describing**: Each component has a `component.yaml` with metadata
+- **Dependency resolution**: Topological sort ensures correct load order
+- **Optional tools**: Components gracefully degrade when tools are missing
+- **XDG compliance**: All paths follow XDG Base Directory specification
 
 ## Directory Structure
 
 ```
-shell/                    # Shell initialization modules
-├── init.sh              # Main entry point (load order controller)
+core/                     # Core bootstrap system
+├── bootstrap.sh         # Main entry point
 ├── discovery.sh         # Shell/platform detection
 ├── xdg.sh              # XDG base directory setup
-├── environment.sh       # Core environment variables
-├── environment.darwin.sh # macOS-specific
-├── environment.linux.sh # Linux-specific
-├── aliases.sh          # Shell aliases
-├── options.sh          # shopt/setopt options
-├── secrets.sh          # Secrets loader
-├── completions.sh      # Completion systems + FZF
-└── prompt.sh           # Git-aware prompt
+├── theme.sh            # Catppuccin Mocha color definitions
+├── loader.sh           # Component loader with dependency resolution
+└── sync.sh             # Dotfiles management functions
 
-functions/               # Function modules by domain
-├── core/               # Essential utilities
-│   ├── cd.sh          # Enhanced cd
-│   ├── history.sh     # History functions
-│   ├── archive.sh     # mktar, mkzip
-│   ├── utils.sh       # bash_as, misc
-│   ├── tools.sh       # Tool management
-│   ├── tmux.sh        # Tmux helpers
-│   └── inject.sh      # Dotfiles management
-├── dev/                # Development tools
-│   ├── python.sh      # mkvenv, venv, rmenv
-│   ├── golang.sh      # Go helpers
-│   ├── github.sh      # GitHub functions
-│   └── vscode.sh      # VS Code functions
-├── cloud/              # Cloud/DevOps
-│   ├── kubernetes.sh  # K8s functions
-│   ├── automation.sh  # Automation helpers
-│   └── secrets.sh     # Secret management
-└── ai/                 # AI/ML tools
-    ├── ollama.sh      # Ollama integration
-    ├── huggingface.sh # Hugging Face
-    └── aliases.sh     # AI command aliases
+components/              # Feature components
+├── _template/          # Template for new components
+├── shell/              # Core shell functions (cd, history, archive)
+├── git/                # Git aliases and functions
+├── fzf/                # FZF integration with previews
+├── tools/              # Tool management utilities
+├── tmux/               # Tmux session management
+├── python/             # Python/UV virtual environments
+├── node/               # Node.js/NVM/pnpm setup
+├── go/                 # Go development environment
+├── github/             # GitHub CLI integration
+├── vscode/             # VS Code helpers
+├── database/           # Database tool aliases
+├── kubernetes/         # kubectl and helm aliases
+├── secrets/            # Secret loading and validation
+├── automation/         # Automation framework integration
+├── claude/             # Claude Code management
+├── ollama/             # Ollama local AI models
+└── huggingface/        # Hugging Face integration
 
 config/                  # Application configs
 ├── git/                # Git configuration
 ├── ssh/                # SSH config
 ├── python/             # Python startup
-├── r/                  # R profile
-├── conda/              # Conda config
-├── wget/               # Wget config
 └── karabiner/          # macOS keyboard
 
 secrets/                 # Secure storage (gitignored)
-docs/                    # Documentation
 .automation/             # Automation CLI framework
+```
+
+### Component Structure
+
+Each component follows this structure:
+```
+components/<name>/
+├── component.yaml      # Metadata: name, dependencies, tools
+├── env.sh             # Environment variables
+├── aliases.sh         # Command aliases
+├── functions.sh       # Shell functions
+└── completions.sh     # Tab completions
+```
+
+Example `component.yaml`:
+```yaml
+name: python
+description: Python development with UV package manager
+version: 1.0.0
+shell: [bash, zsh]
+platform: [darwin, linux]
+
+dependencies:
+  components:
+    - shell
+  tools:
+    required: []
+    optional:
+      - uv
+      - python3
 ```
 
 ## Loading Sequence
 
-Configuration loads in this order (see `shell/init.sh`):
-1. **`discovery.sh`** - Detects shell type and platform
-2. **`xdg.sh`** - Sets XDG base directories
-3. **`environment.sh`** - Core environment variables (sources platform-specific)
-4. **`secrets.sh`** - Loads credentials silently
-5. **`options.sh`** - Shell options (shopt/setopt)
-6. **`aliases.sh`** - Command aliases
-7. **`functions/**/*.sh`** - All function modules
-8. **`completions.sh`** - Completion systems and FZF
-9. **`prompt.sh`** - Git-aware prompt
-10. **`~/.config/shell/local.sh`** - Local overrides (optional)
+Configuration loads in this order (see `core/bootstrap.sh`):
+1. **`core/discovery.sh`** - Detects shell type and platform
+2. **`core/xdg.sh`** - Sets XDG base directories
+3. **`core/theme.sh`** - Loads Catppuccin Mocha colors
+4. **`core/loader.sh`** - Discovers and loads components in dependency order
+5. **`core/sync.sh`** - Dotfiles management functions
+6. **`~/.config/shell/local.sh`** - Local overrides (optional)
+
+Component loading order is determined by topological sort of dependencies.
 
 ## Installation and Setup
 
@@ -99,9 +113,10 @@ cd ~/.config/dotfiles
 ./install.sh
 ```
 
-The installer creates bootstrap files that source the main init.sh:
-- `~/.bashrc` - Sources `$DOTFILES_ROOT/shell/init.sh`
-- `~/.zshrc` - Sources `$DOTFILES_ROOT/shell/init.sh`
+The installer creates bootstrap files that source core/bootstrap.sh:
+- `~/.bashrc` - Sources `$DOTFILES_ROOT/core/bootstrap.sh`
+- `~/.zshrc` - Sources `$DOTFILES_ROOT/core/bootstrap.sh`
+- `~/.bash_profile` - Sources ~/.bashrc for login shells
 
 ### Dotfiles Management Functions
 ```bash
@@ -110,39 +125,69 @@ dotfiles_eject      # Remove all injected config
 dotfiles_update     # Git pull + reload
 dotfiles_reload     # Reload without restart
 dotfiles_status     # Show current state
-dotfiles_link_configs # Symlink app configs
+dotfiles_audit      # Check XDG compliance
+dotfiles_link_configs   # Symlink app configs
+dotfiles_unlink_configs # Remove symlinks
 ```
 
-### Third-Party Tools
-**macOS (via Homebrew):**
-- bash-completion, fd, fzf, xclip, xquartz
+Convenience aliases: `df-inject`, `df-eject`, `df-update`, `df-reload`, `df-status`, `df-audit`
 
-**Linux (via apt/yum):**
-- bash-completion, fd-find, fzf
+### Component Management (Makefile)
+```bash
+make component-list      # List all components
+make component-status    # Show component health
+make component-new NAME=foo  # Create from template
+make component-validate  # Validate all component.yaml
+make test-components     # Test component loading
+```
 
-## Custom Functions
+## Key Functions by Component
 
-### Core (functions/core/)
+### shell
 - **`cd()`** - Enhanced cd that runs `ll` after directory change
 - **`h(pattern)`** - History search with grep
 - **`mktar(path)`** - Create .tar.gz archive
 - **`mkzip(path)`** - Create .zip archive
 - **`bash_as(user)`** - Run bash shell as another user
 
-### Development (functions/dev/)
-- **`mkvenv([name])`** - Create virtual environment
+### python
+- **`mkvenv([name])`** - Create virtual environment (uses UV if available)
 - **`venv([name])`** - Activate virtual environment
-- **`rmenv([pattern])`** - Remove environment variables
+- **`dvenv()`** - Deactivate virtual environment
+- **`fastapi_env()`** - Setup FastAPI development environment
 
-### Cloud (functions/cloud/)
-- **`load_secrets`** - Load secrets into environment
-- **`validate_secrets`** - Validate API keys
-- **Kubernetes helpers** - Pod logs, context switching
+### node
+- **`nvm_setup()`** - Install NVM and latest LTS Node
+- **`node_init()`** - Initialize TypeScript project
+- **`nclean()`** - Remove and reinstall node_modules
 
-### AI (functions/ai/)
-- **`ollama_setup`** - Install and configure Ollama
-- **`ollama_chat`** - Interactive AI chat
-- **`hf_setup`** - Setup Hugging Face environment
+### go
+- **`gonew(name)`** - Initialize new Go project
+- **`gotest([pattern])`** - Run tests with optional filter
+- **`gotestcover()`** - Generate coverage report
+- **`gobuildall()`** - Build for multiple platforms
+
+### github
+- **`quickpr()`** - Push branch and create PR
+- **`newrepo(name)`** - Create GitHub repository
+- **`gitcleanup()`** - Remove merged branches
+
+### kubernetes
+- **`kuse([context])`** - Switch kubectl context
+- **`knsuse([ns])`** - Switch namespace
+- **`kpods([filter])`** - List pods with optional filter
+- **`klf(pod)`** - Follow pod logs
+
+### claude
+- **`claude_stats()`** - View usage statistics
+- **`claude_tokens()`** - View token usage by model
+- **`claude_permissions()`** - View/manage permissions
+- **`claude_mcp()`** - List MCP servers
+
+### ollama
+- **`ollama_status()`** - Check installation and models
+- **`ollama_chat(model, prompt)`** - Quick AI chat
+- **`ollama_code(lang, desc)`** - Generate code
 
 ## Testing and Development
 
@@ -151,6 +196,7 @@ dotfiles_link_configs # Symlink app configs
 make test-quick          # Syntax and basic tests
 make test-dotfiles       # Dotfiles functionality
 make test-syntax         # All shell script syntax
+make test-components     # Component loading tests
 make test-comprehensive  # Full test suite
 ```
 
@@ -159,7 +205,7 @@ make test-comprehensive  # Full test suite
 # Test in clean shell
 bash --noprofile --norc
 export DOTFILES_ROOT="$PWD"
-source shell/init.sh
+source core/bootstrap.sh
 
 # Verify detection
 echo "Shell: $CURRENT_SHELL"
@@ -170,12 +216,12 @@ mkvenv test-env
 h git
 ```
 
-### Key Test Cases
-1. **Shell detection** works in bash and zsh
-2. **Git prompt** shows correct colors and branch info
-3. **XDG directories** created correctly
-4. **Custom functions** work in both shells
-5. **Completions** load without errors
+### Creating New Components
+```bash
+make component-new NAME=mycomponent
+# Edit components/mycomponent/component.yaml
+# Add functions to components/mycomponent/functions.sh
+```
 
 ## Environment Variables
 
@@ -192,30 +238,41 @@ h git
 - **`IS_INTERACTIVE`** - true/false
 - **`IS_LOGIN_SHELL`** - true/false
 
-### Development Paths
-- **Python**: `PYTHONSTARTUP`, `IPYTHONDIR`
-- **Node.js**: `NVM_DIR` (XDG-compliant)
-- **Neovim**: `NEOVIM_VIRTUALENV`, `VIM_PLUGGED`
+### Theme Colors (Catppuccin Mocha)
+- **`CLR_*`** - Color codes (CLR_RED, CLR_GREEN, CLR_BLUE, etc.)
+- **`CLR_RESET`** - Reset color
 
 ## Troubleshooting
 
 ### Common Issues
 1. **Shell not detected**: Check `$BASH_VERSION` / `$ZSH_VERSION`
-2. **Prompt broken**: Verify shell-specific color escaping
-3. **Functions missing**: Ensure `functions/` is sourced
-4. **XDG not set**: Check `shell/xdg.sh` sourcing
+2. **Component not loading**: Check `component.yaml` syntax with `yq`
+3. **Functions missing**: Run `make component-status` to check health
+4. **XDG not set**: Check `core/xdg.sh` sourcing
 
 ### Debug Commands
 ```bash
 # Check detection
 echo "Shell: $CURRENT_SHELL, Platform: $CURRENT_PLATFORM"
 
-# Test git functions
-git_branch; git_color
+# List loaded components
+make component-status
 
 # Verify XDG
 env | grep XDG
 
 # List loaded functions
 declare -F | grep -E "(mkvenv|dotfiles)"
+
+# Check component dependencies
+yq '.dependencies' components/python/component.yaml
 ```
+
+## Legacy Migration
+
+The system was migrated from a legacy `shell/` + `functions/` structure to the current component-based architecture. Legacy directories may still exist but are no longer used:
+
+- `shell/` → Replaced by `core/`
+- `functions/` → Replaced by `components/`
+
+If you find references to legacy paths, update them to use the new structure.
