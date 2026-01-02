@@ -1,0 +1,27 @@
+name: fzf
+version: 1.0.0
+description: Fuzzy finder with Catppuccin theme and shell integrations
+category: dev
+
+requires:
+  tools: [fzf]
+  components: [shell]
+
+provides:
+  aliases: [ff, fcd, fgb, fgl, fkill, fh, fenv]
+  functions: [fzf_files, fzf_cd, fzf_git_branch, fzf_git_log, fzf_kill, fzf_history, fzf_env]
+  completions: [fzf]
+
+xdg:
+  config: fzf
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [fzf, fd]
+  apt: [fzf, fd-find]
+  post_install: setup.sh

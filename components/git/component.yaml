@@ -1,0 +1,27 @@
+name: git
+version: 1.0.0
+description: Git version control aliases and functions
+category: dev
+
+requires:
+  tools: [git]
+  components: [shell]
+
+provides:
+  aliases: [g, gs, ga, gaa, gc, gco, gb, gd, gp, gpl, gl, glog]
+  functions: [gclone, gcob, gpush, gpull]
+  completions: [git]
+
+xdg:
+  config: git
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [git]
+  apt: [git]
+  post_install: ""
