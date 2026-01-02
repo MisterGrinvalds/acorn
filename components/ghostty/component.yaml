@@ -1,0 +1,25 @@
+name: ghostty
+description: Ghostty terminal emulator configuration
+version: 1.0.0
+shell: [bash, zsh]
+platform: [darwin, linux]
+
+dependencies:
+  components:
+    - shell
+  tools:
+    required: []
+    optional:
+      - ghostty
+
+files:
+  env: env.sh
+  aliases: aliases.sh
+  functions: functions.sh
+  completions: completions.sh
+
+xdg:
+  config:
+    - ghostty
+  data: []
+  cache: []
