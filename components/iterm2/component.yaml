@@ -1,18 +1,37 @@
 name: iterm2
 description: iTerm2 terminal configuration and shell integration
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin]
+category: dev
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional: []
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions:
+    - iterm_install_integration
+    - iterm_integration_status
+    - iterm_profile
+    - iterm_tab_color
+    - iterm_tab_reset
+    - iterm_title
+    - iterm_badge
+    - iterm_notify
+    - iterm_alert
+    - iterm_info
+  completions: []
+
+xdg:
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin]
+shells: [bash, zsh]
+
+setup:
+  brew: []
+  apt: []
+  post_install: ""

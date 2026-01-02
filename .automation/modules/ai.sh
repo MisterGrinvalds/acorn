@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # AI/ML Module for Automation Framework
 # Provides unified interface for Ollama and Hugging Face models
 

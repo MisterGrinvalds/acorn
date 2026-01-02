@@ -1,26 +1,27 @@
 name: python
 description: Python development with UV package manager
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: dev
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - uv
-      - python3
-      - pip
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: [py, pip]
+  functions: [mkvenv, venv, dvenv, fastapi_env]
+  completions: [uv, pip]
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [python3, uv]
+  apt: [python3, python3-pip]
+  post_install: ""

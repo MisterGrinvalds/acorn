@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 # Automation Framework Setup Script
 
 set -euo pipefail

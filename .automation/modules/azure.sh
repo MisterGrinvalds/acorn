@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Azure Cloud Automation Module
 
 # Module configuration

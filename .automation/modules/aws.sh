@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # AWS Cloud Automation Module
 
 # Module configuration

@@ -1,28 +1,27 @@
 name: node
 description: Node.js development with NVM and pnpm
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: dev
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - nvm
-      - node
-      - npm
-      - pnpm
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions: [nvm_setup, node_init, nclean]
+  completions: []
 
 xdg:
-  config: []
-  data:
-    - nvm
-  cache: []
+  config: ""
+  data: nvm
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [node, pnpm]
+  apt: [nodejs, npm]
+  post_install: ""

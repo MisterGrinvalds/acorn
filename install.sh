@@ -38,7 +38,7 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $*"
 }
 
-# Portable function to get user response
+# Portable function to get user response (defaults to Y on Enter)
 getResponse() {
     local OPTIND MESSAGE
     while getopts ":m:" opt; do
@@ -52,19 +52,19 @@ getResponse() {
 
     # If YES_TO_ALL is set, automatically answer yes
     if [ "$YES_TO_ALL" = true ]; then
-        printf "%s [y/n]: y (auto-yes)\n" "$MESSAGE"
+        printf "%s [Y/n]: y (auto-yes)\n" "$MESSAGE"
         RESPONSE="y"
         return 0
     fi
 
-    # Loop until valid response
+    # Loop until valid response (defaults to Y on empty input)
     while true; do
-        printf "%s [y/n]: " "$MESSAGE"
+        printf "%s [Y/n]: " "$MESSAGE"
         read -r RESPONSE
         case "$RESPONSE" in
-            y|Y|yes|Yes|YES) RESPONSE="y"; break ;;
+            y|Y|yes|Yes|YES|"") RESPONSE="y"; break ;;
             n|N|no|No|NO) RESPONSE="n"; break ;;
-            *) echo "Please enter y or n" ;;
+            *) echo "Please enter y or n (default: y)" ;;
         esac
     done
 }

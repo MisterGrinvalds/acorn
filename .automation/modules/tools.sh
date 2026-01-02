@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # External Tools Management Module
 # Check for updates and upgrade external dependencies with user prompting
 

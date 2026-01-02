@@ -1,25 +1,27 @@
 name: claude
 description: Claude Code management and utilities
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: ai
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - claude
-      - jq
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions: [claude_stats, claude_tokens, claude_permissions, claude_mcp]
+  completions: []
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: []
+  apt: []
+  post_install: ""

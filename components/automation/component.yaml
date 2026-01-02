@@ -1,24 +1,27 @@
 name: automation
 description: Automation framework integration
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: dev
 
-dependencies:
-  components:
-    - shell
-    - secrets
-  tools:
-    required: []
-    optional: []
+requires:
+  tools: []
+  components: [shell, secrets]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions: []
+  completions: []
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: []
+  apt: []
+  post_install: ""

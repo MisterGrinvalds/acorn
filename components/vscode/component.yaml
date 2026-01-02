@@ -1,24 +1,27 @@
 name: vscode
 description: VS Code integration and project helpers
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: dev
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - code
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: [c, code]
+  functions: []
+  completions: []
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [visual-studio-code]
+  apt: []
+  post_install: ""

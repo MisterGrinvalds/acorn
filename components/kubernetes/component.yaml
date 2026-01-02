@@ -1,26 +1,27 @@
 name: kubernetes
 description: Kubernetes and Helm development tools
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: cloud
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - kubectl
-      - helm
-      - k9s
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: [k, kns, kctx]
+  functions: [kuse, knsuse, kpods, klf]
+  completions: [kubectl, helm]
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [kubectl, helm, k9s]
+  apt: [kubectl]
+  post_install: ""

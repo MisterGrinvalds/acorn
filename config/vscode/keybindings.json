@@ -162,12 +162,8 @@
   },
 
   // ==========================================================================
-  // Terminal
+  // Terminal (Cmd+` left as macOS default for window switching)
   // ==========================================================================
-  {
-    "key": "cmd+`",
-    "command": "workbench.action.terminal.toggleTerminal"
-  },
   {
     "key": "cmd+shift+`",
     "command": "workbench.action.terminal.new"

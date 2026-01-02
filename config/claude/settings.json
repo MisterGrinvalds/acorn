@@ -1,5 +1,9 @@
 {
-  "$schema": "https://claude.ai/schemas/settings.json",
+  "statusLine": {
+    "type": "command",
+    "command": "/Users/mistergrinvalds/.claude/statusline-bridge.sh",
+    "padding": 0
+  },
   "permissions": {
     "allow": [
       "Bash(git:*)",

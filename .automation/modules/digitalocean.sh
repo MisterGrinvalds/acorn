@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # DigitalOcean Cloud Automation Module
 
 # Module configuration

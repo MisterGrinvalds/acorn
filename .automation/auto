@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Unified Automation CLI
+# Requires bash 4+ for associative arrays (use Homebrew bash on macOS)
 # Main entry point for all automation tools
 
 # Set script directory and load framework

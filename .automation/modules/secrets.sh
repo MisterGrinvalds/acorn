@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Secrets Management Module
 # Secure handling of API keys, tokens, and sensitive configuration
 

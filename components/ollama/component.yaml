@@ -1,24 +1,27 @@
 name: ollama
 description: Ollama local AI model management
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: ai
 
-dependencies:
-  components:
-    - shell
-  tools:
-    required: []
-    optional:
-      - ollama
+requires:
+  tools: []
+  components: [shell]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions: [ollama_status, ollama_chat, ollama_code]
+  completions: []
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [ollama]
+  apt: []
+  post_install: ""

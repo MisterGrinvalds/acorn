@@ -1,25 +1,27 @@
 name: github
 description: GitHub CLI integration and workflow helpers
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+category: dev
 
-dependencies:
-  components:
-    - shell
-    - git
-  tools:
-    required: []
-    optional:
-      - gh
+requires:
+  tools: []
+  components: [shell, git]
 
-files:
-  env: env.sh
-  aliases: aliases.sh
-  functions: functions.sh
-  completions: completions.sh
+provides:
+  aliases: []
+  functions: [quickpr, newrepo, gitcleanup]
+  completions: [gh]
 
 xdg:
-  config: []
-  data: []
-  cache: []
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [gh]
+  apt: [gh]
+  post_install: ""
