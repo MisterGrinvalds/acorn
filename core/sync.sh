@@ -554,10 +554,21 @@ dotfiles_link_configs() {
     fi
 
     # Claude Code config
-    if [ -f "$DOTFILES_ROOT/config/claude/settings.json" ]; then
+    if [ -d "$DOTFILES_ROOT/config/claude" ]; then
         mkdir -p "$HOME/.claude"
-        ln -sf "$DOTFILES_ROOT/config/claude/settings.json" "$HOME/.claude/settings.json"
-        echo "Linked: ~/.claude/settings.json"
+
+        # Copy statusline bridge script
+        if [ -f "$DOTFILES_ROOT/config/claude/statusline-bridge.sh" ]; then
+            cp "$DOTFILES_ROOT/config/claude/statusline-bridge.sh" "$HOME/.claude/statusline-bridge.sh"
+            chmod +x "$HOME/.claude/statusline-bridge.sh"
+            echo "Installed: ~/.claude/statusline-bridge.sh"
+        fi
+
+        # Generate settings.json with correct paths for this system
+        if [ -f "$DOTFILES_ROOT/config/claude/settings.json" ]; then
+            sed "s|/Users/[^/]*/|$HOME/|g" "$DOTFILES_ROOT/config/claude/settings.json" > "$HOME/.claude/settings.json"
+            echo "Installed: ~/.claude/settings.json"
+        fi
     fi
 
     echo ""
@@ -574,7 +585,8 @@ dotfiles_unlink_configs() {
     [ -L "$HOME/.config/karabiner/karabiner.json" ] && rm "$HOME/.config/karabiner/karabiner.json" && echo "Unlinked: ~/.config/karabiner/karabiner.json"
     [ -L "$HOME/.config/ghostty/config" ] && rm "$HOME/.config/ghostty/config" && echo "Unlinked: ~/.config/ghostty/config"
     [ -L "$HOME/.config/tmux/tmux.conf" ] && rm "$HOME/.config/tmux/tmux.conf" && echo "Unlinked: ~/.config/tmux/tmux.conf"
-    [ -L "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Unlinked: ~/.claude/settings.json"
+    [ -f "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Removed: ~/.claude/settings.json"
+    [ -f "$HOME/.claude/statusline-bridge.sh" ] && rm "$HOME/.claude/statusline-bridge.sh" && echo "Removed: ~/.claude/statusline-bridge.sh"
 
     # iTerm2 DynamicProfiles (macOS only)
     if [ "$CURRENT_PLATFORM" = "darwin" ]; then
