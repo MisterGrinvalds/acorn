@@ -1,0 +1,27 @@
+name: shell
+version: 1.0.0
+description: Core shell configuration - prompt, options, history
+category: core
+
+requires:
+  tools: []
+  components: []  # No dependencies - this is the base component
+
+provides:
+  aliases: [ll, la, l, ..., ..., grep, less, c, cp, df, du]
+  functions: [git_branch, git_color, cd, mkcd, up, extract, mktar, mkzip, h, ff, fd, rg, sysinfo, bash_as, rmenv]
+  completions: []
+
+xdg:
+  config: shell
+  data: shell
+  cache: ""
+  state: shell
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: []
+  apt: []
+  post_install: ""
