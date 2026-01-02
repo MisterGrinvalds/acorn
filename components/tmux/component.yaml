@@ -1,0 +1,27 @@
+name: tmux
+version: 1.0.0
+description: Tmux session management and development workspace helpers
+category: dev
+
+requires:
+  tools: [tmux]
+  components: [shell]
+
+provides:
+  aliases: []
+  functions: [dev_session, k8s_session, project_session, tswitch, tkill]
+  completions: []
+
+xdg:
+  config: tmux
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [tmux]
+  apt: [tmux]
+  post_install: ""
