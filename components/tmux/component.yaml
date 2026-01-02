@@ -1,6 +1,6 @@
 name: tmux
 version: 1.0.0
-description: Tmux session management and development workspace helpers
+description: Tmux configuration with Catppuccin theme, TPM plugin manager, and session helpers
 category: dev
 
 requires:
@@ -8,8 +8,21 @@ requires:
   components: [shell]
 
 provides:
-  aliases: []
-  functions: [dev_session, k8s_session, project_session, tswitch, tkill]
+  aliases: [tm, tma, tmat, tmn, tmns, tml, tmk, tmka, tmx, tmdev]
+  functions:
+    - dev_session
+    - k8s_session
+    - project_session
+    - tswitch
+    - tkill
+    - tmux_install_tpm
+    - tmux_update_tpm
+    - tmux_install_plugins
+    - tmux_update_plugins
+    - tmux_config
+    - tmux_reload
+    - tmux_info
+    - tmux_attach
   completions: []
 
 xdg:
@@ -24,4 +37,4 @@ shells: [bash, zsh]
 setup:
   brew: [tmux]
   apt: [tmux]
-  post_install: ""
+  post_install: "tmux_install_tpm && tmux_install_plugins"

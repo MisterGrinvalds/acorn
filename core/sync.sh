@@ -497,6 +497,13 @@ dotfiles_link_configs() {
         echo "Linked: ~/.config/ghostty/config"
     fi
 
+    # Tmux config
+    if [ -f "$DOTFILES_ROOT/config/tmux/tmux.conf" ]; then
+        mkdir -p "$HOME/.config/tmux"
+        ln -sf "$DOTFILES_ROOT/config/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
+        echo "Linked: ~/.config/tmux/tmux.conf"
+    fi
+
     # iTerm2 config (macOS only)
     if [ "$CURRENT_PLATFORM" = "darwin" ] && [ -d "$DOTFILES_ROOT/config/iterm2" ]; then
         local iterm_profiles_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
@@ -566,6 +573,7 @@ dotfiles_unlink_configs() {
     [ -L "$HOME/.condarc" ] && rm "$HOME/.condarc" && echo "Unlinked: ~/.condarc"
     [ -L "$HOME/.config/karabiner/karabiner.json" ] && rm "$HOME/.config/karabiner/karabiner.json" && echo "Unlinked: ~/.config/karabiner/karabiner.json"
     [ -L "$HOME/.config/ghostty/config" ] && rm "$HOME/.config/ghostty/config" && echo "Unlinked: ~/.config/ghostty/config"
+    [ -L "$HOME/.config/tmux/tmux.conf" ] && rm "$HOME/.config/tmux/tmux.conf" && echo "Unlinked: ~/.config/tmux/tmux.conf"
     [ -L "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Unlinked: ~/.claude/settings.json"
 
     # iTerm2 DynamicProfiles (macOS only)

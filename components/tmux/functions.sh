@@ -107,3 +107,157 @@ tkill() {
         echo "Killed session: $session"
     fi
 }
+
+# =============================================================================
+# TPM (Tmux Plugin Manager)
+# =============================================================================
+
+# Install TPM
+tmux_install_tpm() {
+    local tpm_dir="${TMUX_TPM_DIR:-$HOME/.config/tmux/plugins/tpm}"
+
+    if [ -d "$tpm_dir" ]; then
+        echo "TPM already installed at: $tpm_dir"
+        echo "To update, run: tmux_update_tpm"
+        return 0
+    fi
+
+    echo "Installing Tmux Plugin Manager..."
+    mkdir -p "$(dirname "$tpm_dir")"
+    git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+
+    if [ -d "$tpm_dir" ]; then
+        echo "TPM installed successfully!"
+        echo ""
+        echo "Next steps:"
+        echo "  1. Start tmux: tmux"
+        echo "  2. Install plugins: prefix + I"
+        echo "  3. Update plugins: prefix + U"
+    else
+        echo "Failed to install TPM"
+        return 1
+    fi
+}
+
+# Update TPM
+tmux_update_tpm() {
+    local tpm_dir="${TMUX_TPM_DIR:-$HOME/.config/tmux/plugins/tpm}"
+
+    if [ ! -d "$tpm_dir" ]; then
+        echo "TPM not installed. Run: tmux_install_tpm"
+        return 1
+    fi
+
+    echo "Updating TPM..."
+    git -C "$tpm_dir" pull
+    echo "TPM updated!"
+}
+
+# Install all plugins (run outside tmux)
+tmux_install_plugins() {
+    local tpm_dir="${TMUX_TPM_DIR:-$HOME/.config/tmux/plugins/tpm}"
+
+    if [ ! -d "$tpm_dir" ]; then
+        echo "TPM not installed. Run: tmux_install_tpm"
+        return 1
+    fi
+
+    echo "Installing tmux plugins..."
+    "$tpm_dir/bin/install_plugins"
+}
+
+# Update all plugins (run outside tmux)
+tmux_update_plugins() {
+    local tpm_dir="${TMUX_TPM_DIR:-$HOME/.config/tmux/plugins/tpm}"
+
+    if [ ! -d "$tpm_dir" ]; then
+        echo "TPM not installed. Run: tmux_install_tpm"
+        return 1
+    fi
+
+    echo "Updating tmux plugins..."
+    "$tpm_dir/bin/update_plugins" all
+}
+
+# =============================================================================
+# Configuration Management
+# =============================================================================
+
+# Edit tmux config
+tmux_config() {
+    local config="${TMUX_CONF:-$HOME/.config/tmux/tmux.conf}"
+
+    if [ ! -f "$config" ]; then
+        echo "Tmux config not found: $config"
+        return 1
+    fi
+
+    ${EDITOR:-vim} "$config"
+    echo "Config saved. Run 'tmux source-file $config' or prefix + r to reload."
+}
+
+# Reload tmux config
+tmux_reload() {
+    local config="${TMUX_CONF:-$HOME/.config/tmux/tmux.conf}"
+
+    if [ ! -f "$config" ]; then
+        echo "Tmux config not found: $config"
+        return 1
+    fi
+
+    if [ -n "$TMUX" ]; then
+        tmux source-file "$config"
+        echo "Config reloaded!"
+    else
+        echo "Not in a tmux session. Config will load on next tmux start."
+    fi
+}
+
+# Show tmux info
+tmux_info() {
+    echo "Tmux Information"
+    echo "================"
+
+    if command -v tmux >/dev/null 2>&1; then
+        echo "Version: $(tmux -V)"
+    else
+        echo "Version: not installed"
+        return 1
+    fi
+
+    echo ""
+    echo "Configuration:"
+    echo "  Config: ${TMUX_CONF:-$HOME/.config/tmux/tmux.conf}"
+    echo "  Plugins: ${TMUX_PLUGIN_DIR:-$HOME/.config/tmux/plugins}"
+
+    local tpm_dir="${TMUX_TPM_DIR:-$HOME/.config/tmux/plugins/tpm}"
+    if [ -d "$tpm_dir" ]; then
+        echo "  TPM: installed"
+    else
+        echo "  TPM: not installed (run tmux_install_tpm)"
+    fi
+
+    echo ""
+    echo "Sessions:"
+    if tmux list-sessions 2>/dev/null; then
+        :
+    else
+        echo "  No active sessions"
+    fi
+}
+
+# =============================================================================
+# Session Utilities
+# =============================================================================
+
+# Attach to session or create new with name
+tmux_attach() {
+    local session="${1:-main}"
+
+    if tmux has-session -t "$session" 2>/dev/null; then
+        tmux attach-session -t "$session"
+    else
+        echo "Creating new session: $session"
+        tmux new-session -s "$session"
+    fi
+}
