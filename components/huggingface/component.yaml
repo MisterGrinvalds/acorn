@@ -1,0 +1,27 @@
+name: huggingface
+description: Hugging Face local model management
+version: 1.0.0
+shell: [bash, zsh]
+platform: [darwin, linux]
+
+dependencies:
+  components:
+    - shell
+    - python
+  tools:
+    required: []
+    optional:
+      - python3
+      - pip
+
+files:
+  env: env.sh
+  aliases: aliases.sh
+  functions: functions.sh
+  completions: completions.sh
+
+xdg:
+  config: []
+  data: []
+  cache:
+    - huggingface
