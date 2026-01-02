@@ -1,0 +1,30 @@
+name: database
+description: Database tools and service management
+version: 1.0.0
+shell: [bash, zsh]
+platform: [darwin, linux]
+
+dependencies:
+  components:
+    - shell
+  tools:
+    required: []
+    optional:
+      - pgcli
+      - psql
+      - mycli
+      - mysql
+      - mongosh
+      - redis-cli
+      - sqlite3
+
+files:
+  env: env.sh
+  aliases: aliases.sh
+  functions: functions.sh
+  completions: completions.sh
+
+xdg:
+  config: []
+  data: []
+  cache: []
