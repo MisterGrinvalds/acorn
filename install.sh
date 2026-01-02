@@ -530,22 +530,10 @@ link_app_configs() {
     fi
 
     # Claude Code config
-    if [ -d "$SCRIPT_DIR/config/claude" ]; then
+    if [ -f "$SCRIPT_DIR/config/claude/settings.json" ]; then
         mkdir -p "$HOME/.claude"
-
-        # Copy statusline bridge script
-        if [ -f "$SCRIPT_DIR/config/claude/statusline-bridge.sh" ]; then
-            cp "$SCRIPT_DIR/config/claude/statusline-bridge.sh" "$HOME/.claude/statusline-bridge.sh"
-            chmod +x "$HOME/.claude/statusline-bridge.sh"
-            log_info "Installed Claude statusline bridge"
-        fi
-
-        # Generate settings.json with correct paths for this system
-        if [ -f "$SCRIPT_DIR/config/claude/settings.json" ]; then
-            # Replace hardcoded home path with actual $HOME
-            sed "s|/Users/[^/]*/|$HOME/|g" "$SCRIPT_DIR/config/claude/settings.json" > "$HOME/.claude/settings.json"
-            log_info "Installed Claude Code settings"
-        fi
+        ln -sf "$SCRIPT_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
+        log_info "Linked Claude Code settings"
     fi
 
     # IntelliJ config (reference only)
