@@ -1,0 +1,18 @@
+name: iterm2
+description: iTerm2 terminal configuration and shell integration
+version: 1.0.0
+shell: [bash, zsh]
+platform: [darwin]
+
+dependencies:
+  components:
+    - shell
+  tools:
+    required: []
+    optional: []
+
+files:
+  env: env.sh
+  aliases: aliases.sh
+  functions: functions.sh
+  completions: completions.sh

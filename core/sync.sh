@@ -497,6 +497,29 @@ dotfiles_link_configs() {
         echo "Linked: ~/.config/ghostty/config"
     fi
 
+    # iTerm2 config (macOS only)
+    if [ "$CURRENT_PLATFORM" = "darwin" ] && [ -d "$DOTFILES_ROOT/config/iterm2" ]; then
+        local iterm_profiles_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+        mkdir -p "$iterm_profiles_dir"
+
+        # Link Dynamic Profiles
+        if [ -d "$DOTFILES_ROOT/config/iterm2/DynamicProfiles" ]; then
+            for profile in "$DOTFILES_ROOT/config/iterm2/DynamicProfiles"/*.json; do
+                [ -f "$profile" ] || continue
+                local profile_name
+                profile_name=$(basename "$profile")
+                ln -sf "$profile" "$iterm_profiles_dir/$profile_name"
+                echo "Linked: iTerm2 DynamicProfiles/$profile_name"
+            done
+        fi
+
+        # Note about color scheme
+        if [ -f "$DOTFILES_ROOT/config/iterm2/catppuccin-mocha.itermcolors" ]; then
+            echo "iTerm2 color scheme available: $DOTFILES_ROOT/config/iterm2/catppuccin-mocha.itermcolors"
+            echo "  Import via: iTerm2 > Preferences > Profiles > Colors > Color Presets > Import"
+        fi
+    fi
+
     # VS Code config
     if [ -d "$DOTFILES_ROOT/config/vscode" ]; then
         local vscode_dir
@@ -544,6 +567,16 @@ dotfiles_unlink_configs() {
     [ -L "$HOME/.config/karabiner/karabiner.json" ] && rm "$HOME/.config/karabiner/karabiner.json" && echo "Unlinked: ~/.config/karabiner/karabiner.json"
     [ -L "$HOME/.config/ghostty/config" ] && rm "$HOME/.config/ghostty/config" && echo "Unlinked: ~/.config/ghostty/config"
     [ -L "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Unlinked: ~/.claude/settings.json"
+
+    # iTerm2 DynamicProfiles (macOS only)
+    if [ "$CURRENT_PLATFORM" = "darwin" ]; then
+        local iterm_profiles_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+        if [ -d "$iterm_profiles_dir" ]; then
+            for profile in "$iterm_profiles_dir"/*.json; do
+                [ -L "$profile" ] && rm "$profile" && echo "Unlinked: iTerm2 $(basename "$profile")"
+            done
+        fi
+    fi
 
     # VS Code configs
     local vscode_dir

@@ -1,0 +1,243 @@
+#!/bin/sh
+# components/iterm2/functions.sh - iTerm2 helper functions
+
+# =============================================================================
+# Shell Integration
+# =============================================================================
+
+# Install iTerm2 shell integration
+iterm_install_integration() {
+    if [ "$CURRENT_PLATFORM" != "darwin" ]; then
+        echo "iTerm2 is only available on macOS"
+        return 1
+    fi
+
+    local shell="${CURRENT_SHELL:-bash}"
+    local integration_file="${HOME}/.iterm2_shell_integration.${shell}"
+
+    if [ -f "$integration_file" ]; then
+        echo "Shell integration already installed: $integration_file"
+        echo "To reinstall, remove the file first."
+        return 0
+    fi
+
+    echo "Installing iTerm2 shell integration for $shell..."
+    curl -fsSL "https://iterm2.com/shell_integration/${shell}" -o "$integration_file"
+
+    if [ -f "$integration_file" ]; then
+        echo "Installed: $integration_file"
+        echo "Restart your shell or run: source $integration_file"
+    else
+        echo "Failed to install shell integration"
+        return 1
+    fi
+}
+
+# Check shell integration status
+iterm_integration_status() {
+    local shell="${CURRENT_SHELL:-bash}"
+    local integration_file="${HOME}/.iterm2_shell_integration.${shell}"
+
+    echo "iTerm2 Shell Integration Status"
+    echo "================================"
+
+    if [ -f "$integration_file" ]; then
+        echo "Integration file: $integration_file (installed)"
+    else
+        echo "Integration file: $integration_file (not installed)"
+    fi
+
+    if [ -n "$ITERM_SESSION_ID" ]; then
+        echo "Running in iTerm2: yes"
+        echo "Session ID: $ITERM_SESSION_ID"
+    else
+        echo "Running in iTerm2: no"
+    fi
+
+    if type iterm2_set_user_var >/dev/null 2>&1; then
+        echo "Integration loaded: yes"
+    else
+        echo "Integration loaded: no"
+    fi
+}
+
+# =============================================================================
+# Profile Management
+# =============================================================================
+
+# Switch iTerm2 profile using escape sequence
+iterm_profile() {
+    local profile="$1"
+
+    if [ -z "$profile" ]; then
+        echo "Usage: iterm_profile <profile-name>"
+        echo ""
+        echo "Available profiles can be found in iTerm2 > Preferences > Profiles"
+        return 1
+    fi
+
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        echo "Not running in iTerm2"
+        return 1
+    fi
+
+    # Use iTerm2 proprietary escape sequence to change profile
+    printf '\033]1337;SetProfile=%s\007' "$profile"
+    echo "Switched to profile: $profile"
+}
+
+# Set iTerm2 tab color
+iterm_tab_color() {
+    local r="$1" g="$2" b="$3"
+
+    if [ -z "$r" ] || [ -z "$g" ] || [ -z "$b" ]; then
+        echo "Usage: iterm_tab_color <red> <green> <blue>"
+        echo "Values should be 0-255"
+        echo ""
+        echo "Examples:"
+        echo "  iterm_tab_color 255 0 0      # Red"
+        echo "  iterm_tab_color 0 255 0      # Green"
+        echo "  iterm_tab_color 137 180 250  # Catppuccin Blue"
+        return 1
+    fi
+
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        echo "Not running in iTerm2"
+        return 1
+    fi
+
+    printf '\033]6;1;bg;red;brightness;%s\007' "$r"
+    printf '\033]6;1;bg;green;brightness;%s\007' "$g"
+    printf '\033]6;1;bg;blue;brightness;%s\007' "$b"
+}
+
+# Reset tab color to default
+iterm_tab_reset() {
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        echo "Not running in iTerm2"
+        return 1
+    fi
+
+    printf '\033]6;1;bg;*;default\007'
+}
+
+# =============================================================================
+# Window/Tab Management
+# =============================================================================
+
+# Set iTerm2 window/tab title
+iterm_title() {
+    local title="$1"
+
+    if [ -z "$title" ]; then
+        echo "Usage: iterm_title <title>"
+        return 1
+    fi
+
+    # Set both window and tab title
+    printf '\033]0;%s\007' "$title"
+}
+
+# Set badge text (overlay in corner)
+iterm_badge() {
+    local badge="$1"
+
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        echo "Not running in iTerm2"
+        return 1
+    fi
+
+    if [ -z "$badge" ]; then
+        echo "Usage: iterm_badge <text>"
+        echo "Use empty string to clear: iterm_badge ''"
+        return 1
+    fi
+
+    # Base64 encode the badge text
+    local encoded
+    encoded=$(printf '%s' "$badge" | base64)
+    printf '\033]1337;SetBadgeFormat=%s\007' "$encoded"
+}
+
+# =============================================================================
+# Notifications
+# =============================================================================
+
+# Send iTerm2 notification
+iterm_notify() {
+    local message="$1"
+
+    if [ -z "$message" ]; then
+        echo "Usage: iterm_notify <message>"
+        return 1
+    fi
+
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        echo "Not running in iTerm2"
+        return 1
+    fi
+
+    printf '\033]9;%s\007' "$message"
+}
+
+# Alert when command finishes (call at end of long command)
+iterm_alert() {
+    if [ -z "$ITERM_SESSION_ID" ]; then
+        return 0
+    fi
+
+    printf '\033]1337;RequestAttention=fireworks\007'
+}
+
+# =============================================================================
+# Info
+# =============================================================================
+
+# Show iTerm2 information
+iterm_info() {
+    echo "iTerm2 Information"
+    echo "=================="
+
+    if [ "$CURRENT_PLATFORM" != "darwin" ]; then
+        echo "Platform: $CURRENT_PLATFORM (iTerm2 requires macOS)"
+        return 1
+    fi
+
+    echo "Platform: macOS"
+
+    if [ -n "$ITERM_SESSION_ID" ]; then
+        echo "Running in iTerm2: yes"
+        echo "Session ID: $ITERM_SESSION_ID"
+    else
+        echo "Running in iTerm2: no"
+    fi
+
+    local shell="${CURRENT_SHELL:-bash}"
+    local integration_file="${HOME}/.iterm2_shell_integration.${shell}"
+
+    echo ""
+    echo "Shell Integration:"
+    if [ -f "$integration_file" ]; then
+        echo "  File: $integration_file (installed)"
+        if type iterm2_set_user_var >/dev/null 2>&1; then
+            echo "  Status: loaded"
+        else
+            echo "  Status: not loaded (source the file or restart shell)"
+        fi
+    else
+        echo "  File: $integration_file (not installed)"
+        echo "  Install with: iterm_install_integration"
+    fi
+
+    echo ""
+    echo "Dynamic Profiles:"
+    local profiles_dir="${HOME}/Library/Application Support/iTerm2/DynamicProfiles"
+    if [ -d "$profiles_dir" ]; then
+        local count
+        count=$(find "$profiles_dir" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  Directory: $profiles_dir"
+        echo "  Profile files: $count"
+    else
+        echo "  Directory: $profiles_dir (not found)"
+    fi
+}
