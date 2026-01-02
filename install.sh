@@ -716,11 +716,11 @@ main() {
         install_dotfiles
     fi
 
-    # Install automation framework
-    getResponse -m "Setup automation framework?"
-    if [ "$RESPONSE" = 'y' ]; then
-        install_automation_framework
-    fi
+    # Install automation framework (disabled - needs more work)
+    # getResponse -m "Setup automation framework?"
+    # if [ "$RESPONSE" = 'y' ]; then
+    #     install_automation_framework
+    # fi
 
     # Link app configs
     getResponse -m "Link application configs (git, ssh)?"
@@ -746,11 +746,11 @@ main() {
         install_cloud_tools
     fi
 
-    # Setup secrets management
-    getResponse -m "Setup secrets management?"
-    if [ "$RESPONSE" = 'y' ]; then
-        setup_secrets_management
-    fi
+    # Setup secrets management (disabled - needs more work)
+    # getResponse -m "Setup secrets management?"
+    # if [ "$RESPONSE" = 'y' ]; then
+    #     setup_secrets_management
+    # fi
 
     # Run validation tests
     getResponse -m "Run installation validation tests?"
