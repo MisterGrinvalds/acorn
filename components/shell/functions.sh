@@ -1,6 +1,12 @@
 #!/bin/sh
 # components/shell/functions.sh - Core shell functions
 
+# Unalias any conflicting names before defining functions (zsh compatibility)
+# shellcheck disable=SC3044
+[ -n "$ZSH_VERSION" ] && {
+    unalias h ff fd rg 2>/dev/null
+}
+
 # =============================================================================
 # Git Prompt Helpers
 # =============================================================================
