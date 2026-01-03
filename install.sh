@@ -525,6 +525,15 @@ link_app_configs() {
         log_info "Linked Ghostty config"
     fi
 
+    # Tmux config
+    if [ -f "$SCRIPT_DIR/config/tmux/tmux.conf" ]; then
+        mkdir -p "$HOME/.config/tmux"
+        ln -sf "$SCRIPT_DIR/config/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
+        # Also link to traditional location for older tmux versions
+        ln -sf "$SCRIPT_DIR/config/tmux/tmux.conf" "$HOME/.tmux.conf"
+        log_info "Linked tmux config"
+    fi
+
     # VS Code config
     if [ -d "$SCRIPT_DIR/config/vscode" ]; then
         local vscode_dir
