@@ -61,38 +61,39 @@ if _has_truecolor; then
     THEME_MANTLE=$(_rgb 24 24 37)
     THEME_CRUST=$(_rgb 17 17 27)
 else
-    # 256-color fallback
-    THEME_ROSEWATER='\033[38;5;224m'
-    THEME_FLAMINGO='\033[38;5;224m'
-    THEME_PINK='\033[38;5;218m'
-    THEME_MAUVE='\033[38;5;183m'
-    THEME_RED='\033[38;5;211m'
-    THEME_MAROON='\033[38;5;217m'
-    THEME_PEACH='\033[38;5;223m'
-    THEME_YELLOW='\033[38;5;223m'
-    THEME_GREEN='\033[38;5;157m'
-    THEME_TEAL='\033[38;5;158m'
-    THEME_SKY='\033[38;5;117m'
-    THEME_SAPPHIRE='\033[38;5;117m'
-    THEME_BLUE='\033[38;5;117m'
-    THEME_LAVENDER='\033[38;5;183m'
-    THEME_TEXT='\033[38;5;189m'
-    THEME_SUBTEXT1='\033[38;5;189m'
-    THEME_SUBTEXT0='\033[38;5;146m'
-    THEME_OVERLAY2='\033[38;5;146m'
-    THEME_OVERLAY1='\033[38;5;102m'
-    THEME_OVERLAY0='\033[38;5;102m'
-    THEME_SURFACE2='\033[38;5;60m'
-    THEME_SURFACE1='\033[38;5;60m'
-    THEME_SURFACE0='\033[38;5;238m'
-    THEME_BASE='\033[38;5;235m'
-    THEME_MANTLE='\033[38;5;234m'
-    THEME_CRUST='\033[38;5;233m'
+    # 256-color fallback (use printf to interpret escape sequences)
+    _c256() { printf '\033[38;5;%dm' "$1"; }
+    THEME_ROSEWATER=$(_c256 224)
+    THEME_FLAMINGO=$(_c256 224)
+    THEME_PINK=$(_c256 218)
+    THEME_MAUVE=$(_c256 183)
+    THEME_RED=$(_c256 211)
+    THEME_MAROON=$(_c256 217)
+    THEME_PEACH=$(_c256 223)
+    THEME_YELLOW=$(_c256 223)
+    THEME_GREEN=$(_c256 157)
+    THEME_TEAL=$(_c256 158)
+    THEME_SKY=$(_c256 117)
+    THEME_SAPPHIRE=$(_c256 117)
+    THEME_BLUE=$(_c256 117)
+    THEME_LAVENDER=$(_c256 183)
+    THEME_TEXT=$(_c256 189)
+    THEME_SUBTEXT1=$(_c256 189)
+    THEME_SUBTEXT0=$(_c256 146)
+    THEME_OVERLAY2=$(_c256 146)
+    THEME_OVERLAY1=$(_c256 102)
+    THEME_OVERLAY0=$(_c256 102)
+    THEME_SURFACE2=$(_c256 60)
+    THEME_SURFACE1=$(_c256 60)
+    THEME_SURFACE0=$(_c256 238)
+    THEME_BASE=$(_c256 235)
+    THEME_MANTLE=$(_c256 234)
+    THEME_CRUST=$(_c256 233)
 fi
 
 # Reset and formatting codes
-THEME_RESET='\033[0m'
-THEME_BOLD='\033[1m'
+THEME_RESET=$(printf '\033[0m')
+THEME_BOLD=$(printf '\033[1m')
 
 # =============================================================================
 # Semantic Color Aliases
