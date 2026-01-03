@@ -451,6 +451,65 @@ install_cloud_tools() {
     log_success "Cloud tools installation completed!"
 }
 
+# Setup Neovim configuration
+setup_neovim() {
+    log_info "Setting up Neovim configuration..."
+
+    local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+    local repos_dir="${HOME}/Repos/personal"
+
+    # Check if already configured
+    if [ -L "$config_dir" ]; then
+        local target
+        target=$(readlink "$config_dir")
+        log_info "Neovim already configured: $config_dir -> $target"
+        return 0
+    fi
+
+    if [ -d "$config_dir" ]; then
+        log_info "Neovim config directory exists at $config_dir"
+        return 0
+    fi
+
+    echo ""
+    echo "Neovim configuration can be stored in a separate GitHub repository."
+    echo "Popular options:"
+    echo "  - https://github.com/nvim-lua/kickstart.nvim (recommended starter)"
+    echo "  - Your own fork of kickstart.nvim"
+    echo "  - Any other Neovim config repo"
+    echo ""
+    printf "Enter your Neovim config GitHub repo URL (or 'skip'): "
+    read -r repo_url
+
+    if [ "$repo_url" = "skip" ] || [ -z "$repo_url" ]; then
+        log_info "Skipping Neovim config setup. Run 'nvim_setup' later to configure."
+        return 0
+    fi
+
+    # Extract repo name
+    local repo_name
+    repo_name=$(basename "$repo_url" .git)
+    local repo_path="${repos_dir}/${repo_name}"
+
+    mkdir -p "$repos_dir"
+
+    # Clone repo
+    if [ -d "$repo_path" ]; then
+        log_info "Repo already exists at $repo_path"
+    else
+        log_info "Cloning $repo_url..."
+        git clone "$repo_url" "$repo_path"
+        if [ $? -ne 0 ]; then
+            log_error "Failed to clone repository"
+            return 1
+        fi
+    fi
+
+    # Create symlink
+    ln -s "$repo_path" "$config_dir"
+    log_success "Neovim config linked: $config_dir -> $repo_path"
+}
+
 # Setup secrets management
 setup_secrets_management() {
     log_info "Setting up secrets management..."
@@ -744,6 +803,12 @@ main() {
     getResponse -m "Install cloud and Kubernetes tools?"
     if [ "$RESPONSE" = 'y' ]; then
         install_cloud_tools
+    fi
+
+    # Setup Neovim
+    getResponse -m "Setup Neovim configuration (external repo)?"
+    if [ "$RESPONSE" = 'y' ]; then
+        setup_neovim
     fi
 
     # Setup secrets management (disabled - needs more work)

@@ -1,0 +1,31 @@
+name: neovim
+description: Neovim editor with external config repo support
+version: 1.0.0
+category: editor
+
+requires:
+  tools: [nvim, git]
+  components: [shell]
+
+provides:
+  aliases: [v, vi, vim]
+  functions:
+    - nvim_setup
+    - nvim_update
+    - nvim_clean
+    - nvim_health
+  completions: []
+
+xdg:
+  config: nvim
+  data: nvim
+  cache: nvim
+  state: nvim
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [neovim]
+  apt: [neovim]
+  post_install: "nvim_setup"
