@@ -9,6 +9,10 @@
 #   DOTFILES_DISABLE_<COMPONENT> - Set to 1 to disable a component
 #   DOTFILES_COMPONENTS          - Comma-separated list to load only specific components
 
+# Enable word splitting in zsh (bash splits by default)
+# shellcheck disable=SC3040
+[ -n "$ZSH_VERSION" ] && setopt shwordsplit 2>/dev/null
+
 # =============================================================================
 # Configuration
 # =============================================================================
@@ -69,14 +73,17 @@ _loader_yaml_array() {
 
 # Get list of all component directories
 _loader_discover_components() {
-    local comp_dir
+    local comp_dir comp_name
     for comp_dir in "${COMPONENTS_DIR}"/*/; do
         [ -d "$comp_dir" ] || continue
-        # Skip template directory
-        [ "$(basename "$comp_dir")" = "_template" ] && continue
+        comp_name=$(basename "$comp_dir")
+        # Skip directories starting with _ (disabled/template)
+        case "$comp_name" in
+            _*) continue ;;
+        esac
         # Must have component.yaml
         [ -f "${comp_dir}component.yaml" ] || continue
-        basename "$comp_dir"
+        echo "$comp_name"
     done
 }
 
