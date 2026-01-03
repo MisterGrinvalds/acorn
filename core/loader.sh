@@ -301,5 +301,5 @@ loader_run() {
     return 0
 }
 
-# Export functions that components might need
-export -f xdg_config_dir xdg_data_dir xdg_cache_dir xdg_state_dir xdg_ensure_dirs 2>/dev/null
+# Export functions to subshells (suppress zsh output)
+export -f xdg_config_dir xdg_data_dir xdg_cache_dir xdg_state_dir xdg_ensure_dirs >/dev/null 2>&1
