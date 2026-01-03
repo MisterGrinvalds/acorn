@@ -1,9 +1,10 @@
 {
   "Profiles": [
     {
-      "Name": "Dotfiles Default",
-      "Guid": "dotfiles-default-profile-001",
-      "Description": "Default profile from dotfiles with Catppuccin Mocha theme",
+      "Name": "shell-profile",
+      "Guid": "shell-profile-001",
+      "Dynamic Profile Parent Name": "Default",
+      "Description": "Shell profile with Catppuccin Mocha theme",
 
       "Custom Directory": "Recycle",
       "Working Directory": "",

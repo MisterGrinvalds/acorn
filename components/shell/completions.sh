@@ -6,18 +6,20 @@
 # =============================================================================
 
 if [ "$CURRENT_SHELL" = "bash" ]; then
+    # Suppress errors from completion scripts using bash 4.4+ features (like nosort)
+    # when running on older bash versions (macOS ships with bash 3.2)
     # macOS Homebrew bash-completion
     if [ -f "/opt/homebrew/etc/profile.d/bash_completion.sh" ]; then
-        . "/opt/homebrew/etc/profile.d/bash_completion.sh"
+        . "/opt/homebrew/etc/profile.d/bash_completion.sh" 2>/dev/null
     # Linux Homebrew bash-completion
     elif [ -f "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then
-        . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"
+        . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" 2>/dev/null
     # System bash-completion (Debian/Ubuntu)
     elif [ -f "/usr/share/bash-completion/bash_completion" ]; then
-        . "/usr/share/bash-completion/bash_completion"
+        . "/usr/share/bash-completion/bash_completion" 2>/dev/null
     # System bash-completion (older)
     elif [ -f "/etc/bash_completion" ]; then
-        . "/etc/bash_completion"
+        . "/etc/bash_completion" 2>/dev/null
     fi
 fi
 

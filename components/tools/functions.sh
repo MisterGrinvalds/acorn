@@ -131,6 +131,55 @@ smart_update() {
 }
 
 # =============================================================================
+# Bash Upgrade (macOS)
+# =============================================================================
+
+# Upgrade to modern bash (macOS ships with ancient bash 3.2)
+upgrade_bash() {
+    if [ "$CURRENT_PLATFORM" != "darwin" ]; then
+        echo "This function is for macOS only"
+        return 1
+    fi
+
+    local brew_bash="/opt/homebrew/bin/bash"
+    [ ! -x "$brew_bash" ] && brew_bash="/usr/local/bin/bash"
+
+    # Install bash if not present
+    if ! command -v "$brew_bash" >/dev/null 2>&1; then
+        echo "Installing modern bash via Homebrew..."
+        brew install bash
+    fi
+
+    # Check version
+    local version
+    version=$("$brew_bash" --version | head -1)
+    echo "Homebrew bash: $version"
+    echo "System bash:   $(/bin/bash --version | head -1)"
+
+    # Add to /etc/shells if not present
+    if ! grep -q "$brew_bash" /etc/shells 2>/dev/null; then
+        echo ""
+        echo "Adding $brew_bash to /etc/shells..."
+        echo "$brew_bash" | sudo tee -a /etc/shells
+    fi
+
+    # Offer to set as default
+    if [ "$SHELL" != "$brew_bash" ]; then
+        echo ""
+        echo "Current shell: $SHELL"
+        printf "Set %s as default shell? [y/N] " "$brew_bash"
+        read -r response
+        if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+            chsh -s "$brew_bash"
+            echo "Default shell changed. Restart terminal to use."
+        fi
+    else
+        echo ""
+        echo "Already using Homebrew bash as default shell."
+    fi
+}
+
+# =============================================================================
 # Enhanced Utilities
 # =============================================================================
 

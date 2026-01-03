@@ -52,16 +52,25 @@ git_color() {
 # Prompt Setup
 # =============================================================================
 
+# Set terminal title to current directory
+_set_title() {
+    printf '\033]0;%s\007' "${PWD/#$HOME/~}"
+}
+
 # Set prompt based on shell type
 _setup_prompt() {
     case "$CURRENT_SHELL" in
         bash)
+            # Set title before each prompt
+            PROMPT_COMMAND='_set_title'
             # Bash prompt using theme colors
             PS1='\['"$THEME_TEXT"'\]\n\['"$THEME_TEXT"'\]\A \['"$THEME_TEAL"'\]\u\['"$THEME_TEXT"'\] on \['"$THEME_SAPPHIRE"'\]\h\['"$THEME_TEXT"'\] \['"$THEME_BLUE"'\][\w]$(git_color)$(git_branch)\['"$THEME_RESET"'\]\n\$ '
             ;;
         zsh)
             # Zsh prompt using theme colors
             setopt PROMPT_SUBST
+            # Set title before each prompt
+            precmd() { _set_title; }
             PROMPT='%{'"$THEME_TEXT"'%}
 %{'"$THEME_TEXT"'%}%T %{'"$THEME_TEAL"'%}%n%{'"$THEME_TEXT"'%} on %{'"$THEME_SAPPHIRE"'%}%m%{'"$THEME_TEXT"'%} %{'"$THEME_BLUE"'%}[%~]$(git_color)$(git_branch)%{'"$THEME_RESET"'%}
 %# '
