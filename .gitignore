@@ -1,1 +1,18 @@
+# Temporary directories
 tmp-dotfiles/
+
+# OS files
+.DS_Store
+
+# Claude Code ephemeral files
+.claude/status.json
+.claude/state-*.json
+.claude/refresh-*
+.claude/SESSION_CONTEXT.md
+.claude/settings.local.json
+
+# Editor/IDE
+*.swp
+*~
+.idea/
+*.iml
