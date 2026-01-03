@@ -1,8 +1,8 @@
-# 🚀 Installation Guide
+# Installation Guide
 
-Complete installation guide for the Enhanced Bash Profile & Automation Framework with secrets management and cloud integration.
+Complete installation guide for the Component-Based Dotfiles System with secrets management and cloud integration.
 
-## 📋 Prerequisites
+## Prerequisites
 
 ### Operating System Support
 - **macOS** 10.15+ (Catalina or later)
@@ -12,72 +12,51 @@ Complete installation guide for the Enhanced Bash Profile & Automation Framework
 - **bash** 4.0+ or **zsh** 5.0+
 - **curl** or **wget**
 - **git** 2.0+
-- **rsync**
 
 ### Optional but Recommended
 - **Homebrew** (macOS) or package manager (Linux)
 - **jq** for JSON processing
 - **fzf** for fuzzy finding
 
-## 🎯 Installation Methods
+## Installation Methods
 
 ### Method 1: Interactive Installation (Recommended)
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/bash-profile.git
-cd bash-profile
+git clone https://github.com/your-username/bash-profile.git ~/.config/dotfiles
+cd ~/.config/dotfiles
 
 # Run interactive installer
-./initialize.sh
+./install.sh
 ```
 
 The installer will guide you through:
 1. **Dotfiles installation** - Core bash/zsh profile setup
-2. **Automation framework** - CLI tools and modules
+2. **Application configs** - Link git, ssh, and other app configurations
 3. **Package management** - Install essential tools
 4. **Development tools** - Git, Go, Node.js, Python, VS Code
 5. **Cloud tools** - AWS CLI, Azure CLI, kubectl, Helm
-6. **Secrets management** - API key configuration
+6. **Neovim setup** - External config repository linking
 7. **Validation testing** - Verify everything works
 
 ### Method 2: Non-Interactive Installation
 
 ```bash
 # Install everything with defaults
-./initialize.sh --auto
+./install.sh --auto
 ```
 
 ### Method 3: Selective Installation
 
 ```bash
 # Install only specific components
-./initialize.sh --dotfiles      # Dotfiles only
-./initialize.sh --automation    # Automation framework only
-./initialize.sh --dev-tools     # Development tools only
-./initialize.sh --cloud-tools   # Cloud tools only
+./install.sh --dotfiles      # Dotfiles only
+./install.sh --dev-tools     # Development tools only
+./install.sh --cloud-tools   # Cloud tools only
 ```
 
-### Method 4: Manual Installation
-
-```bash
-# 1. Install dotfiles manually
-export DOTFILES="$HOME"
-rsync -avr --exclude=".git*" ./ "$DOTFILES"
-
-# 2. Setup automation framework
-chmod +x .automation/auto .automation/setup.sh
-.automation/setup.sh
-
-# 3. Initialize secrets management
-auto secrets init
-
-# 4. Create shell links
-ln -s ~/.bash_profile ~/.bashrc    # for bash
-ln -s ~/.bash_profile ~/.zshrc     # for zsh
-```
-
-## 🔧 Platform-Specific Setup
+## Platform-Specific Setup
 
 ### macOS Setup
 
@@ -86,7 +65,7 @@ ln -s ~/.bash_profile ~/.zshrc     # for zsh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Run installer (will use Homebrew)
-./initialize.sh
+./install.sh
 
 # Recommended additional tools
 brew install --cask iterm2        # Better terminal
@@ -101,10 +80,10 @@ brew install tree htop            # System utilities
 sudo apt-get update
 
 # Install prerequisites
-sudo apt-get install -y curl git rsync build-essential
+sudo apt-get install -y curl git build-essential
 
 # Run installer
-./initialize.sh
+./install.sh
 
 # Manual cloud tools installation
 # AWS CLI
@@ -113,10 +92,6 @@ unzip awscliv2.zip && sudo ./aws/install
 
 # Azure CLI
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-# DigitalOcean CLI
-cd ~ && wget https://github.com/digitalocean/doctl/releases/download/v1.94.0/doctl-1.94.0-linux-amd64.tar.gz
-tar xf doctl-1.94.0-linux-amd64.tar.gz && sudo mv doctl /usr/local/bin
 ```
 
 ### CentOS/RHEL Setup
@@ -126,53 +101,28 @@ tar xf doctl-1.94.0-linux-amd64.tar.gz && sudo mv doctl /usr/local/bin
 sudo yum install -y epel-release
 
 # Install prerequisites
-sudo yum install -y curl git rsync gcc make
+sudo yum install -y curl git gcc make
 
 # Run installer
-./initialize.sh
-
-# Install development tools group
-sudo yum groupinstall -y "Development Tools"
+./install.sh
 ```
 
 ### Arch Linux Setup
 
 ```bash
 # Install prerequisites
-sudo pacman -S curl git rsync base-devel
+sudo pacman -S curl git base-devel
 
 # Run installer
-./initialize.sh
-
-# Install AUR helper (optional)
-git clone https://aur.archlinux.org/yay.git
-cd yay && makepkg -si
+./install.sh
 ```
 
-## 🔐 Secrets Management Setup
+## Cloud Provider Setup
 
-After installation, configure your API keys and credentials:
+After installation, configure your cloud providers:
 
-### Quick Setup
+### AWS
 ```bash
-# Interactive setup wizard
-auto secrets setup
-
-# Check what's missing
-auto secrets check-requirements
-
-# Validate configured keys
-auto secrets validate
-```
-
-### Provider-Specific Setup
-
-#### AWS
-```bash
-# Method 1: Use automation wizard
-auto secrets aws
-
-# Method 2: Manual configuration
 aws configure
 # OR set environment variables
 export AWS_ACCESS_KEY_ID="your-access-key"
@@ -180,50 +130,35 @@ export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_DEFAULT_REGION="us-east-1"
 ```
 
-#### Azure
+### Azure
 ```bash
-# Method 1: Use automation wizard
-auto secrets azure
-
-# Method 2: Azure CLI login
 az login
-
-# Method 3: Service principal
+# OR with service principal
 az login --service-principal -u <client-id> -p <client-secret> --tenant <tenant-id>
 ```
 
-#### DigitalOcean
+### DigitalOcean
 ```bash
-# Method 1: Use automation wizard
-auto secrets digitalocean
-
-# Method 2: Manual setup
 doctl auth init
 # OR set environment variable
 export DIGITALOCEAN_TOKEN="your-token"
 ```
 
-#### GitHub
+### GitHub
 ```bash
-# Method 1: Use automation wizard
-auto secrets github
-
-# Method 2: GitHub CLI
 gh auth login
-
-# Method 3: Manual token
+# OR set token
 export GITHUB_TOKEN="your-personal-access-token"
 ```
 
-## 🧪 Testing Your Installation
+## Testing Your Installation
 
 ### Quick Validation
 ```bash
 # Test basic functionality
 make test-quick
 
-# Test API keys and authentication
-make test-api-keys
+# Test authentication status
 make test-auth-status
 
 # Test required tools
@@ -235,22 +170,19 @@ make test-required-tools
 # Full test suite
 make test-comprehensive
 
-# Generate test report
-make test-report
+# Test components
+make test-components
+make component-status
 ```
 
 ### Manual Testing
 ```bash
-# Test shell loading
-source ~/.bash_profile
+# Reload shell
+source ~/.bashrc     # for bash
+source ~/.zshrc      # for zsh
 
-# Test automation CLI
-auto --help
-auto --version
-
-# Test secrets management
-auto secrets check-requirements
-load_secrets
+# Check dotfiles status
+dotfiles_status
 
 # Test cloud connectivity
 aws sts get-caller-identity    # AWS
@@ -260,223 +192,119 @@ gh auth status               # GitHub
 kubectl cluster-info         # Kubernetes
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
-Add to your shell profile or secrets file:
+The system uses XDG Base Directory specification:
 
 ```bash
-# Automation settings
-export AUTO_LOG_LEVEL=INFO
-export AUTO_PARALLEL_JOBS=4
-export AUTO_TIMEOUT=300
+# XDG directories (set automatically)
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
 
-# Auto-load secrets on shell startup
-export AUTO_LOAD_SECRETS=true
-
-# Default project directory
-export DEV_PROJECTS_DIR=$HOME/projects
-
-# GitHub settings
-export GITHUB_DEFAULT_VISIBILITY=public
-
-# Kubernetes settings
-export K8S_DEFAULT_NAMESPACE=default
+# Dotfiles location
+export DOTFILES_ROOT="$HOME/.config/dotfiles"
 ```
 
-### Custom Configuration
+### Component Configuration
 
+Disable specific components:
 ```bash
-# Create custom configuration
-auto config profile create work
-auto config template create my-stack
-
-# Edit automation config
-nano ~/.automation/config/automation.conf
-
-# Edit secrets template
-nano ~/.automation/secrets/template.env
+export DOTFILES_DISABLE_KUBERNETES=1
+export DOTFILES_DISABLE_OLLAMA=1
 ```
 
-## 🚨 Troubleshooting
+Whitelist specific components:
+```bash
+export DOTFILES_COMPONENTS="git,fzf,python,shell"
+```
+
+## Troubleshooting
 
 ### Common Issues
 
 #### Permission Denied
 ```bash
 # Fix script permissions
-chmod +x .automation/auto .automation/setup.sh initialize.sh
-find .automation -name "*.sh" -exec chmod +x {} \;
+chmod +x install.sh
 ```
 
-#### Command Not Found
+#### Components Not Loading
 ```bash
-# Add automation to PATH
-export PATH="$HOME/.automation:$PATH"
-echo 'export PATH="$HOME/.automation:$PATH"' >> ~/.bash_profile
-source ~/.bash_profile
+# Check component status
+make component-status
+
+# Validate component.yaml files
+make component-validate
 ```
 
-#### Secrets Not Loading
+#### Shell Not Detected
 ```bash
-# Check secrets file
-ls -la ~/.automation/secrets/.env
-
-# Reload secrets
-load_secrets
-
-# Re-initialize secrets
-auto secrets init
-```
-
-#### Cloud CLI Issues
-```bash
-# Check CLI installation
-make test-required-tools
-
-# Verify authentication
-make test-auth-status
-
-# Re-authenticate
-auto secrets setup
+# Check shell detection
+echo "Shell: $CURRENT_SHELL"
+echo "Platform: $CURRENT_PLATFORM"
 ```
 
 ### Debugging
 
 ```bash
-# Enable debug logging
-export AUTO_LOG_LEVEL=DEBUG
+# Reload dotfiles
+dotfiles_reload
 
-# Check automation logs
-tail -f ~/.automation/logs/automation.log
+# Check XDG compliance
+dotfiles_audit
 
-# Run tests with verbose output
-make test-quick TEST_VERBOSE=true
+# View loaded components
+make component-list
 ```
 
 ### Reset Installation
 
 ```bash
-# Remove dotfiles (backup first!)
-rm -rf ~/.bash_profile ~/.bash_profile.dir ~/.bash_tools ~/.automation
+# Remove bootstrap files
+dotfiles_eject
 
-# Restore from backup
-cp -r ~/.dotfiles-backup-YYYYMMDD_HHMMSS/* ~/
+# Restore from backup (if available)
+cp -r ~/.dotfiles-backup-*/* ~/
 
 # Reinstall
-./initialize.sh
+./install.sh
 ```
 
-## 🔄 Post-Installation
+## Post-Installation
 
-### Shell Configuration
-
-Add to your shell startup files:
+### Dotfiles Management
 
 ```bash
-# ~/.bash_profile or ~/.zshrc
-source ~/.bash_profile
-
-# Auto-load secrets (optional)
-export AUTO_LOAD_SECRETS=true
-
-# Custom aliases
-alias ll='ls -la'
-alias la='ls -A'
-alias l='ls -CF'
+dotfiles_status         # Show current state
+dotfiles_reload         # Reload without restart
+dotfiles_update         # Git pull + reload
+dotfiles_link_configs   # Link app configs
+dotfiles_unlink_configs # Remove app config links
 ```
 
 ### Development Setup
 
 ```bash
-# Create projects directory
-mkdir -p ~/projects
+# Python virtual environment
+mkvenv myproject
+venv myproject
 
-# Setup common development tools
-auto dev init python sample-api
-auto dev init go sample-cli --cobra
-auto dev init typescript sample-app
+# Go project
+gonew myproject
 
-# Setup Kubernetes environment
-auto k8s cluster info
-auto k8s monitoring
+# Node.js setup
+nvm_setup
+node_init
 ```
 
-### Cloud Environment
+## Further Reading
 
-```bash
-# Setup cloud resources
-auto cloud status
-auto aws ec2 list
-auto azure vm list
-auto digitalocean droplets list
-
-# Deploy sample application
-auto cloud multi-deploy sample-app
-```
-
-## 🚀 Advanced Features
-
-### Custom Modules
-
-Create your own automation modules:
-
-```bash
-# Create custom module
-cat > ~/.automation/modules/custom.sh << 'EOF'
-#!/bin/bash
-custom_help() {
-    echo "Custom module help"
-}
-
-custom_main() {
-    case "$1" in
-        "help") custom_help ;;
-        *) echo "Custom action: $1" ;;
-    esac
-}
-EOF
-
-# Use custom module
-auto custom help
-```
-
-### CI/CD Integration
-
-```bash
-# GitHub Actions example
-name: Test Bash Profile
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install
-      run: ./initialize.sh --auto
-    - name: Test
-      run: make test-ci
-```
-
-### Container Development
-
-```bash
-# Use with dev containers
-auto dev init python my-api --devcontainer
-auto dev init go my-cli --docker
-
-# Kubernetes development
-auto k8s deploy my-app development
-auto k8s port-forward my-app 8080:80
-```
-
-## 📚 Further Reading
-
-- **[Automation Framework](/.automation/README.md)** - Complete automation guide
-- **[Secrets Management](/.automation/SECRETS.md)** - Security and API keys
-- **[Testing Guide](/tests/README.md)** - Testing and validation
-- **[CLAUDE.md](/CLAUDE.md)** - Architecture and design
+- **[CLAUDE.md](/CLAUDE.md)** - Architecture and design guide
+- **[README.md](/README.md)** - Project overview
 
 ---
 

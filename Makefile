@@ -1,31 +1,22 @@
-# Makefile for Testing Bash Profile and Automation Framework
+# Makefile for Testing Component-Based Dotfiles System
 # Comprehensive test suite for all functionality
 
 .PHONY: help test test-all test-quick test-dotfiles test-automation test-cloud test-modules test-syntax test-security test-install clean setup ai-setup ai-status ai-test ai-models ai-chat ai-benchmark ai-cleanup ai-examples nvm-install nvm-setup nvm-status node-install node-lts pnpm-install pnpm-setup node-status shell-status shell-test-discovery shell-test-xdg shell-test-theme shell-test-env shell-test-options shell-test-aliases shell-test-functions shell-test-prompt shell-test-all dotfiles-install dotfiles-inject dotfiles-eject dotfiles-link dotfiles-unlink dotfiles-status dotfiles-reload dotfiles-update uv-install uv-setup uv-status python-status venv-create venv-status go-install go-setup go-status go-tools status brew-status brew-update brew-install-devops brew-install-dev brew-install-db brew-install-all db-install-mysql db-install-mongo db-install-redis db-install-neo4j db-install-kafka component-list component-status component-new component-validate test-components test-component-loader test-component-deps
 
 # Default target
 help: ## Show this help message
-	@echo "Bash Profile & Automation Framework Test Suite"
-	@echo "=============================================="
+	@echo "Component-Based Dotfiles Test Suite"
+	@echo "===================================="
 	@echo ""
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Test Categories:"
 	@echo "  test-quick        - Quick syntax and basic functionality tests"
-	@echo "  test-all          - Complete test suite (requires cloud CLIs)"
+	@echo "  test-all          - Complete test suite"
 	@echo "  test-dotfiles     - Test dotfiles configuration only"
-	@echo "  test-automation   - Test automation framework only"
-	@echo "  test-api-keys     - Test API key configuration and validation"
 	@echo "  test-auth-status  - Test authentication status for all services"
 	@echo "  test-required-tools - Test if required CLI tools are installed"
-	@echo ""
-	@echo "Tools Management:"
-	@echo "  tools-status      - Show comprehensive tools status"
-	@echo "  tools-missing     - Show missing tools"
-	@echo "  tools-update      - Interactive tool updates"
-	@echo "  tools-update-all  - Update all tools without prompting"
-	@echo "  tools-update-yes  - Update all tools with auto-yes prompts"
 	@echo ""
 	@echo "AI/ML Management:"
 	@echo "  ai-setup          - Setup AI/ML environment (Ollama + Hugging Face)"
@@ -102,14 +93,12 @@ help: ## Show this help message
 # Variables
 SHELL := /bin/bash
 DOTFILES_DIR := $(PWD)
-AUTO_DIR := $(DOTFILES_DIR)/.automation
 TEST_DIR := $(DOTFILES_DIR)/tests
 LOG_DIR := $(TEST_DIR)/logs
 BACKUP_DIR := $(TEST_DIR)/backups
 
 # Test configuration
 TEST_PROJECT_DIR := $(TEST_DIR)/test-projects
-TEST_VENV_NAME := test-automation-env
 TEST_TIMEOUT := 30
 
 # Colors for output
@@ -134,7 +123,7 @@ test-quick: setup test-syntax test-dotfiles-basic ## Run quick tests (syntax, ba
 	@echo -e "$(GREEN)✅ Quick tests completed successfully$(NC)"
 
 # Complete test suite
-test-all: setup test-syntax test-dotfiles test-automation test-modules test-integration ## Run complete test suite
+test-all: setup test-syntax test-dotfiles test-components test-integration ## Run complete test suite
 	@echo -e "$(GREEN)✅ All tests completed successfully$(NC)"
 
 # Individual test categories
@@ -143,23 +132,15 @@ test: test-quick ## Alias for test-quick
 # Test syntax of all shell files
 test-syntax: ## Test syntax of all shell scripts
 	@echo -e "$(BLUE)Testing shell script syntax...$(NC)"
-	@echo "Testing shell modules..."
-	@for file in shell/*.sh; do \
-		echo "  Testing $$file..."; \
-		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	@echo "Testing core modules..."
+	@for file in core/*.sh; do \
+		if [ -f "$$file" ]; then \
+			echo "  Testing $$file..."; \
+			bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+		fi; \
 	done
-	@echo "Testing function modules..."
-	@for file in functions/**/*.sh; do \
-		echo "  Testing $$file..."; \
-		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
-	done
-	@echo "Testing automation framework..."
-	@bash -n $(AUTO_DIR)/auto || (echo -e "$(RED)❌ Syntax error in automation CLI$(NC)" && exit 1)
-	@for file in $(AUTO_DIR)/framework/*.sh; do \
-		echo "  Testing $$file..."; \
-		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
-	done
-	@for file in $(AUTO_DIR)/modules/*.sh; do \
+	@echo "Testing component scripts..."
+	@find components -name "*.sh" -type f 2>/dev/null | while read file; do \
 		echo "  Testing $$file..."; \
 		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
 	done
@@ -202,152 +183,6 @@ test-dotfiles-advanced: ## Test advanced dotfiles features
 	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)" IS_INTERACTIVE=true; source shell/init.sh; declare -f h >/dev/null' || \
 		(echo -e "$(RED)❌ h function not defined$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Advanced dotfiles tests passed$(NC)"
-
-# Test automation framework
-test-automation: test-automation-basic test-automation-cli ## Test automation framework
-
-test-automation-basic: ## Test basic automation framework
-	@echo -e "$(BLUE)Testing automation framework basics...$(NC)"
-	@# Test framework files exist
-	@echo "Testing framework structure..."
-	@[ -f $(AUTO_DIR)/auto ] || (echo -e "$(RED)❌ Automation CLI not found$(NC)" && exit 1)
-	@[ -f $(AUTO_DIR)/framework/core.sh ] || (echo -e "$(RED)❌ Core framework not found$(NC)" && exit 1)
-	@[ -f $(AUTO_DIR)/framework/utils.sh ] || (echo -e "$(RED)❌ Utils framework not found$(NC)" && exit 1)
-	@# Test framework initialization
-	@echo "Testing framework initialization..."
-	@bash -c 'source $(AUTO_DIR)/framework/core.sh && [ -n "$$AUTO_HOME" ]' || \
-		(echo -e "$(RED)❌ Framework initialization failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ Basic automation tests passed$(NC)"
-
-test-automation-cli: ## Test automation CLI functionality
-	@echo -e "$(BLUE)Testing automation CLI...$(NC)"
-	@# Make CLI executable
-	@chmod +x $(AUTO_DIR)/auto
-	@# Test help command
-	@echo "Testing CLI help..."
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto --help > $(LOG_DIR)/auto-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Auto help command failed$(NC)" && exit 1)
-	@# Test version command
-	@echo "Testing CLI version..."
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto --version > $(LOG_DIR)/auto-version.log 2>&1 || \
-		(echo -e "$(RED)❌ Auto version command failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ Automation CLI tests passed$(NC)"
-
-# Test individual modules
-test-modules: test-dev-module test-k8s-module test-github-module test-system-module test-config-module test-secrets-module test-tools-module ## Test all automation modules
-
-test-dev-module: ## Test development module
-	@echo -e "$(BLUE)Testing development module...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@# Test dev help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto dev --help > $(LOG_DIR)/dev-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Dev module help failed$(NC)" && exit 1)
-	@# Test project initialization (dry run)
-	@echo "Testing project initialization..."
-	@cd $(TEST_PROJECT_DIR) && \
-		timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto dev init python test-project --dry-run > $(LOG_DIR)/dev-init.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Dev init test skipped (may require dependencies)$(NC)"
-	@echo -e "$(GREEN)✅ Development module tests passed$(NC)"
-
-test-k8s-module: ## Test Kubernetes module
-	@echo -e "$(BLUE)Testing Kubernetes module...$(NC)"
-	@# Test k8s help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto k8s --help > $(LOG_DIR)/k8s-help.log 2>&1 || \
-		(echo -e "$(RED)❌ K8s module help failed$(NC)" && exit 1)
-	@# Test cluster info (may fail if no cluster)
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto k8s cluster info > $(LOG_DIR)/k8s-cluster.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ K8s cluster test skipped (no cluster configured)$(NC)"
-	@echo -e "$(GREEN)✅ Kubernetes module tests passed$(NC)"
-
-test-github-module: ## Test GitHub module
-	@echo -e "$(BLUE)Testing GitHub module...$(NC)"
-	@# Test github help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto github --help > $(LOG_DIR)/github-help.log 2>&1 || \
-		(echo -e "$(RED)❌ GitHub module help failed$(NC)" && exit 1)
-	@# Test repo list (may fail if not authenticated)
-	@if command -v gh >/dev/null 2>&1; then \
-		timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto github repo list > $(LOG_DIR)/github-repos.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ GitHub repo test skipped (not authenticated)$(NC)"; \
-	else \
-		echo -e "$(YELLOW)⚠️ GitHub tests skipped (gh CLI not installed)$(NC)"; \
-	fi
-	@echo -e "$(GREEN)✅ GitHub module tests passed$(NC)"
-
-test-system-module: ## Test system module
-	@echo -e "$(BLUE)Testing system module...$(NC)"
-	@# Test system help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto system --help > $(LOG_DIR)/system-help.log 2>&1 || \
-		(echo -e "$(RED)❌ System module help failed$(NC)" && exit 1)
-	@# Test system info
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto system info > $(LOG_DIR)/system-info.log 2>&1 || \
-		(echo -e "$(RED)❌ System info failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ System module tests passed$(NC)"
-
-test-config-module: ## Test configuration module
-	@echo -e "$(BLUE)Testing configuration module...$(NC)"
-	@# Test config help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto config --help > $(LOG_DIR)/config-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Config module help failed$(NC)" && exit 1)
-	@# Test config validation
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto config validate > $(LOG_DIR)/config-validate.log 2>&1 || \
-		(echo -e "$(RED)❌ Config validation failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ Configuration module tests passed$(NC)"
-
-test-secrets-module: ## Test secrets management module
-	@echo -e "$(BLUE)Testing secrets management module...$(NC)"
-	@# Test secrets help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto secrets --help > $(LOG_DIR)/secrets-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Secrets module help failed$(NC)" && exit 1)
-	@# Test secrets initialization
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto secrets init > $(LOG_DIR)/secrets-init.log 2>&1 || \
-		(echo -e "$(RED)❌ Secrets initialization failed$(NC)" && exit 1)
-	@# Test secrets requirements check
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto secrets check-requirements > $(LOG_DIR)/secrets-check.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Secrets requirements check completed (expected missing keys)$(NC)"
-	@echo -e "$(GREEN)✅ Secrets module tests passed$(NC)"
-
-test-tools-module: ## Test tools management module
-	@echo -e "$(BLUE)Testing tools management module...$(NC)"
-	@# Test tools help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto tools --help > $(LOG_DIR)/tools-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Tools module help failed$(NC)" && exit 1)
-	@# Test tools list
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto tools list > $(LOG_DIR)/tools-list.log 2>&1 || \
-		(echo -e "$(RED)❌ Tools list failed$(NC)" && exit 1)
-	@# Test tools status
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto tools status > $(LOG_DIR)/tools-status.log 2>&1 || \
-		(echo -e "$(RED)❌ Tools status failed$(NC)" && exit 1)
-	@# Test tools check
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto tools check > $(LOG_DIR)/tools-check.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Tools check completed (some tools may be missing)$(NC)"
-	@echo -e "$(GREEN)✅ Tools module tests passed$(NC)"
-
-# Test API keys and secrets
-test-api-keys: test-api-keys-check test-api-keys-validate ## Test API key availability and validation
-
-test-api-keys-check: ## Check which API keys are configured
-	@echo -e "$(BLUE)Checking API key configuration...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto secrets init >/dev/null 2>&1 || true
-	@echo "=== API Key Status Report ===" > $(LOG_DIR)/api-keys-status.log
-	@$(AUTO_DIR)/auto secrets check-requirements >> $(LOG_DIR)/api-keys-status.log 2>&1 || true
-	@echo "Detailed API key status saved to $(LOG_DIR)/api-keys-status.log"
-	@echo
-	@echo -e "$(BLUE)📋 API Key Summary:$(NC)"
-	@grep -E "(✅|❌)" $(LOG_DIR)/api-keys-status.log || echo "No API key status found"
-	@echo -e "$(GREEN)✅ API key check completed$(NC)"
-
-test-api-keys-validate: ## Validate configured API keys
-	@echo -e "$(BLUE)Validating configured API keys...$(NC)"
-	@if [ -f $(AUTO_DIR)/secrets/.env ]; then \
-		echo "Found secrets file, validating..."; \
-		$(AUTO_DIR)/auto secrets validate > $(LOG_DIR)/api-keys-validation.log 2>&1 && \
-		echo -e "$(GREEN)✅ API key validation passed$(NC)" || \
-		echo -e "$(YELLOW)⚠️ Some API keys failed validation (check $(LOG_DIR)/api-keys-validation.log)$(NC)"; \
-	else \
-		echo -e "$(YELLOW)⚠️ No secrets configured, skipping validation$(NC)"; \
-		echo "No secrets file found" > $(LOG_DIR)/api-keys-validation.log; \
-	fi
 
 test-required-tools: ## Test if required CLI tools are installed
 	@echo -e "$(BLUE)Checking required CLI tools...$(NC)"
@@ -435,110 +270,9 @@ test-auth-status: ## Test authentication status for all services
 	@echo -e "$(GREEN)✅ Authentication status check completed$(NC)"
 	@echo "📋 Full report saved to: $(LOG_DIR)/auth-status.log"
 
-setup-secrets-wizard: ## Run interactive secrets setup wizard
-	@echo -e "$(BLUE)Starting secrets setup wizard...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto secrets init
-	@echo "🔐 Run the following command to setup your API keys:"
-	@echo "   $(AUTO_DIR)/auto secrets setup"
-	@echo ""
-	@echo "Or setup individual providers:"
-	@echo "   $(AUTO_DIR)/auto secrets aws"
-	@echo "   $(AUTO_DIR)/auto secrets azure"
-	@echo "   $(AUTO_DIR)/auto secrets digitalocean"
-	@echo "   $(AUTO_DIR)/auto secrets github"
-
-tools-status: ## Show comprehensive tools status using automation framework
-	@echo -e "$(BLUE)Comprehensive tools status...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto tools status
-
-tools-missing: ## Show missing tools
-	@echo -e "$(BLUE)Checking for missing tools...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto tools missing
-
-tools-update: ## Interactive tool updates
-	@echo -e "$(BLUE)Starting interactive tool updates...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto tools update
-
-tools-update-all: ## Update all tools without prompting
-	@echo -e "$(BLUE)Updating all tools...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto tools update --force
-
-tools-update-yes: ## Update all tools with yes-to-all prompts
-	@echo -e "$(BLUE)Updating all tools with auto-yes...$(NC)"
-	@chmod +x $(AUTO_DIR)/auto
-	@$(AUTO_DIR)/auto tools update --yes-to-all
-
-# Test cloud modules
-test-cloud: test-cloud-unified test-aws-module test-azure-module test-do-module ## Test all cloud modules
-
-test-cloud-unified: ## Test unified cloud management
-	@echo -e "$(BLUE)Testing unified cloud management...$(NC)"
-	@# Test cloud help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto cloud --help > $(LOG_DIR)/cloud-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Cloud module help failed$(NC)" && exit 1)
-	@# Test cloud status
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto cloud status > $(LOG_DIR)/cloud-status.log 2>&1 || \
-		(echo -e "$(RED)❌ Cloud status failed$(NC)" && exit 1)
-	@# Test cost comparison
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto cloud cost-compare > $(LOG_DIR)/cloud-cost.log 2>&1 || \
-		(echo -e "$(RED)❌ Cloud cost comparison failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ Unified cloud tests passed$(NC)"
-
-test-aws-module: ## Test AWS module
-	@echo -e "$(BLUE)Testing AWS module...$(NC)"
-	@# Test AWS help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto aws --help > $(LOG_DIR)/aws-help.log 2>&1 || \
-		(echo -e "$(RED)❌ AWS module help failed$(NC)" && exit 1)
-	@# Test AWS auth status (may fail if not configured)
-	@if command -v aws >/dev/null 2>&1; then \
-		timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto aws auth list-profiles > $(LOG_DIR)/aws-auth.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ AWS auth test skipped (not configured)$(NC)"; \
-	else \
-		echo -e "$(YELLOW)⚠️ AWS tests skipped (AWS CLI not installed)$(NC)"; \
-	fi
-	@echo -e "$(GREEN)✅ AWS module tests passed$(NC)"
-
-test-azure-module: ## Test Azure module
-	@echo -e "$(BLUE)Testing Azure module...$(NC)"
-	@# Test Azure help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto azure --help > $(LOG_DIR)/azure-help.log 2>&1 || \
-		(echo -e "$(RED)❌ Azure module help failed$(NC)" && exit 1)
-	@# Test Azure auth status (may fail if not configured)
-	@if command -v az >/dev/null 2>&1; then \
-		timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto azure auth list-subscriptions > $(LOG_DIR)/azure-auth.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Azure auth test skipped (not configured)$(NC)"; \
-	else \
-		echo -e "$(YELLOW)⚠️ Azure tests skipped (Azure CLI not installed)$(NC)"; \
-	fi
-	@echo -e "$(GREEN)✅ Azure module tests passed$(NC)"
-
-test-do-module: ## Test DigitalOcean module
-	@echo -e "$(BLUE)Testing DigitalOcean module...$(NC)"
-	@# Test DO help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto digitalocean --help > $(LOG_DIR)/do-help.log 2>&1 || \
-		(echo -e "$(RED)❌ DigitalOcean module help failed$(NC)" && exit 1)
-	@# Test DO auth status (may fail if not configured)
-	@if command -v doctl >/dev/null 2>&1; then \
-		timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto digitalocean droplets list > $(LOG_DIR)/do-droplets.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ DigitalOcean auth test skipped (not configured)$(NC)"; \
-	else \
-		echo -e "$(YELLOW)⚠️ DigitalOcean tests skipped (doctl not installed)$(NC)"; \
-	fi
-	@echo -e "$(GREEN)✅ DigitalOcean module tests passed$(NC)"
-
 # Test installation and setup
 test-install: ## Test installation process
 	@echo -e "$(BLUE)Testing installation process...$(NC)"
-	@# Test automation setup script
-	@chmod +x $(AUTO_DIR)/setup.sh
-	@# Dry run of setup (skip actual installation)
-	@echo "Testing setup script syntax..."
-	@bash -n $(AUTO_DIR)/setup.sh || (echo -e "$(RED)❌ Setup script syntax error$(NC)" && exit 1)
 	@# Test install.sh script
 	@echo "Testing install.sh script..."
 	@bash -n install.sh || (echo -e "$(RED)❌ Install script syntax error$(NC)" && exit 1)
@@ -558,34 +292,21 @@ test-installer-components: ## Test individual installer components
 	@echo "Testing backup creation..."
 	@mkdir -p $(TEST_DIR)/installer-test
 	@touch $(TEST_DIR)/installer-test/.bash_profile
-	@# Test dotfiles structure (new organization)
+	@# Test dotfiles structure
 	@echo "Testing dotfiles structure..."
-	@[ -d shell ] || (echo -e "$(RED)❌ Shell directory missing$(NC)" && exit 1)
-	@[ -f shell/init.sh ] || (echo -e "$(RED)❌ Shell init.sh missing$(NC)" && exit 1)
-	@[ -d functions ] || (echo -e "$(RED)❌ Functions directory missing$(NC)" && exit 1)
+	@[ -d core ] || (echo -e "$(RED)❌ Core directory missing$(NC)" && exit 1)
+	@[ -f core/bootstrap.sh ] || (echo -e "$(RED)❌ Core bootstrap.sh missing$(NC)" && exit 1)
+	@[ -d components ] || (echo -e "$(RED)❌ Components directory missing$(NC)" && exit 1)
 	@[ -d config ] || (echo -e "$(RED)❌ Config directory missing$(NC)" && exit 1)
-	@[ -d .automation ] || (echo -e "$(RED)❌ Automation directory missing$(NC)" && exit 1)
-	@# Test automation framework structure
-	@echo "Testing automation framework structure..."
-	@[ -f .automation/auto ] || (echo -e "$(RED)❌ Auto CLI missing$(NC)" && exit 1)
-	@[ -f .automation/setup.sh ] || (echo -e "$(RED)❌ Setup script missing$(NC)" && exit 1)
-	@[ -d .automation/modules ] || (echo -e "$(RED)❌ Modules directory missing$(NC)" && exit 1)
-	@[ -d .automation/framework ] || (echo -e "$(RED)❌ Framework directory missing$(NC)" && exit 1)
-	@# Test function modules
-	@[ -f functions/cloud/secrets.sh ] || (echo -e "$(RED)❌ Secrets function missing$(NC)" && exit 1)
-	@[ -f functions/ai/ollama.sh ] || (echo -e "$(RED)❌ Ollama function missing$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Installer components tests passed$(NC)"
 
 # Integration tests
 test-integration: ## Test integration between components
 	@echo -e "$(BLUE)Testing component integration...$(NC)"
-	@# Test dotfiles + automation integration
-	@echo "Testing dotfiles + automation integration..."
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f dotfiles_status >/dev/null' || \
+	@# Test dotfiles integration
+	@echo "Testing dotfiles integration..."
+	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh; declare -f dotfiles_status >/dev/null' || \
 		(echo -e "$(RED)❌ Dotfiles integration not loaded$(NC)" && exit 1)
-	@# Test cloud functions loaded
-	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; declare -f load_secrets >/dev/null' || \
-		(echo -e "$(RED)❌ Cloud functions not loaded$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Integration tests passed$(NC)"
 
 # Security tests
@@ -597,7 +318,7 @@ test-security: ## Test for security issues
 		(echo -e "$(YELLOW)⚠️ Potential hardcoded secrets found$(NC)")
 	@# Check file permissions
 	@echo "Checking file permissions..."
-	@find . -name "*.sh" -perm +111 | grep -v ".automation/auto" | grep -v "install.sh" | grep -v "setup.sh" && \
+	@find . -name "*.sh" -perm +111 | grep -v "install.sh" | grep -v "setup.sh" && \
 		echo -e "$(YELLOW)⚠️ Unexpected executable permissions found$(NC)" || true
 	@echo -e "$(GREEN)✅ Security tests passed$(NC)"
 
@@ -605,14 +326,9 @@ test-security: ## Test for security issues
 test-performance: ## Test performance of shell loading
 	@echo -e "$(BLUE)Testing shell loading performance...$(NC)"
 	@# Time shell loading
-	@echo "Testing shell init load time..."
-	@time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' > $(LOG_DIR)/perf-load.log 2>&1 || \
+	@echo "Testing bootstrap load time..."
+	@time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh; exit 0' > $(LOG_DIR)/perf-load.log 2>&1 || \
 		(echo -e "$(RED)❌ Performance test failed$(NC)" && exit 1)
-	@# Test automation CLI response time
-	@echo "Testing automation CLI response time..."
-	@chmod +x $(AUTO_DIR)/auto
-	@time $(AUTO_DIR)/auto --version > $(LOG_DIR)/perf-cli.log 2>&1 || \
-		(echo -e "$(RED)❌ CLI performance test failed$(NC)" && exit 1)
 	@echo -e "$(GREEN)✅ Performance tests passed$(NC)"
 
 # Functional tests for specific workflows
@@ -721,14 +437,9 @@ test-dev-env: ## Test development environment setup
 benchmark: ## Run performance benchmarks
 	@echo -e "$(BLUE)Running performance benchmarks...$(NC)"
 	@mkdir -p $(LOG_DIR)
-	@echo "Benchmarking shell init loading..."
+	@echo "Benchmarking bootstrap loading..."
 	@for i in {1..10}; do \
-		time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' 2>> $(LOG_DIR)/benchmark-load.log; \
-	done
-	@echo "Benchmarking automation CLI..."
-	@chmod +x $(AUTO_DIR)/auto
-	@for i in {1..5}; do \
-		time $(AUTO_DIR)/auto --version 2>> $(LOG_DIR)/benchmark-cli.log; \
+		time bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh; exit 0' 2>> $(LOG_DIR)/benchmark-load.log; \
 	done
 	@echo "Benchmark results saved to $(LOG_DIR)/benchmark-*.log"
 	@echo -e "$(GREEN)✅ Benchmarks completed$(NC)"
@@ -739,13 +450,13 @@ stress-test: ## Run stress tests
 	@# Test rapid shell loading
 	@echo "Testing rapid shell loading..."
 	@for i in {1..50}; do \
-		bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source shell/init.sh; exit 0' >/dev/null 2>&1 || \
+		bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh; exit 0' >/dev/null 2>&1 || \
 		(echo -e "$(RED)❌ Stress test failed at iteration $$i$(NC)" && exit 1); \
 	done
 	@echo -e "$(GREEN)✅ Stress tests passed$(NC)"
 
 # Final comprehensive test
-test-comprehensive: setup test-syntax test-dotfiles test-automation test-modules test-cloud test-api-keys test-auth-status test-required-tools test-install test-installer-components test-integration test-security test-performance test-workflows analyze-logs test-report ## Run all tests and generate report
+test-comprehensive: setup test-syntax test-dotfiles test-components test-auth-status test-required-tools test-install test-installer-components test-integration test-security test-performance test-workflows analyze-logs test-report ## Run all tests and generate report
 	@echo -e "$(GREEN)🎉 Comprehensive test suite completed successfully!$(NC)"
 	@echo -e "$(BLUE)📊 Test report available at: $(TEST_DIR)/test-report.md$(NC)"
 
@@ -782,20 +493,11 @@ ai-status: ## Check AI/ML tools and models status
 ai-test: ## Test AI/ML functionality
 	@echo -e "$(BLUE)Testing AI/ML functionality...$(NC)"
 	@mkdir -p $(LOG_DIR)
-	@# Test Ollama functionality
-	@echo "Testing Ollama integration..."
-	@chmod +x $(AUTO_DIR)/auto
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai ollama status > $(LOG_DIR)/ai-ollama-test.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Ollama test completed (may not be installed)$(NC)"
-	@# Test Hugging Face functionality
-	@echo "Testing Hugging Face integration..."
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai hf status > $(LOG_DIR)/ai-hf-test.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Hugging Face test completed (may not be installed)$(NC)"
-	@# Test AI module syntax
-	@echo "Testing AI module syntax..."
-	@bash -n $(AUTO_DIR)/modules/ai.sh || (echo -e "$(RED)❌ AI module syntax error$(NC)" && exit 1)
-	@bash -n functions/ai/ollama.sh || (echo -e "$(RED)❌ Ollama tools syntax error$(NC)" && exit 1)
-	@bash -n functions/ai/huggingface.sh || (echo -e "$(RED)❌ Hugging Face tools syntax error$(NC)" && exit 1)
+	@# Test component syntax
+	@echo "Testing AI component syntax..."
+	@find components/ollama components/huggingface -name "*.sh" -type f 2>/dev/null | while read file; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
 	@echo -e "$(GREEN)✅ AI/ML tests completed$(NC)"
 
 ai-models: ## List all available AI models
@@ -835,12 +537,11 @@ ai-chat-hf: ## Start Hugging Face chat
 ai-benchmark: ## Run AI performance benchmarks
 	@echo -e "$(BLUE)Running AI benchmarks...$(NC)"
 	@mkdir -p $(LOG_DIR)
-	@chmod +x $(AUTO_DIR)/auto
 	@echo "=== AI/ML Performance Benchmark ===" > $(LOG_DIR)/ai-benchmark.log
 	@echo "Generated: $$(date)" >> $(LOG_DIR)/ai-benchmark.log
 	@echo "" >> $(LOG_DIR)/ai-benchmark.log
-	@$(AUTO_DIR)/auto ai benchmark all >> $(LOG_DIR)/ai-benchmark.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ Benchmark completed (some platforms may not be available)$(NC)"
+	@command -v ollama >/dev/null && ollama list >> $(LOG_DIR)/ai-benchmark.log 2>&1 || \
+		echo "Ollama not available" >> $(LOG_DIR)/ai-benchmark.log
 	@echo "📊 Benchmark results saved to: $(LOG_DIR)/ai-benchmark.log"
 	@echo -e "$(GREEN)✅ AI benchmarks completed$(NC)"
 
@@ -938,21 +639,13 @@ hf-clear-cache: ## Clear Hugging Face model cache
 	@bash -c 'source functions/ai/huggingface.sh && hf_clear_cache'
 
 # AI testing in main test suite
-test-ai-module: ## Test AI module specifically
-	@echo -e "$(BLUE)Testing AI/ML module...$(NC)"
-	@# Test AI module help
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai --help > $(LOG_DIR)/ai-help.log 2>&1 || \
-		(echo -e "$(RED)❌ AI module help failed$(NC)" && exit 1)
-	@# Test AI status (non-destructive)
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai status > $(LOG_DIR)/ai-status.log 2>&1 || \
-		echo -e "$(YELLOW)⚠️ AI status test completed (some tools may not be installed)$(NC)"
-	@# Test AI examples
-	@timeout $(TEST_TIMEOUT) $(AUTO_DIR)/auto ai examples > $(LOG_DIR)/ai-examples.log 2>&1 || \
-		(echo -e "$(RED)❌ AI examples failed$(NC)" && exit 1)
-	@echo -e "$(GREEN)✅ AI module tests passed$(NC)"
-
-# Extended module tests to include AI
-test-modules: test-dev-module test-k8s-module test-github-module test-system-module test-config-module test-secrets-module test-tools-module test-ai-module ## Test all automation modules
+test-ai-module: ## Test AI components
+	@echo -e "$(BLUE)Testing AI/ML components...$(NC)"
+	@# Test AI component syntax
+	@find components/ollama components/huggingface -name "*.sh" -type f 2>/dev/null | while read file; do \
+		bash -n "$$file" || (echo -e "$(RED)❌ Syntax error in $$file$(NC)" && exit 1); \
+	done
+	@echo -e "$(GREEN)✅ AI component tests passed$(NC)"
 
 # AI tools status in required tools check
 test-ai-tools: ## Test if AI/ML tools are available

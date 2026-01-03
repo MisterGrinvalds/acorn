@@ -46,7 +46,6 @@ components/              # Feature components
 ├── database/           # Database tool aliases
 ├── kubernetes/         # kubectl and helm aliases
 ├── secrets/            # Secret loading and validation
-├── automation/         # Automation framework integration
 ├── claude/             # Claude Code management
 ├── ollama/             # Ollama local AI models
 └── huggingface/        # Hugging Face integration
@@ -58,7 +57,6 @@ config/                  # Application configs
 └── karabiner/          # macOS keyboard
 
 secrets/                 # Secure storage (gitignored)
-.automation/             # Automation CLI framework
 ```
 
 ### Component Structure

@@ -7,7 +7,7 @@
 
 # Load secrets into current environment
 load_secrets() {
-    local secrets_file="${SECRETS_DIR:-$HOME/.automation/secrets}/.env"
+    local secrets_file="${SECRETS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/secrets}/.env"
 
     if [ -f "$secrets_file" ]; then
         if [ -r "$secrets_file" ]; then
@@ -27,44 +27,32 @@ load_secrets() {
 
 # Quick check of secrets status
 secrets_status() {
-    if command -v auto >/dev/null 2>&1; then
-        auto secrets check-requirements
+    local secrets_file="${SECRETS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/secrets}/.env"
+    if [ -f "$secrets_file" ]; then
+        echo "Secrets file: $secrets_file"
+        echo "Keys defined: $(grep -c '^[A-Z]' "$secrets_file" 2>/dev/null || echo 0)"
     else
-        local secrets_file="${SECRETS_DIR:-$HOME/.automation/secrets}/.env"
-        if [ -f "$secrets_file" ]; then
-            echo "Secrets file: $secrets_file"
-            echo "Keys defined: $(grep -c '^[A-Z]' "$secrets_file" 2>/dev/null || echo 0)"
-        else
-            echo "No secrets file found"
-        fi
+        echo "No secrets file found"
     fi
 }
 
 # Quick secrets validation
 validate_secrets() {
-    if command -v auto >/dev/null 2>&1; then
-        auto secrets validate
-    else
-        echo "Checking common credentials..."
-        check_aws_key
-        check_azure_key
-        check_github_key
-        check_digitalocean_key
-    fi
+    echo "Checking common credentials..."
+    check_aws_key
+    check_azure_key
+    check_github_key
+    check_digitalocean_key
 }
 
 # Show configured secrets (keys only, not values)
 list_secrets() {
-    if command -v auto >/dev/null 2>&1; then
-        auto secrets list
+    local secrets_file="${SECRETS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/secrets}/.env"
+    if [ -f "$secrets_file" ]; then
+        echo "Configured secrets:"
+        grep '^[A-Z]' "$secrets_file" 2>/dev/null | cut -d'=' -f1 | sort
     else
-        local secrets_file="${SECRETS_DIR:-$HOME/.automation/secrets}/.env"
-        if [ -f "$secrets_file" ]; then
-            echo "Configured secrets:"
-            grep '^[A-Z]' "$secrets_file" 2>/dev/null | cut -d'=' -f1 | sort
-        else
-            echo "No secrets file found"
-        fi
+        echo "No secrets file found"
     fi
 }
 

@@ -1,6 +1,6 @@
-# Enhanced Bash Profile & Automation Framework
+# Component-Based Dotfiles System
 
-A **comprehensive development environment** with cross-shell compatible dotfiles, automation framework, secrets management, and cloud integration. Works seamlessly with both **bash** and **zsh** on macOS and Linux with modern development workflows and enterprise-grade tooling.
+A **modular, cross-shell compatible dotfiles system** for macOS and Linux. Works seamlessly with both **bash** and **zsh** using a component-based architecture with automatic dependency resolution.
 
 ## Key Features
 
@@ -14,16 +14,10 @@ A **comprehensive development environment** with cross-shell compatible dotfiles
 - **Clean Home**: Configuration organized in `~/.config/`
 - **Portable**: Easy to migrate between machines
 
-### Automation Framework
-- **Unified CLI**: Single `auto` command for all development workflows
-- **Multi-Cloud Support**: AWS, Azure, DigitalOcean management
-- **Container Orchestration**: Kubernetes, Helm, and Docker integration
-- **Project Templates**: FastAPI, Go/Cobra CLI, TypeScript scaffolding
-
-### Enterprise Secrets Management
-- **API Key Management**: Secure storage for 30+ services
-- **Interactive Setup**: Guided configuration wizards
-- **Credential Validation**: Real-time authentication testing
+### Component Architecture
+- **Self-Describing**: Each component has metadata for dependencies
+- **Dependency Resolution**: Topological sort ensures correct load order
+- **Optional Tools**: Components gracefully degrade when tools are missing
 
 ## Quick Start
 
@@ -41,83 +35,91 @@ cd ~/.config/dotfiles
 
 **[Complete Installation Guide](docs/INSTALL.md)**
 
-The enhanced installer will:
+The installer will:
 - Install cross-shell compatible dotfiles
-- Setup comprehensive automation framework
-- Configure secrets management for 30+ services
-- Install cloud CLI tools (AWS, Azure, DigitalOcean)
+- Configure secrets management
 - Setup development tools (Git, Go, Node.js, Python)
 - Run validation tests to ensure everything works
 
 ## Architecture
 
 ```
-shell/                    # Shell initialization modules
-├── init.sh              # Main entry point
+core/                     # Core bootstrap system
+├── bootstrap.sh         # Main entry point
 ├── discovery.sh         # Shell/platform detection
 ├── xdg.sh              # XDG base directory setup
-├── environment.sh       # Core environment variables
-├── aliases.sh          # Shell aliases
-├── completions.sh      # Completion systems + FZF
-└── prompt.sh           # Git-aware prompt
+├── theme.sh            # Catppuccin Mocha color definitions
+├── loader.sh           # Component loader with dependency resolution
+└── sync.sh             # Dotfiles management functions
 
-functions/               # Function modules by domain
-├── core/               # Essential utilities (cd, history, archive)
-├── dev/                # Development (python, golang, github)
-├── cloud/              # Cloud/DevOps (kubernetes, secrets)
-└── ai/                 # AI/ML (ollama, huggingface)
+components/              # Feature components
+├── shell/              # Core shell functions (cd, history, archive)
+├── git/                # Git aliases and functions
+├── fzf/                # FZF integration with previews
+├── python/             # Python/UV virtual environments
+├── node/               # Node.js/NVM/pnpm setup
+├── go/                 # Go development environment
+├── github/             # GitHub CLI integration
+├── kubernetes/         # kubectl and helm aliases
+├── secrets/            # Secret loading and validation
+├── claude/             # Claude Code management
+├── ollama/             # Ollama local AI models
+└── huggingface/        # Hugging Face integration
 
 config/                  # Application configs
 ├── git/                # Git configuration
 ├── ssh/                # SSH config
 ├── python/             # Python startup
-└── ...                 # Other tool configs
-
-.automation/             # Automation CLI framework
-├── auto                # Main CLI entry point
-├── framework/          # Core framework (logging, utilities)
-├── modules/            # Feature modules (dev, k8s, cloud, secrets)
-└── secrets/            # Secure API key storage
+└── karabiner/          # macOS keyboard
 ```
 
 ## Shell Experience
 
-- **Solarized prompts** with git status integration
+- **Catppuccin Mocha theme** with git status integration
 - **Smart completions** for bash and zsh
 - **Enhanced navigation** with auto-listing and fuzzy finding
 - **History management** with intelligent search
 
-## Automation Commands
+## Key Functions
 
+### Development
 ```bash
-# Development workflows
-auto dev init python my-fastapi-app
-auto dev init go my-cli --cobra
-auto dev init typescript my-app
+# Python
+mkvenv myproject        # Create virtual environment
+venv myproject          # Activate virtual environment
+fastapi_env             # Setup FastAPI development
 
-# AI/ML workflows
-make ai-setup                    # Install Ollama + Hugging Face
-make ai-chat                     # Interactive AI chat
-make ollama-install              # Install Ollama only
-make hf-setup                    # Setup Hugging Face only
+# Go
+gonew myproject         # Initialize Go project
+gotest                  # Run tests
+gobuildall              # Build for multiple platforms
 
-# Kubernetes operations
-auto k8s deploy my-app production
-auto k8s logs my-pod --follow
-auto k8s monitoring
+# Node.js
+nvm_setup               # Install NVM and latest LTS
+node_init               # Initialize TypeScript project
+nclean                  # Clean and reinstall node_modules
+```
 
-# GitHub integration
-auto github repo create my-project
-auto github pr create "New feature"
+### GitHub
+```bash
+quickpr                 # Push branch and create PR
+newrepo myproject       # Create GitHub repository
+gitcleanup              # Remove merged branches
+```
 
-# Cloud management
-auto cloud status
-auto aws ec2 create web-server
-auto azure vm create my-vm
+### Kubernetes
+```bash
+kuse                    # Switch kubectl context
+knsuse                  # Switch namespace
+kpods                   # List pods
+klf mypod               # Follow pod logs
+```
 
-# Secrets management
-auto secrets setup
-auto secrets validate
+### AI/ML
+```bash
+ollama_status           # Check installation and models
+ollama_chat model msg   # Quick AI chat
+ollama_code lang desc   # Generate code
 ```
 
 ## Dotfiles Management
@@ -148,13 +150,9 @@ The system automatically detects your shell and configures appropriately:
 # Quick validation tests
 make test-quick
 
-# API keys and authentication
-make test-api-keys
-make test-auth-status
-
-# AI/ML functionality
-make ai-test
-make ai-status
+# Component tests
+make test-components
+make component-status
 
 # Comprehensive test suite
 make test-comprehensive
@@ -163,45 +161,31 @@ make test-comprehensive
 make test-required-tools
 ```
 
-## Supported Services
-
-**Cloud Providers**: AWS, Azure, DigitalOcean
-**Development**: GitHub, GitLab, Docker Hub
-**AI/ML Platforms**: Ollama, Hugging Face, OpenAI
-**Databases**: PostgreSQL, MySQL, MongoDB, Redis
-**Monitoring**: DataDog, New Relic, Grafana
-**Communication**: Slack, Discord
-**CI/CD**: Jenkins, CircleCI, Travis CI
-
 ## Third-Party Tools
 
 **macOS (via Homebrew):**
 - **Core**: bash-completion, fd, fzf, git, gh (GitHub CLI)
 - **Languages**: go, node, npm, python3
-- **AI/ML**: ollama, python3-pip (for transformers, torch)
+- **AI/ML**: ollama
 - **Kubernetes**: kubectl, helm, k9s
-- **Editors**: tmux, neovim, visual-studio-code
+- **Editors**: tmux, neovim
 
 **Linux (via apt/yum):**
 - **Core**: bash-completion, fd-find, fzf, git
 - **Languages**: python3, python3-pip, nodejs, npm
-- **AI/ML**: Manual Ollama installation, pip packages
+- **AI/ML**: Manual Ollama installation
 
 ## Documentation
 
 - **[Installation Guide](docs/INSTALL.md)** - Complete setup instructions
-- **[Secrets Management](docs/automation/SECRETS.md)** - API keys and security
-- **[Automation Framework](docs/automation/README.md)** - CLI tools and workflows
-- **[Tools Management](docs/automation/TOOLS.md)** - External tools management
 - **[Architecture Guide](CLAUDE.md)** - Design and development
 
 ## Getting Started
 
 1. **[Read the Installation Guide](docs/INSTALL.md)** for platform-specific instructions
-2. **[Configure Secrets](docs/automation/SECRETS.md)** for your cloud providers and services
-3. **[Explore Automation](docs/automation/README.md)** to streamline your development workflow
-4. **Run `make test-quick`** to validate your setup
+2. **Run `make test-quick`** to validate your setup
+3. **Explore components** with `make component-list`
 
 ---
 
-**Built for modern development teams** - This comprehensive framework grows with your needs, supports enterprise security requirements, and streamlines cloud-native development workflows while maintaining the simplicity and portability of traditional dotfiles.
+**Built for developers** - A lightweight, modular dotfiles system that grows with your needs while maintaining simplicity and portability.

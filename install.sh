@@ -1,6 +1,6 @@
 #!/bin/bash
-# Enhanced Bash Profile & Automation Framework Installer
-# Supports dotfiles, automation framework, secrets management, and development tools
+# Component-Based Dotfiles Installer
+# Supports dotfiles, secrets management, and development tools
 # Uses component-based architecture with core/bootstrap.sh as main entry point
 
 set -euo pipefail
@@ -16,7 +16,6 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d_%H%M%S)"
 DOTFILES_INSTALLED=false
-AUTOMATION_INSTALLED=false
 CLOUD_TOOLS_INSTALLED=false
 RESPONSE=""
 YES_TO_ALL=false
@@ -264,29 +263,6 @@ EOF
     log_info "Repository location: $dotfiles_root"
 }
 
-# Install automation framework
-install_automation_framework() {
-    log_info "Setting up automation framework..."
-
-    # Make automation scripts executable
-    if [ -d "$SCRIPT_DIR/.automation" ]; then
-        chmod +x "$SCRIPT_DIR/.automation/auto"
-        chmod +x "$SCRIPT_DIR/.automation/setup.sh" 2>/dev/null || true
-        find "$SCRIPT_DIR/.automation/framework" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-        find "$SCRIPT_DIR/.automation/modules" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-
-        # Run automation setup if it exists
-        if [ -f "$SCRIPT_DIR/.automation/setup.sh" ]; then
-            "$SCRIPT_DIR/.automation/setup.sh"
-        fi
-
-        AUTOMATION_INSTALLED=true
-        log_success "Automation framework installed!"
-    else
-        log_warn "Automation directory not found"
-    fi
-}
-
 # Install package manager tools
 install_package_manager_tools() {
     log_info "Installing package manager tools..."
@@ -510,25 +486,6 @@ setup_neovim() {
     log_success "Neovim config linked: $config_dir -> $repo_path"
 }
 
-# Setup secrets management
-setup_secrets_management() {
-    log_info "Setting up secrets management..."
-
-    # Initialize secrets management
-    if [ -f "$SCRIPT_DIR/.automation/auto" ]; then
-        "$SCRIPT_DIR/.automation/auto" secrets init
-
-        getResponse -m "Run interactive secrets setup wizard now?"
-        if [ "$RESPONSE" = 'y' ]; then
-            "$SCRIPT_DIR/.automation/auto" secrets setup
-        else
-            log_info "You can run the secrets setup later with: auto secrets setup"
-        fi
-    else
-        log_warn "Automation framework not found, skipping secrets setup"
-    fi
-}
-
 # Link app configs (git, ssh, ghostty, vscode, claude, etc.)
 link_app_configs() {
     log_info "Linking application configurations..."
@@ -628,20 +585,6 @@ run_installation_tests() {
         log_error "❌ ~/.zshrc not properly configured"
     fi
 
-    # Test automation framework
-    if [ -f "$SCRIPT_DIR/.automation/auto" ] && [ -x "$SCRIPT_DIR/.automation/auto" ]; then
-        log_success "✅ Automation framework installed"
-
-        # Test basic commands
-        if "$SCRIPT_DIR/.automation/auto" --version >/dev/null 2>&1; then
-            log_success "✅ Automation CLI working"
-        else
-            log_warn "⚠️ Automation CLI not responding"
-        fi
-    else
-        log_error "❌ Automation framework not found or not executable"
-    fi
-
     # Test function modules
     if [ -d "$SCRIPT_DIR/functions" ]; then
         log_success "✅ Function modules found"
@@ -697,43 +640,34 @@ show_post_install_info() {
         echo
     fi
 
-    if [ "$AUTOMATION_INSTALLED" = true ]; then
-        echo "2. 🤖 Try automation commands:"
-        echo "   auto --help              # Show all commands"
-        echo "   auto secrets setup       # Setup API keys"
-        echo "   auto dev init python my-app # Create new project"
-        echo
-    fi
-
     if [ "$CLOUD_TOOLS_INSTALLED" = true ]; then
-        echo "3. ☁️ Configure cloud providers:"
-        echo "   auto secrets aws         # Setup AWS credentials"
-        echo "   auto secrets azure       # Setup Azure credentials"
-        echo "   auto secrets github      # Setup GitHub credentials"
+        echo "2. ☁️ Configure cloud providers:"
+        echo "   Configure AWS: aws configure"
+        echo "   Configure Azure: az login"
+        echo "   Configure GitHub: gh auth login"
         echo
     fi
 
-    echo "4. 🔧 Dotfiles management functions:"
+    echo "3. 🔧 Dotfiles management functions:"
     echo "   dotfiles_status      # Show current configuration"
     echo "   dotfiles_reload      # Reload without restart"
     echo "   dotfiles_update      # Git pull + reload"
     echo "   dotfiles_link_configs # Link app configs (git, ssh)"
     echo
-    echo "5. 📦 Component System:"
+    echo "4. 📦 Component System:"
     echo "   Components are loaded from: \$DOTFILES_ROOT/components/"
     echo "   Disable a component:  export DOTFILES_DISABLE_<NAME>=1"
     echo "   Whitelist components: export DOTFILES_COMPONENTS=\"git,fzf\""
     echo
 
-    echo "6. 🧪 Test your setup:"
+    echo "5. 🧪 Test your setup:"
     echo "   make test-quick           # Quick validation tests"
     echo "   make test-auth-status     # Check authentication"
     echo
 
-    echo "7. 📚 Documentation:"
+    echo "6. 📚 Documentation:"
     echo "   📖 docs/INSTALL.md - Installation guide"
-    echo "   🔐 docs/automation/SECRETS.md - Secrets management"
-    echo "   🤖 docs/automation/README.md - Automation framework"
+    echo "   📖 CLAUDE.md - Architecture guide"
     echo "   🏠 Repository: $SCRIPT_DIR"
     echo
 
@@ -756,8 +690,8 @@ show_post_install_info() {
 # Main installation flow
 main() {
     echo
-    echo "🚀 Enhanced Bash Profile & Automation Framework Installer"
-    echo "=========================================================="
+    echo "🚀 Component-Based Dotfiles Installer"
+    echo "======================================"
     echo
 
     # Show mode information
@@ -774,12 +708,6 @@ main() {
     if [ "$RESPONSE" = 'y' ]; then
         install_dotfiles
     fi
-
-    # Install automation framework (disabled - needs more work)
-    # getResponse -m "Setup automation framework?"
-    # if [ "$RESPONSE" = 'y' ]; then
-    #     install_automation_framework
-    # fi
 
     # Link app configs
     getResponse -m "Link application configs (git, ssh)?"
@@ -811,12 +739,6 @@ main() {
         setup_neovim
     fi
 
-    # Setup secrets management (disabled - needs more work)
-    # getResponse -m "Setup secrets management?"
-    # if [ "$RESPONSE" = 'y' ]; then
-    #     setup_secrets_management
-    # fi
-
     # Run validation tests
     getResponse -m "Run installation validation tests?"
     if [ "$RESPONSE" = 'y' ]; then
@@ -830,7 +752,7 @@ main() {
 # Handle command line arguments
 case "${1:-}" in
     "--help"|"-h")
-        echo "Enhanced Bash Profile & Automation Framework Installer"
+        echo "Component-Based Dotfiles Installer"
         echo
         echo "Usage: $0 [options]"
         echo
@@ -839,7 +761,6 @@ case "${1:-}" in
         echo "  --auto         Run with all defaults (non-interactive)"
         echo "  --yes-to-all   Answer yes to all prompts (interactive but automatic)"
         echo "  --dotfiles     Install only dotfiles"
-        echo "  --automation   Install only automation framework"
         echo "  --dev-tools    Install only development tools"
         echo "  --cloud-tools  Install only cloud tools"
         echo "  --skip-gui     Skip GUI applications (VS Code, Docker Desktop)"
@@ -853,7 +774,6 @@ case "${1:-}" in
         export NON_INTERACTIVE=true
         create_backup
         install_dotfiles
-        install_automation_framework
         link_app_configs
         install_package_manager_tools
         install_development_tools
@@ -870,10 +790,6 @@ case "${1:-}" in
     "--dotfiles")
         create_backup
         install_dotfiles
-        show_post_install_info
-        ;;
-    "--automation")
-        install_automation_framework
         show_post_install_info
         ;;
     "--dev-tools")
