@@ -4,12 +4,24 @@ version: 1.0.0
 category: dev
 
 requires:
-  tools: []
+  tools: [code]
   components: [shell]
 
 provides:
-  aliases: [c, code]
-  functions: []
+  aliases: [c]
+  functions:
+    - vscode_setup
+    - vscode_install_extensions
+    - vscode_sync_config
+    - vscode_install_essentials
+    - vscode_export_extensions
+    - vscode_import_extensions
+    - workspace
+    - workspaces
+    - newproject
+    - cpy
+    - cgo
+    - cts
   completions: []
 
 xdg:

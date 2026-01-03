@@ -126,10 +126,92 @@ cts() {
 }
 
 # =============================================================================
+# Setup (Install vs Config)
+# =============================================================================
+
+# Full VS Code setup (extensions + config)
+vscode_setup() {
+    echo "VS Code Setup"
+    echo "============="
+    echo "1) Install extensions only"
+    echo "2) Sync config only"
+    echo "3) Both (full setup)"
+    echo ""
+    printf "Choice [1-3]: "
+    read -r choice
+
+    case "$choice" in
+        1) vscode_install_extensions ;;
+        2) vscode_sync_config ;;
+        3) vscode_install_extensions && vscode_sync_config ;;
+        *) echo "Invalid choice" ;;
+    esac
+}
+
+# Install extensions from dotfiles list
+vscode_install_extensions() {
+    local ext_file="${DOTFILES_ROOT:-$HOME/.config/dotfiles}/config/vscode/extensions.txt"
+
+    if [ ! -f "$ext_file" ]; then
+        echo "No extensions list found at $ext_file"
+        echo "Run vscode_export_extensions to create one"
+        return 1
+    fi
+
+    echo "Installing VS Code extensions..."
+    while IFS= read -r ext; do
+        [ -z "$ext" ] && continue
+        echo "  → $ext"
+        code --install-extension "$ext" --force 2>/dev/null
+    done < "$ext_file"
+    echo "Extensions installed!"
+}
+
+# Sync settings and keybindings from dotfiles
+vscode_sync_config() {
+    local src_dir="${DOTFILES_ROOT:-$HOME/.config/dotfiles}/config/vscode"
+    local dest_dir="$HOME/Library/Application Support/Code/User"
+
+    # Linux path
+    if [ "$(uname)" != "Darwin" ]; then
+        dest_dir="$HOME/.config/Code/User"
+    fi
+
+    if [ ! -d "$dest_dir" ]; then
+        echo "VS Code user directory not found: $dest_dir"
+        echo "Is VS Code installed?"
+        return 1
+    fi
+
+    echo "Syncing VS Code config..."
+
+    # Backup existing
+    if [ -f "$dest_dir/settings.json" ]; then
+        cp "$dest_dir/settings.json" "$dest_dir/settings.json.backup"
+        echo "  → Backed up existing settings.json"
+    fi
+    if [ -f "$dest_dir/keybindings.json" ]; then
+        cp "$dest_dir/keybindings.json" "$dest_dir/keybindings.json.backup"
+        echo "  → Backed up existing keybindings.json"
+    fi
+
+    # Copy new config
+    cp "$src_dir/settings.json" "$dest_dir/settings.json"
+    echo "  → Synced settings.json"
+
+    if [ -f "$src_dir/keybindings.json" ]; then
+        cp "$src_dir/keybindings.json" "$dest_dir/keybindings.json"
+        echo "  → Synced keybindings.json"
+    fi
+
+    echo "VS Code config synced!"
+}
+
+# =============================================================================
 # Extensions Management
 # =============================================================================
 
-# Install essential VS Code extensions
+# Install essential VS Code extensions (quick setup)
 vscode_install_essentials() {
     echo "Installing essential VS Code extensions..."
 
@@ -139,6 +221,8 @@ vscode_install_essentials() {
     code --install-extension eamodio.gitlens
     code --install-extension ms-kubernetes-tools.vscode-kubernetes-tools
     code --install-extension ms-azuretools.vscode-docker
+    code --install-extension catppuccin.catppuccin-vsc
+    code --install-extension catppuccin.catppuccin-vsc-icons
 
     echo "Essential extensions installed!"
 }

@@ -72,7 +72,7 @@
   "terminal.integrated.cursorStyle": "block",
   "terminal.integrated.cursorBlinking": false,
   "terminal.integrated.scrollback": 10000,
-  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.osx": "bash",
   "terminal.integrated.defaultProfile.linux": "bash",
 
   // ==========================================================================
