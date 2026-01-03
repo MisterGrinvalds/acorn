@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/mistergrinvalds/.claude/hooks/on-permission.sh"
+            "command": "~/.claude/hooks/on-permission.sh"
           }
         ]
       }

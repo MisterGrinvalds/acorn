@@ -54,6 +54,7 @@ config/                  # Application configs
 ├── git/                # Git configuration
 ├── ssh/                # SSH config
 ├── python/             # Python startup
+├── claude/             # Claude Code settings (global)
 └── karabiner/          # macOS keyboard
 
 secrets/                 # Secure storage (gitignored)
@@ -181,6 +182,9 @@ make test-components     # Test component loading
 - **`claude_tokens()`** - View token usage by model
 - **`claude_permissions()`** - View/manage permissions
 - **`claude_mcp()`** - List MCP servers
+- **`claude_settings()`** - View settings (global/local/config)
+- **`claude_info()`** - Show Claude Code info summary
+- **`claude_help()`** - Show all available functions
 
 ### ollama
 - **`ollama_status()`** - Check installation and models
@@ -264,6 +268,31 @@ declare -F | grep -E "(mkvenv|dotfiles)"
 
 # Check component dependencies
 yq '.dependencies' components/python/component.yaml
+```
+
+## Claude Code Configuration
+
+The `config/claude/settings.json` contains global Claude Code settings that are symlinked to `~/.claude/settings.json` during installation.
+
+### Settings Location
+- **Global settings**: `~/.claude/settings.json` (symlinked from `config/claude/settings.json`)
+- **Project settings**: `.claude/settings.json` in any project directory
+- **Local overrides**: `~/.claude/settings.local.json`
+
+### Configuration Features
+- **Permissions**: Pre-approved tool patterns (e.g., `Bash(git:*)`, `Bash(make:*)`)
+- **Hooks**: Custom shell scripts for various lifecycle events
+- **Status line**: Custom status bar integration
+- **Preferences**: Auto-approve read operations, preferred shell
+
+### Claude Component Functions
+The `components/claude/` component provides shell functions for managing Claude Code:
+```bash
+claude_info          # Quick overview
+claude_stats         # Usage statistics
+claude_permissions   # View/manage permissions
+claude_settings      # View settings files
+claude_mcp           # MCP server management
 ```
 
 ## Legacy Migration
