@@ -78,7 +78,7 @@ alias week='date +%V'
 # =============================================================================
 
 alias c='clear'
-alias h='history'
+# h is a function in functions.sh (history | grep)
 alias j='jobs -l'
 alias path='echo -e ${PATH//:/\\n}'
 alias reload='source ~/.bashrc 2>/dev/null || source ~/.zshrc'

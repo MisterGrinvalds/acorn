@@ -30,7 +30,7 @@ alias kgns='kubectl get namespaces'
 # =============================================================================
 # Helm aliases
 # =============================================================================
-alias h='helm'
+alias hm='helm'
 alias hls='helm list'
 alias hla='helm list -A'
 alias hin='helm install'
