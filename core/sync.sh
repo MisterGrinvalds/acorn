@@ -502,14 +502,16 @@ _sync_link_component_configs() {
     # Create directories first
     local dir_count i
     dir_count=$(yq -r '.config.directories | length // 0' "$yaml_file" 2>/dev/null)
-    for i in $(seq 0 $((dir_count - 1))); do
-        local target perms
-        target=$(yq -r ".config.directories[$i].target" "$yaml_file")
-        perms=$(yq -r ".config.directories[$i].permissions // \"\"" "$yaml_file")
-        target=$(_sync_expand_path "$target")
-        mkdir -p "$target"
-        [ -n "$perms" ] && [ "$perms" != "null" ] && chmod "$perms" "$target" 2>/dev/null
-    done
+    if [ "$dir_count" -gt 0 ] 2>/dev/null; then
+        for i in $(seq 0 $((dir_count - 1))); do
+            local target perms
+            target=$(yq -r ".config.directories[$i].target" "$yaml_file")
+            perms=$(yq -r ".config.directories[$i].permissions // \"\"" "$yaml_file")
+            target=$(_sync_expand_path "$target")
+            mkdir -p "$target"
+            [ -n "$perms" ] && [ "$perms" != "null" ] && chmod "$perms" "$target" 2>/dev/null
+        done
+    fi
 
     # Process each config file
     local linked_count=0
