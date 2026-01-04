@@ -5,7 +5,7 @@
   path = config.alias
 [user]
     name = MisterGrinvalds
-    email = ross.grinvalds@gmail.com
+    email = 8541275+MisterGrinvalds@users.noreply.github.com
 [includeIf "gitdir:~/Repos/work/"]
     path = config.work
 [credential "https://github.com"]
