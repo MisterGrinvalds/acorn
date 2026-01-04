@@ -24,4 +24,20 @@ shells: [bash, zsh]
 setup:
   brew: [python3, uv]
   apt: [python3, python3-pip]
+  npm: []
   post_install: ""
+  install_note: ""
+
+# Configuration files to deploy
+# Python startup scripts are loaded via PYTHONSTARTUP environment variable
+config:
+  files:
+    - source: config/startup.py
+      target: ~/.config/python/startup.py
+      method: symlink
+    - source: config/startup3.py
+      target: ~/.config/python/startup3.py
+      method: symlink
+  directories:
+    - target: ~/.config/python
+    - target: ~/.config/ipython

@@ -1,0 +1,56 @@
+# CloudFlare CLI (Wrangler) Component
+# Provides shell integration for CloudFlare Workers, Pages, R2, and KV
+
+name: cloudflare
+version: 1.0.0
+description: CloudFlare CLI (wrangler) integration for Workers, Pages, R2, and KV
+category: cloud
+
+# Dependencies
+requires:
+  tools:
+    - wrangler           # CloudFlare CLI (npx wrangler or global install)
+  components:
+    - shell              # Base shell utilities
+
+# What this component provides
+provides:
+  aliases:
+    - wr                 # Short alias for wrangler
+    - wrd                # wrangler dev
+    - wrp                # wrangler pages
+    - wrr2               # wrangler r2
+    - wrkv               # wrangler kv
+  functions:
+    - cf_status          # Check CloudFlare CLI status
+    - cf_whoami          # Show current CloudFlare account
+    - cf_workers         # List workers
+    - cf_pages           # List pages projects
+    - cf_r2_buckets      # List R2 buckets
+    - cf_kv_namespaces   # List KV namespaces
+    - cf_logs            # Tail worker logs
+    - cf_deploy          # Deploy current worker
+    - cf_help            # Show all CloudFlare functions
+  completions:
+    - wrangler
+
+# XDG directories
+xdg:
+  config: wrangler       # $XDG_CONFIG_HOME/wrangler
+  cache: wrangler        # $XDG_CACHE_HOME/wrangler
+  data: ""
+  state: ""
+
+# Platform support
+platforms: [darwin, linux]
+
+# Shell support
+shells: [bash, zsh]
+
+# Setup configuration
+setup:
+  brew: []               # Not available via Homebrew
+  apt: []                # Not available via apt
+  npm: [wrangler]        # Install via npm: npm install -g wrangler
+  post_install: ""
+  install_note: "Requires Node.js. Install with: npm install -g wrangler"

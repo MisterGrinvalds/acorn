@@ -1,0 +1,50 @@
+# SSH Client Configuration Component
+# Provides SSH client config with multiple GitHub host aliases
+
+name: ssh
+version: 1.0.0
+description: SSH client configuration with multiple identity support
+category: core
+
+# Dependencies
+requires:
+  tools: []
+  components: []
+
+# What this component provides
+provides:
+  aliases: []
+  functions: []
+  completions: []
+
+# XDG directories (SSH uses ~/.ssh, not XDG)
+xdg:
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+# Platform support
+platforms: [darwin, linux]
+
+# Shell support
+shells: [bash, zsh]
+
+# Setup configuration
+setup:
+  brew: []
+  apt: [openssh-client]
+  npm: []
+  post_install: ""
+  install_note: "SSH is typically pre-installed on macOS and Linux"
+
+# Configuration files to deploy
+config:
+  files:
+    - source: config/config
+      target: ~/.ssh/config
+      method: copy
+      permissions: "600"
+  directories:
+    - target: ~/.ssh
+      permissions: "700"

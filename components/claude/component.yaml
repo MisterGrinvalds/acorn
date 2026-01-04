@@ -24,4 +24,15 @@ shells: [bash, zsh]
 setup:
   brew: []
   apt: []
+  npm: []
   post_install: ""
+  install_note: "Install Claude Code via: npm install -g @anthropic-ai/claude-code"
+
+# Configuration files to deploy
+config:
+  files:
+    - source: config/settings.json
+      target: ~/.claude/settings.json
+      method: symlink
+  directories:
+    - target: ~/.claude

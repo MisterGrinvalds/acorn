@@ -31,4 +31,15 @@ shells: [bash, zsh]
 setup:
   brew: []
   apt: []
+  npm: []
   post_install: ""
+  install_note: "Download Ghostty from https://ghostty.org"
+
+# Configuration files to deploy
+config:
+  files:
+    - source: config/config
+      target: ~/.config/ghostty/config
+      method: symlink
+  directories:
+    - target: ~/.config/ghostty

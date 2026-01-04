@@ -1,0 +1,38 @@
+# IntelliJ IDEA Configuration Component
+# Provides IDE settings, keymaps, and plugin list
+
+name: intellij
+version: 1.0.0
+description: IntelliJ IDEA IDE configuration
+category: dev
+
+requires:
+  tools: []
+  components: []
+
+provides:
+  aliases: []
+  functions: []
+  completions: []
+
+xdg:
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: []
+  apt: []
+  npm: []
+  post_install: ""
+  install_note: "IntelliJ configs require manual linking - see component README"
+
+# Note: IntelliJ stores configs in version-specific directories
+# These are provided as reference files for manual import
+config:
+  files: []
+  directories: []

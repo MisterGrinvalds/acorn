@@ -1,0 +1,3 @@
+# Placeholder for component configuration files
+# Add your app-specific config files here (e.g., settings.json, config)
+# Then declare them in component.yaml under the config.files section

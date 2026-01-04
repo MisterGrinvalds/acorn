@@ -52,25 +52,24 @@ core/                     # Core bootstrap system
 ├── loader.sh           # Component loader with dependency resolution
 └── sync.sh             # Dotfiles management functions
 
-components/              # Feature components
+components/              # Feature components (each with optional config/)
 ├── shell/              # Core shell functions (cd, history, archive)
-├── git/                # Git aliases and functions
+├── git/                # Git aliases, functions, and config
 ├── fzf/                # FZF integration with previews
-├── python/             # Python/UV virtual environments
+├── python/             # Python/UV virtual environments and startup
 ├── node/               # Node.js/NVM/pnpm setup
 ├── go/                 # Go development environment
 ├── github/             # GitHub CLI integration
 ├── kubernetes/         # kubectl and helm aliases
 ├── secrets/            # Secret loading and validation
-├── claude/             # Claude Code management
+├── claude/             # Claude Code management and settings
 ├── ollama/             # Ollama local AI models
-└── huggingface/        # Hugging Face integration
-
-config/                  # Application configs
-├── git/                # Git configuration
-├── ssh/                # SSH config
-├── python/             # Python startup
-└── karabiner/          # macOS keyboard
+├── huggingface/        # Hugging Face integration
+├── ssh/                # SSH client configuration
+├── tmux/               # Tmux session manager and config
+├── vscode/             # VS Code helpers and settings
+├── ghostty/            # Ghostty terminal configuration
+└── ...                 # And more (karabiner, conda, iterm2, etc.)
 ```
 
 ## Shell Experience

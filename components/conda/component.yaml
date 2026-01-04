@@ -1,0 +1,39 @@
+# Conda Package Manager Configuration Component
+# Provides conda/miniconda configuration
+
+name: conda
+version: 1.0.0
+description: Conda package manager configuration
+category: dev
+
+requires:
+  tools: []
+  components: []
+
+provides:
+  aliases: []
+  functions: []
+  completions: []
+
+xdg:
+  config: ""
+  data: ""
+  cache: ""
+  state: ""
+
+platforms: [darwin, linux]
+shells: [bash, zsh]
+
+setup:
+  brew: [miniconda]
+  apt: []
+  npm: []
+  post_install: ""
+  install_note: "Install Miniconda from https://docs.conda.io/en/latest/miniconda.html"
+
+config:
+  files:
+    - source: config/condarc
+      target: ~/.condarc
+      method: symlink
+  directories: []

@@ -173,7 +173,7 @@ dotfiles_audit() {
     if [ -n "$status" ]; then
         echo "File Changes:"
         echo "-------------"
-        echo "$status" | while read -r line; do
+        echo "$status" | while IFS= read -r line; do
             local prefix=$(echo "$line" | cut -c1-2)
             local file=$(echo "$line" | cut -c4-)
             case "$prefix" in
@@ -459,145 +459,778 @@ dotfiles_reload() {
 # =============================================================================
 
 # Symlink app configs to their expected locations
-dotfiles_link_configs() {
-    echo "Linking app configurations..."
+# =============================================================================
+# Component-Driven Config Linking
+# =============================================================================
 
-    # Git config
-    if [ -f "$DOTFILES_ROOT/config/git/config" ]; then
-        ln -sf "$DOTFILES_ROOT/config/git/config" "$HOME/.gitconfig"
-        echo "Linked: ~/.gitconfig"
-    fi
-
-    # SSH config (be careful with permissions)
-    if [ -f "$DOTFILES_ROOT/config/ssh/config" ]; then
-        mkdir -p "$HOME/.ssh"
-        chmod 700 "$HOME/.ssh"
-        ln -sf "$DOTFILES_ROOT/config/ssh/config" "$HOME/.ssh/config"
-        chmod 600 "$HOME/.ssh/config"
-        echo "Linked: ~/.ssh/config"
-    fi
-
-    # Conda config
-    if [ -f "$DOTFILES_ROOT/config/conda/condarc" ]; then
-        ln -sf "$DOTFILES_ROOT/config/conda/condarc" "$HOME/.condarc"
-        echo "Linked: ~/.condarc"
-    fi
-
-    # Karabiner config (macOS only)
-    if [ "$CURRENT_PLATFORM" = "darwin" ] && [ -f "$DOTFILES_ROOT/config/karabiner/karabiner.json" ]; then
-        mkdir -p "$HOME/.config/karabiner"
-        ln -sf "$DOTFILES_ROOT/config/karabiner/karabiner.json" "$HOME/.config/karabiner/karabiner.json"
-        echo "Linked: ~/.config/karabiner/karabiner.json"
-    fi
-
-    # Ghostty config
-    if [ -f "$DOTFILES_ROOT/config/ghostty/config" ]; then
-        mkdir -p "$HOME/.config/ghostty"
-        ln -sf "$DOTFILES_ROOT/config/ghostty/config" "$HOME/.config/ghostty/config"
-        echo "Linked: ~/.config/ghostty/config"
-    fi
-
-    # Tmux config
-    if [ -f "$DOTFILES_ROOT/config/tmux/tmux.conf" ]; then
-        mkdir -p "$HOME/.config/tmux"
-        ln -sf "$DOTFILES_ROOT/config/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
-        echo "Linked: ~/.config/tmux/tmux.conf"
-    fi
-
-    # iTerm2 config (macOS only)
-    if [ "$CURRENT_PLATFORM" = "darwin" ] && [ -d "$DOTFILES_ROOT/config/iterm2" ]; then
-        local iterm_profiles_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
-        mkdir -p "$iterm_profiles_dir"
-
-        # Link Dynamic Profiles
-        if [ -d "$DOTFILES_ROOT/config/iterm2/DynamicProfiles" ]; then
-            for profile in "$DOTFILES_ROOT/config/iterm2/DynamicProfiles"/*.json; do
-                [ -f "$profile" ] || continue
-                local profile_name
-                profile_name=$(basename "$profile")
-                ln -sf "$profile" "$iterm_profiles_dir/$profile_name"
-                echo "Linked: iTerm2 DynamicProfiles/$profile_name"
-            done
-        fi
-
-        # Note about color scheme
-        if [ -f "$DOTFILES_ROOT/config/iterm2/catppuccin-mocha.itermcolors" ]; then
-            echo "iTerm2 color scheme available: $DOTFILES_ROOT/config/iterm2/catppuccin-mocha.itermcolors"
-            echo "  Import via: iTerm2 > Preferences > Profiles > Colors > Color Presets > Import"
-        fi
-    fi
-
-    # VS Code config
-    if [ -d "$DOTFILES_ROOT/config/vscode" ]; then
-        local vscode_dir
-        if [ "$CURRENT_PLATFORM" = "darwin" ]; then
-            vscode_dir="$HOME/Library/Application Support/Code/User"
-        else
-            vscode_dir="$HOME/.config/Code/User"
-        fi
-        mkdir -p "$vscode_dir"
-
-        if [ -f "$DOTFILES_ROOT/config/vscode/settings.json" ]; then
-            ln -sf "$DOTFILES_ROOT/config/vscode/settings.json" "$vscode_dir/settings.json"
-            echo "Linked: VS Code settings.json"
-        fi
-        if [ -f "$DOTFILES_ROOT/config/vscode/keybindings.json" ]; then
-            ln -sf "$DOTFILES_ROOT/config/vscode/keybindings.json" "$vscode_dir/keybindings.json"
-            echo "Linked: VS Code keybindings.json"
-        fi
-    fi
-
-    # IntelliJ config (reference only - requires manual setup due to version directories)
-    if [ -d "$DOTFILES_ROOT/config/intellij" ]; then
-        echo "IntelliJ configs available at: $DOTFILES_ROOT/config/intellij/"
-        echo "  - Manual linking required due to version-specific paths"
-    fi
-
-    # Claude Code config
-    if [ -f "$DOTFILES_ROOT/config/claude/settings.json" ]; then
-        mkdir -p "$HOME/.claude"
-        ln -sf "$DOTFILES_ROOT/config/claude/settings.json" "$HOME/.claude/settings.json"
-        echo "Linked: ~/.claude/settings.json"
-    fi
-
-    echo ""
-    echo "Config linking complete!"
+# Internal: Expand path (handle ~ and environment variables)
+_sync_expand_path() {
+    local path="$1"
+    # Expand ~ to $HOME
+    path="${path/#\~/$HOME}"
+    # Expand environment variables
+    eval echo "$path"
 }
 
-# Unlink app configs
-dotfiles_unlink_configs() {
-    echo "Unlinking app configurations..."
+# Internal: Link configs for a single component
+_sync_link_component_configs() {
+    local component="$1"
+    local comp_dir="${DOTFILES_ROOT}/components/${component}"
+    local yaml_file="${comp_dir}/component.yaml"
 
-    [ -L "$HOME/.gitconfig" ] && rm "$HOME/.gitconfig" && echo "Unlinked: ~/.gitconfig"
-    [ -L "$HOME/.ssh/config" ] && rm "$HOME/.ssh/config" && echo "Unlinked: ~/.ssh/config"
-    [ -L "$HOME/.condarc" ] && rm "$HOME/.condarc" && echo "Unlinked: ~/.condarc"
-    [ -L "$HOME/.config/karabiner/karabiner.json" ] && rm "$HOME/.config/karabiner/karabiner.json" && echo "Unlinked: ~/.config/karabiner/karabiner.json"
-    [ -L "$HOME/.config/ghostty/config" ] && rm "$HOME/.config/ghostty/config" && echo "Unlinked: ~/.config/ghostty/config"
-    [ -L "$HOME/.config/tmux/tmux.conf" ] && rm "$HOME/.config/tmux/tmux.conf" && echo "Unlinked: ~/.config/tmux/tmux.conf"
-    [ -L "$HOME/.claude/settings.json" ] && rm "$HOME/.claude/settings.json" && echo "Unlinked: ~/.claude/settings.json"
+    [ -f "$yaml_file" ] || return 0
 
-    # iTerm2 DynamicProfiles (macOS only)
-    if [ "$CURRENT_PLATFORM" = "darwin" ]; then
-        local iterm_profiles_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
-        if [ -d "$iterm_profiles_dir" ]; then
-            for profile in "$iterm_profiles_dir"/*.json; do
-                [ -L "$profile" ] && rm "$profile" && echo "Unlinked: iTerm2 $(basename "$profile")"
-            done
+    # Check if yq is available
+    if ! command -v yq &>/dev/null; then
+        return 0
+    fi
+
+    # Check if component has config section
+    local file_count
+    file_count=$(yq -r '.config.files | length // 0' "$yaml_file" 2>/dev/null)
+    [ "$file_count" = "0" ] || [ -z "$file_count" ] && return 0
+
+    # Check platform support
+    local platforms
+    platforms=$(yq -r '.platforms // []' "$yaml_file" 2>/dev/null)
+    if [ "$platforms" != "[]" ] && [ "$platforms" != "null" ]; then
+        if ! echo "$platforms" | grep -q "$CURRENT_PLATFORM"; then
+            return 0
         fi
     fi
 
-    # VS Code configs
-    local vscode_dir
-    if [ "$CURRENT_PLATFORM" = "darwin" ]; then
-        vscode_dir="$HOME/Library/Application Support/Code/User"
-    else
-        vscode_dir="$HOME/.config/Code/User"
+    # Create directories first
+    local dir_count i
+    dir_count=$(yq -r '.config.directories | length // 0' "$yaml_file" 2>/dev/null)
+    for i in $(seq 0 $((dir_count - 1))); do
+        local target perms
+        target=$(yq -r ".config.directories[$i].target" "$yaml_file")
+        perms=$(yq -r ".config.directories[$i].permissions // \"\"" "$yaml_file")
+        target=$(_sync_expand_path "$target")
+        mkdir -p "$target"
+        [ -n "$perms" ] && [ "$perms" != "null" ] && chmod "$perms" "$target" 2>/dev/null
+    done
+
+    # Process each config file
+    local linked_count=0
+    for i in $(seq 0 $((file_count - 1))); do
+        local source target method platform perms
+        source=$(yq -r ".config.files[$i].source" "$yaml_file")
+        target=$(yq -r ".config.files[$i].target" "$yaml_file")
+        method=$(yq -r ".config.files[$i].method // \"symlink\"" "$yaml_file")
+        platform=$(yq -r ".config.files[$i].platform // \"\"" "$yaml_file")
+        perms=$(yq -r ".config.files[$i].permissions // \"\"" "$yaml_file")
+
+        # Skip if platform-specific and not matching
+        if [ -n "$platform" ] && [ "$platform" != "null" ] && [ "$platform" != "$CURRENT_PLATFORM" ]; then
+            continue
+        fi
+
+        # Resolve paths
+        local source_path="${comp_dir}/${source}"
+        local target_path
+        target_path=$(_sync_expand_path "$target")
+
+        # Ensure source exists
+        if [ ! -e "$source_path" ]; then
+            continue
+        fi
+
+        # Ensure target directory exists
+        mkdir -p "$(dirname "$target_path")"
+
+        # Deploy based on method
+        case "$method" in
+            symlink)
+                ln -sf "$source_path" "$target_path"
+                ;;
+            copy)
+                cp "$source_path" "$target_path"
+                ;;
+        esac
+
+        # Apply permissions if specified
+        if [ -n "$perms" ] && [ "$perms" != "null" ]; then
+            chmod "$perms" "$target_path" 2>/dev/null
+        fi
+
+        linked_count=$((linked_count + 1))
+    done
+
+    if [ "$linked_count" -gt 0 ]; then
+        printf "  ${THEME_SUCCESS}%s${THEME_RESET}: %d file(s) linked\n" "$component" "$linked_count"
     fi
-    [ -L "$vscode_dir/settings.json" ] && rm "$vscode_dir/settings.json" && echo "Unlinked: VS Code settings.json"
-    [ -L "$vscode_dir/keybindings.json" ] && rm "$vscode_dir/keybindings.json" && echo "Unlinked: VS Code keybindings.json"
+}
+
+# Internal: Unlink configs for a single component
+_sync_unlink_component_configs() {
+    local component="$1"
+    local comp_dir="${DOTFILES_ROOT}/components/${component}"
+    local yaml_file="${comp_dir}/component.yaml"
+
+    [ -f "$yaml_file" ] || return 0
+
+    # Check if yq is available
+    if ! command -v yq &>/dev/null; then
+        return 0
+    fi
+
+    # Check if component has config section
+    local file_count
+    file_count=$(yq -r '.config.files | length // 0' "$yaml_file" 2>/dev/null)
+    [ "$file_count" = "0" ] || [ -z "$file_count" ] && return 0
+
+    # Process each config file
+    local unlinked_count=0
+    local i
+    for i in $(seq 0 $((file_count - 1))); do
+        local target method
+        target=$(yq -r ".config.files[$i].target" "$yaml_file")
+        method=$(yq -r ".config.files[$i].method // \"symlink\"" "$yaml_file")
+
+        local target_path
+        target_path=$(_sync_expand_path "$target")
+
+        # Only remove symlinks (not copies, to be safe)
+        if [ "$method" = "symlink" ] && [ -L "$target_path" ]; then
+            rm "$target_path"
+            unlinked_count=$((unlinked_count + 1))
+        elif [ "$method" = "copy" ] && [ -f "$target_path" ]; then
+            # For copies, we could optionally remove but it's safer not to
+            # User may have modified the copy
+            :
+        fi
+    done
+
+    if [ "$unlinked_count" -gt 0 ]; then
+        printf "  ${THEME_PEACH}%s${THEME_RESET}: %d file(s) unlinked\n" "$component" "$unlinked_count"
+    fi
+}
+
+# Link app configurations from all components
+dotfiles_link_configs() {
+    _sync_log info "Linking component configurations..."
+
+    # Check for yq
+    if ! command -v yq &>/dev/null; then
+        _sync_log error "yq is required for config linking. Install with: brew install yq"
+        return 1
+    fi
 
     echo ""
-    echo "Config unlinking complete!"
+
+    local component
+    for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        component=$(basename "$comp_dir")
+        [ "$component" = "_template" ] && continue
+
+        _sync_link_component_configs "$component"
+    done
+
+    echo ""
+    _sync_log success "Config linking complete!"
+}
+
+# Unlink app configs from all components
+dotfiles_unlink_configs() {
+    _sync_log info "Unlinking component configurations..."
+
+    # Check for yq
+    if ! command -v yq &>/dev/null; then
+        _sync_log error "yq is required for config unlinking. Install with: brew install yq"
+        return 1
+    fi
+
+    echo ""
+
+    local component
+    for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        component=$(basename "$comp_dir")
+        [ "$component" = "_template" ] && continue
+
+        _sync_unlink_component_configs "$component"
+    done
+
+    echo ""
+    _sync_log success "Config unlinking complete!"
+}
+
+# =============================================================================
+# Component-Level Sync Operations
+# =============================================================================
+
+# Check health of a specific component or all components
+# Usage: component_health [component_name]
+component_health() {
+    local component="${1:-}"
+    local component_dir yaml_file
+
+    if [ -n "$component" ]; then
+        # Single component health check
+        component_dir="${DOTFILES_ROOT}/components/${component}"
+        yaml_file="${component_dir}/component.yaml"
+
+        if [ ! -f "$yaml_file" ]; then
+            printf "${THEME_ERROR}Component not found: %s${THEME_RESET}\n" "$component"
+            return 1
+        fi
+
+        _component_health_check "$component"
+    else
+        # All components health check
+        echo ""
+        echo "Component Health Report"
+        echo "======================="
+        echo ""
+
+        local total=0 healthy=0 warnings=0 errors=0
+
+        for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+            [ -d "$comp_dir" ] || continue
+            local comp
+            comp=$(basename "$comp_dir")
+            [ "$comp" = "_template" ] && continue
+            [ -f "${comp_dir}component.yaml" ] || continue
+
+            total=$((total + 1))
+            local status
+            status=$(_component_health_check "$comp" quiet)
+            case "$status" in
+                healthy) healthy=$((healthy + 1)) ;;
+                warning) warnings=$((warnings + 1)) ;;
+                error)   errors=$((errors + 1)) ;;
+            esac
+        done
+
+        echo ""
+        echo "Summary: $total components"
+        printf "  ${THEME_SUCCESS}Healthy: %d${THEME_RESET}\n" "$healthy"
+        [ "$warnings" -gt 0 ] && printf "  ${THEME_WARNING}Warnings: %d${THEME_RESET}\n" "$warnings"
+        [ "$errors" -gt 0 ] && printf "  ${THEME_ERROR}Errors: %d${THEME_RESET}\n" "$errors"
+    fi
+}
+
+# Internal: Check health of a single component
+_component_health_check() {
+    local component="$1"
+    local quiet="${2:-}"
+    local component_dir="${DOTFILES_ROOT}/components/${component}"
+    local yaml_file="${component_dir}/component.yaml"
+    local status="healthy"
+    local issues=""
+
+    # Check YAML is valid
+    if ! yq '.' "$yaml_file" >/dev/null 2>&1; then
+        issues="${issues}  - Invalid component.yaml\n"
+        status="error"
+    fi
+
+    # Check required tools
+    local tools tool
+    tools=$(yq -r '.requires.tools // [] | .[]' "$yaml_file" 2>/dev/null)
+    for tool in $tools; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            issues="${issues}  - Missing tool: ${tool}\n"
+            [ "$status" != "error" ] && status="warning"
+        fi
+    done
+
+    # Check shell files syntax
+    for sh_file in "${component_dir}"/*.sh; do
+        [ -f "$sh_file" ] || continue
+        if ! bash -n "$sh_file" 2>/dev/null; then
+            issues="${issues}  - Syntax error: $(basename "$sh_file")\n"
+            status="error"
+        fi
+    done
+
+    # Check component dependencies
+    local deps dep
+    deps=$(yq -r '.requires.components // [] | .[]' "$yaml_file" 2>/dev/null)
+    for dep in $deps; do
+        if [ ! -d "${DOTFILES_ROOT}/components/${dep}" ]; then
+            issues="${issues}  - Missing dependency: ${dep}\n"
+            [ "$status" != "error" ] && status="warning"
+        fi
+    done
+
+    # Output
+    if [ "$quiet" = "quiet" ]; then
+        echo "$status"
+    else
+        local symbol color
+        case "$status" in
+            healthy) symbol="✓"; color="$THEME_SUCCESS" ;;
+            warning) symbol="⚠"; color="$THEME_WARNING" ;;
+            error)   symbol="✗"; color="$THEME_ERROR" ;;
+        esac
+
+        local desc
+        desc=$(yq -r '.description // "No description"' "$yaml_file" 2>/dev/null)
+        printf "${color}%s${THEME_RESET} %s - %s\n" "$symbol" "$component" "$desc"
+
+        if [ -n "$issues" ]; then
+            printf "$issues"
+        fi
+    fi
+
+    [ "$status" = "healthy" ] && return 0 || return 1
+}
+
+# Show drift per component
+# Usage: component_drift [component_name]
+component_drift() {
+    local component="${1:-}"
+
+    if ! _sync_is_git_repo; then
+        echo "Error: Not a git repository"
+        return 1
+    fi
+
+    # Fetch to get accurate status
+    _sync_fetch
+
+    echo ""
+    echo "Component Drift Report"
+    echo "======================"
+    echo ""
+
+    local git_status
+    git_status=$(_sync_git_status)
+
+    if [ -z "$git_status" ]; then
+        printf "${THEME_SUCCESS}No uncommitted changes${THEME_RESET}\n"
+        return 0
+    fi
+
+    # Group changes by component
+    local current_component=""
+    local has_changes=false
+
+    for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        local comp
+        comp=$(basename "$comp_dir")
+        [ "$comp" = "_template" ] && continue
+
+        # Skip if specific component requested and this isn't it
+        [ -n "$component" ] && [ "$comp" != "$component" ] && continue
+
+        # Find changes in this component
+        local comp_changes
+        comp_changes=$(echo "$git_status" | grep " components/${comp}/")
+
+        if [ -n "$comp_changes" ]; then
+            has_changes=true
+            printf "${THEME_PEACH}%s${THEME_RESET}\n" "$comp"
+            echo "$comp_changes" | while IFS= read -r line; do
+                local prefix file
+                prefix=$(echo "$line" | cut -c1-2)
+                file=$(echo "$line" | cut -c4- | sed "s|components/${comp}/||")
+                # Handle empty file (new directory)
+                [ -z "$file" ] && file="(new component)"
+                case "$prefix" in
+                    "M "|" M") printf "  ${THEME_PEACH}M${THEME_RESET} %s\n" "$file" ;;
+                    "A "|" A") printf "  ${THEME_GREEN}A${THEME_RESET} %s\n" "$file" ;;
+                    "D "|" D") printf "  ${THEME_RED}D${THEME_RESET} %s\n" "$file" ;;
+                    "??")      printf "  ${THEME_MAUVE}?${THEME_RESET} %s\n" "$file" ;;
+                    *)         printf "  %s %s\n" "$prefix" "$file" ;;
+                esac
+            done
+            echo ""
+        fi
+    done
+
+    # Show core/ changes
+    local core_changes
+    core_changes=$(echo "$git_status" | grep " core/")
+    if [ -n "$core_changes" ]; then
+        has_changes=true
+        printf "${THEME_BLUE}core${THEME_RESET}\n"
+        echo "$core_changes" | while IFS= read -r line; do
+            local prefix file
+            prefix=$(echo "$line" | cut -c1-2)
+            file=$(echo "$line" | cut -c4- | sed 's|core/||')
+            case "$prefix" in
+                "M "|" M") printf "  ${THEME_PEACH}M${THEME_RESET} %s\n" "$file" ;;
+                "??")      printf "  ${THEME_MAUVE}?${THEME_RESET} %s\n" "$file" ;;
+                *)         printf "  %s %s\n" "$prefix" "$file" ;;
+            esac
+        done
+        echo ""
+    fi
+
+    # Show config/ changes
+    local config_changes
+    config_changes=$(echo "$git_status" | grep " config/")
+    if [ -n "$config_changes" ]; then
+        has_changes=true
+        printf "${THEME_TEAL}config${THEME_RESET}\n"
+        echo "$config_changes" | while IFS= read -r line; do
+            local prefix file
+            prefix=$(echo "$line" | cut -c1-2)
+            file=$(echo "$line" | cut -c4- | sed 's|config/||')
+            case "$prefix" in
+                "M "|" M") printf "  ${THEME_PEACH}M${THEME_RESET} %s\n" "$file" ;;
+                "??")      printf "  ${THEME_MAUVE}?${THEME_RESET} %s\n" "$file" ;;
+                *)         printf "  %s %s\n" "$prefix" "$file" ;;
+            esac
+        done
+        echo ""
+    fi
+
+    # Show other changes (not in components/, core/, or config/)
+    local other_changes
+    other_changes=$(echo "$git_status" | grep -v " components/" | grep -v " core/" | grep -v " config/")
+    if [ -n "$other_changes" ]; then
+        has_changes=true
+        printf "${THEME_OVERLAY1}other${THEME_RESET}\n"
+        echo "$other_changes" | while IFS= read -r line; do
+            local prefix file
+            prefix=$(echo "$line" | cut -c1-2)
+            file=$(echo "$line" | cut -c4-)
+            case "$prefix" in
+                "M "|" M") printf "  ${THEME_PEACH}M${THEME_RESET} %s\n" "$file" ;;
+                "A "|" A") printf "  ${THEME_GREEN}A${THEME_RESET} %s\n" "$file" ;;
+                "D "|" D") printf "  ${THEME_RED}D${THEME_RESET} %s\n" "$file" ;;
+                "??")      printf "  ${THEME_MAUVE}?${THEME_RESET} %s\n" "$file" ;;
+                *)         printf "  %s %s\n" "$prefix" "$file" ;;
+            esac
+        done
+        echo ""
+    fi
+
+    if [ "$has_changes" = false ]; then
+        printf "${THEME_SUCCESS}No changes in components${THEME_RESET}\n"
+    fi
+}
+
+# Interactive component sync - review and decide per component
+# Usage: component_sync [component_name]
+component_sync() {
+    local component="${1:-}"
+
+    if ! _sync_is_git_repo; then
+        echo "Error: Not a git repository"
+        return 1
+    fi
+
+    local git_status
+    git_status=$(_sync_git_status)
+
+    if [ -z "$git_status" ]; then
+        printf "${THEME_SUCCESS}No changes to sync${THEME_RESET}\n"
+        return 0
+    fi
+
+    echo ""
+    echo "Interactive Component Sync"
+    echo "=========================="
+    echo ""
+    echo "For each component with changes, choose:"
+    echo "  [c]ommit  - Stage and commit changes"
+    echo "  [r]evert  - Discard changes"
+    echo "  [s]kip    - Leave as-is"
+    echo "  [d]iff    - Show diff"
+    echo "  [q]uit    - Stop processing"
+    echo ""
+
+    # Process components with changes
+    for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        local comp
+        comp=$(basename "$comp_dir")
+        [ "$comp" = "_template" ] && continue
+
+        # Skip if specific component requested
+        [ -n "$component" ] && [ "$comp" != "$component" ] && continue
+
+        local comp_changes
+        comp_changes=$(echo "$git_status" | grep "components/${comp}/")
+
+        if [ -n "$comp_changes" ]; then
+            _sync_handle_component "$comp" "$comp_changes" || break
+        fi
+    done
+
+    # Handle core/ changes
+    if [ -z "$component" ]; then
+        local core_changes
+        core_changes=$(echo "$git_status" | grep "^.. core/")
+        if [ -n "$core_changes" ]; then
+            _sync_handle_section "core" "$core_changes" || return
+        fi
+    fi
+
+    echo ""
+    printf "${THEME_SUCCESS}Sync complete${THEME_RESET}\n"
+}
+
+# Internal: Handle sync for a component
+_sync_handle_component() {
+    local component="$1"
+    local changes="$2"
+
+    printf "\n${THEME_PEACH}Component: %s${THEME_RESET}\n" "$component"
+    echo "Changes:"
+    echo "$changes" | while IFS= read -r line; do
+        printf "  %s\n" "$line"
+    done
+
+    printf "\n[c]ommit, [r]evert, [s]kip, [d]iff, [q]uit? "
+    read -r action
+
+    case "$action" in
+        c|C|commit)
+            local files
+            files=$(echo "$changes" | awk '{print $2}')
+            echo "$files" | xargs git -C "$DOTFILES_ROOT" add
+            git -C "$DOTFILES_ROOT" commit -m "Update ${component} component"
+            printf "${THEME_SUCCESS}Committed %s changes${THEME_RESET}\n" "$component"
+            ;;
+        r|R|revert)
+            local files
+            files=$(echo "$changes" | grep -v "^??" | awk '{print $2}')
+            if [ -n "$files" ]; then
+                echo "$files" | xargs git -C "$DOTFILES_ROOT" checkout --
+                printf "${THEME_WARNING}Reverted %s changes${THEME_RESET}\n" "$component"
+            fi
+            # Handle untracked files
+            local untracked
+            untracked=$(echo "$changes" | grep "^??" | awk '{print $2}')
+            if [ -n "$untracked" ]; then
+                printf "Remove untracked files? [y/N] "
+                read -r confirm
+                if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+                    echo "$untracked" | xargs rm -rf
+                    printf "${THEME_WARNING}Removed untracked files${THEME_RESET}\n"
+                fi
+            fi
+            ;;
+        d|D|diff)
+            local files
+            files=$(echo "$changes" | grep -v "^??" | awk '{print $2}')
+            if [ -n "$files" ]; then
+                echo "$files" | xargs git -C "$DOTFILES_ROOT" diff
+            fi
+            # Re-prompt after showing diff
+            _sync_handle_component "$component" "$changes"
+            ;;
+        s|S|skip)
+            printf "${THEME_INFO}Skipped %s${THEME_RESET}\n" "$component"
+            ;;
+        q|Q|quit)
+            return 1
+            ;;
+        *)
+            printf "${THEME_WARNING}Invalid choice, skipping${THEME_RESET}\n"
+            ;;
+    esac
+    return 0
+}
+
+# Internal: Handle sync for a section (core, config, etc.)
+_sync_handle_section() {
+    local section="$1"
+    local changes="$2"
+
+    printf "\n${THEME_BLUE}Section: %s${THEME_RESET}\n" "$section"
+    echo "Changes:"
+    echo "$changes" | while IFS= read -r line; do
+        printf "  %s\n" "$line"
+    done
+
+    printf "\n[c]ommit, [r]evert, [s]kip, [d]iff, [q]uit? "
+    read -r action
+
+    case "$action" in
+        c|C|commit)
+            local files
+            files=$(echo "$changes" | awk '{print $2}')
+            echo "$files" | xargs git -C "$DOTFILES_ROOT" add
+            git -C "$DOTFILES_ROOT" commit -m "Update ${section}"
+            printf "${THEME_SUCCESS}Committed %s changes${THEME_RESET}\n" "$section"
+            ;;
+        r|R|revert)
+            local files
+            files=$(echo "$changes" | grep -v "^??" | awk '{print $2}')
+            if [ -n "$files" ]; then
+                echo "$files" | xargs git -C "$DOTFILES_ROOT" checkout --
+                printf "${THEME_WARNING}Reverted %s changes${THEME_RESET}\n" "$section"
+            fi
+            ;;
+        d|D|diff)
+            local files
+            files=$(echo "$changes" | grep -v "^??" | awk '{print $2}')
+            if [ -n "$files" ]; then
+                echo "$files" | xargs git -C "$DOTFILES_ROOT" diff
+            fi
+            _sync_handle_section "$section" "$changes"
+            ;;
+        s|S|skip)
+            printf "${THEME_INFO}Skipped %s${THEME_RESET}\n" "$section"
+            ;;
+        q|Q|quit)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# Validate component configurations
+# Usage: component_validate [component_name]
+component_validate() {
+    local component="${1:-}"
+    local errors=0
+
+    echo ""
+    echo "Component Validation"
+    echo "===================="
+    echo ""
+
+    for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        local comp
+        comp=$(basename "$comp_dir")
+        [ "$comp" = "_template" ] && continue
+
+        # Skip if specific component requested
+        [ -n "$component" ] && [ "$comp" != "$component" ] && continue
+
+        local yaml_file="${comp_dir}component.yaml"
+        local comp_errors=0
+
+        # Check YAML exists
+        if [ ! -f "$yaml_file" ]; then
+            printf "${THEME_ERROR}✗${THEME_RESET} %s: missing component.yaml\n" "$comp"
+            errors=$((errors + 1))
+            continue
+        fi
+
+        # Validate YAML syntax
+        if ! yq '.' "$yaml_file" >/dev/null 2>&1; then
+            printf "${THEME_ERROR}✗${THEME_RESET} %s: invalid YAML syntax\n" "$comp"
+            errors=$((errors + 1))
+            continue
+        fi
+
+        # Check required fields
+        local name version description category
+        name=$(yq -r '.name // ""' "$yaml_file")
+        version=$(yq -r '.version // ""' "$yaml_file")
+        description=$(yq -r '.description // ""' "$yaml_file")
+        category=$(yq -r '.category // ""' "$yaml_file")
+
+        local field_errors=""
+        [ -z "$name" ] && field_errors="${field_errors}name, " && comp_errors=$((comp_errors + 1))
+        [ -z "$version" ] && field_errors="${field_errors}version, " && comp_errors=$((comp_errors + 1))
+        [ -z "$description" ] && field_errors="${field_errors}description, " && comp_errors=$((comp_errors + 1))
+        [ -z "$category" ] && field_errors="${field_errors}category, " && comp_errors=$((comp_errors + 1))
+
+        # Validate shell files
+        for sh_file in "${comp_dir}"/*.sh; do
+            [ -f "$sh_file" ] || continue
+            if ! bash -n "$sh_file" 2>/dev/null; then
+                field_errors="${field_errors}$(basename "$sh_file") syntax, "
+                comp_errors=$((comp_errors + 1))
+            fi
+        done
+
+        # Validate config files exist
+        local config_count
+        config_count=$(yq -r '.config.files | length // 0' "$yaml_file" 2>/dev/null)
+        if [ "$config_count" != "0" ] && [ -n "$config_count" ]; then
+            local i
+            for i in $(seq 0 $((config_count - 1))); do
+                local source method
+                source=$(yq -r ".config.files[$i].source" "$yaml_file")
+                method=$(yq -r ".config.files[$i].method // \"symlink\"" "$yaml_file")
+
+                # Check source file exists
+                if [ ! -e "${comp_dir}${source}" ]; then
+                    field_errors="${field_errors}config:${source} missing, "
+                    comp_errors=$((comp_errors + 1))
+                fi
+
+                # Validate method
+                if [ "$method" != "symlink" ] && [ "$method" != "copy" ]; then
+                    field_errors="${field_errors}config:invalid method '${method}', "
+                    comp_errors=$((comp_errors + 1))
+                fi
+            done
+        fi
+
+        if [ $comp_errors -eq 0 ]; then
+            printf "${THEME_SUCCESS}✓${THEME_RESET} %s (%s)\n" "$comp" "$version"
+        else
+            field_errors=$(echo "$field_errors" | sed 's/, $//')
+            printf "${THEME_ERROR}✗${THEME_RESET} %s: missing/invalid: %s\n" "$comp" "$field_errors"
+            errors=$((errors + comp_errors))
+        fi
+    done
+
+    echo ""
+    if [ $errors -eq 0 ]; then
+        printf "${THEME_SUCCESS}All components valid${THEME_RESET}\n"
+    else
+        printf "${THEME_ERROR}%d validation error(s)${THEME_RESET}\n" "$errors"
+    fi
+
+    return $errors
+}
+
+# Quick overview of all components and their status
+component_overview() {
+    echo ""
+    echo "Component Overview"
+    echo "=================="
+    echo ""
+
+    # Group by category
+    for category in core dev cloud ai database editor; do
+        local has_category=false
+
+        for comp_dir in "${DOTFILES_ROOT}/components"/*/; do
+            [ -d "$comp_dir" ] || continue
+            local comp
+            comp=$(basename "$comp_dir")
+            [ "$comp" = "_template" ] && continue
+
+            local yaml_file="${comp_dir}component.yaml"
+            [ -f "$yaml_file" ] || continue
+
+            local comp_category
+            comp_category=$(yq -r '.category // "unknown"' "$yaml_file" 2>/dev/null)
+
+            if [ "$comp_category" = "$category" ]; then
+                if [ "$has_category" = false ]; then
+                    printf "${THEME_BLUE}[%s]${THEME_RESET}\n" "$category"
+                    has_category=true
+                fi
+
+                # Check if tools are installed
+                local tools_ok=true
+                local tools
+                tools=$(yq -r '.requires.tools // [] | .[]' "$yaml_file" 2>/dev/null)
+                for tool in $tools; do
+                    command -v "$tool" >/dev/null 2>&1 || tools_ok=false
+                done
+
+                local desc
+                desc=$(yq -r '.description // ""' "$yaml_file" 2>/dev/null | head -c 45)
+
+                if [ "$tools_ok" = true ]; then
+                    printf "  ${THEME_SUCCESS}✓${THEME_RESET} %-15s %s\n" "$comp" "$desc"
+                else
+                    printf "  ${THEME_WARNING}○${THEME_RESET} %-15s %s\n" "$comp" "$desc"
+                fi
+            fi
+        done
+
+        [ "$has_category" = true ] && echo ""
+    done
 }
 
 # =============================================================================
@@ -629,12 +1262,22 @@ SYNC:
   dotfiles_check_drift    Quick drift check
   dotfiles_auto_sync      Enable/disable auto-sync on startup
 
+COMPONENT MANAGEMENT:
+  component_health        Check health of components (tools, syntax)
+  component_drift         Show changes grouped by component
+  component_sync          Interactive per-component sync
+  component_validate      Validate component configurations
+  component_overview      Quick overview of all components
+
 EXAMPLES:
   dotfiles_inject         # First-time setup
   dotfiles_link_configs   # Link git, ssh configs
   dotfiles_update         # Update from git
   dotfiles_status         # Check current state
   dotfiles_audit          # Full drift report
+  component_health        # Check all component health
+  component_drift python  # Show drift in python component
+  component_sync          # Interactive sync per component
 EOF
 }
 
@@ -648,6 +1291,13 @@ alias df-audit='dotfiles_audit'
 alias df-link='dotfiles_link_configs'
 alias df-unlink='dotfiles_unlink_configs'
 alias df-help='dotfiles_help'
+
+# Component management aliases
+alias comp-health='component_health'
+alias comp-drift='component_drift'
+alias comp-sync='component_sync'
+alias comp-validate='component_validate'
+alias comp-overview='component_overview'
 
 # =============================================================================
 # Initialize

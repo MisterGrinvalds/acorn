@@ -31,31 +31,32 @@ core/                     # Core bootstrap system
 ├── loader.sh           # Component loader with dependency resolution
 └── sync.sh             # Dotfiles management functions
 
-components/              # Feature components
+components/              # Feature components (each with optional config/)
 ├── _template/          # Template for new components
 ├── shell/              # Core shell functions (cd, history, archive)
-├── git/                # Git aliases and functions
+├── git/                # Git aliases, functions, and config files
 ├── fzf/                # FZF integration with previews
 ├── tools/              # Tool management utilities
-├── tmux/               # Tmux session management
-├── python/             # Python/UV virtual environments
+├── tmux/               # Tmux session management and config
+├── python/             # Python/UV virtual environments and startup
 ├── node/               # Node.js/NVM/pnpm setup
 ├── go/                 # Go development environment
 ├── github/             # GitHub CLI integration
-├── vscode/             # VS Code helpers
+├── vscode/             # VS Code helpers and settings
 ├── database/           # Database tool aliases
 ├── kubernetes/         # kubectl and helm aliases
 ├── secrets/            # Secret loading and validation
-├── claude/             # Claude Code management
+├── claude/             # Claude Code management and settings
 ├── ollama/             # Ollama local AI models
-└── huggingface/        # Hugging Face integration
-
-config/                  # Application configs
-├── git/                # Git configuration
-├── ssh/                # SSH config
-├── python/             # Python startup
-├── claude/             # Claude Code settings (global)
-└── karabiner/          # macOS keyboard
+├── huggingface/        # Hugging Face integration
+├── ssh/                # SSH client configuration
+├── conda/              # Conda package manager config
+├── karabiner/          # macOS keyboard customization
+├── ghostty/            # Ghostty terminal configuration
+├── iterm2/             # iTerm2 terminal configuration
+├── intellij/           # IntelliJ IDE configuration
+├── wget/               # Wget download utility config
+└── r/                  # R statistical programming config
 
 secrets/                 # Secure storage (gitignored)
 ```
@@ -65,11 +66,13 @@ secrets/                 # Secure storage (gitignored)
 Each component follows this structure:
 ```
 components/<name>/
-├── component.yaml      # Metadata: name, dependencies, tools
+├── component.yaml      # Metadata: name, dependencies, tools, config
 ├── env.sh             # Environment variables
 ├── aliases.sh         # Command aliases
 ├── functions.sh       # Shell functions
-└── completions.sh     # Tab completions
+├── completions.sh     # Tab completions
+└── config/            # Configuration files (optional)
+    └── <config-files> # App-specific config files
 ```
 
 Example `component.yaml`:
@@ -77,8 +80,8 @@ Example `component.yaml`:
 name: python
 description: Python development with UV package manager
 version: 1.0.0
-shell: [bash, zsh]
-platform: [darwin, linux]
+shells: [bash, zsh]
+platforms: [darwin, linux]
 
 dependencies:
   components:
@@ -88,6 +91,15 @@ dependencies:
     optional:
       - uv
       - python3
+
+# Configuration files to deploy (optional)
+config:
+  files:
+    - source: config/startup.py
+      target: ~/.config/python/startup.py
+      method: symlink
+  directories:
+    - target: ~/.config/python
 ```
 
 ## Loading Sequence
@@ -272,10 +284,10 @@ yq '.dependencies' components/python/component.yaml
 
 ## Claude Code Configuration
 
-The `config/claude/settings.json` contains global Claude Code settings that are symlinked to `~/.claude/settings.json` during installation.
+The `components/claude/config/settings.json` contains global Claude Code settings that are symlinked to `~/.claude/settings.json` during installation.
 
 ### Settings Location
-- **Global settings**: `~/.claude/settings.json` (symlinked from `config/claude/settings.json`)
+- **Global settings**: `~/.claude/settings.json` (symlinked from `components/claude/config/settings.json`)
 - **Project settings**: `.claude/settings.json` in any project directory
 - **Local overrides**: `~/.claude/settings.local.json`
 

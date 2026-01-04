@@ -24,4 +24,24 @@ shells: [bash, zsh]
 setup:
   brew: [git]
   apt: [git]
+  npm: []
   post_install: ""
+  install_note: ""
+
+# Configuration files to deploy
+config:
+  files:
+    - source: config/config
+      target: ~/.gitconfig
+      method: symlink
+    - source: config/config.alias
+      target: ~/.config/git/config.alias
+      method: symlink
+    - source: config/config.color
+      target: ~/.config/git/config.color
+      method: symlink
+    - source: config/config.work
+      target: ~/.config/git/config.work
+      method: symlink
+  directories:
+    - target: ~/.config/git

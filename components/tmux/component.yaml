@@ -37,4 +37,19 @@ shells: [bash, zsh]
 setup:
   brew: [tmux]
   apt: [tmux]
+  npm: []
   post_install: "tmux_install_tpm && tmux_install_plugins"
+  install_note: ""
+
+# Configuration files to deploy
+# Tmux config is linked to both XDG and legacy locations for compatibility
+config:
+  files:
+    - source: config/tmux.conf
+      target: ~/.config/tmux/tmux.conf
+      method: symlink
+    - source: config/tmux.conf
+      target: ~/.tmux.conf
+      method: symlink
+  directories:
+    - target: ~/.config/tmux

@@ -32,6 +32,25 @@ platforms: [darwin]
 shells: [bash, zsh]
 
 setup:
-  brew: []
+  brew: [iterm2]
   apt: []
+  npm: []
   post_install: ""
+  install_note: "macOS only - download from https://iterm2.com"
+
+# Configuration files to deploy
+# Note: iTerm2 color scheme can be imported manually
+# DynamicProfiles are loaded automatically from the target directory
+config:
+  files:
+    - source: config/catppuccin-mocha.itermcolors
+      target: ~/.config/iterm2/catppuccin-mocha.itermcolors
+      method: symlink
+      platform: darwin
+    - source: config/DynamicProfiles/dotfiles-profile.json
+      target: ~/Library/Application Support/iTerm2/DynamicProfiles/dotfiles-profile.json
+      method: symlink
+      platform: darwin
+  directories:
+    - target: ~/.config/iterm2
+    - target: ~/Library/Application Support/iTerm2/DynamicProfiles

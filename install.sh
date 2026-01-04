@@ -368,6 +368,249 @@ install_development_tools() {
     log_success "Development tools installation completed!"
 }
 
+# Install tools for a specific component from its component.yaml
+# Usage: install_component_tools <component_name>
+install_component_tools() {
+    local component="$1"
+    local component_dir="$SCRIPT_DIR/components/$component"
+    local component_yaml="$component_dir/component.yaml"
+
+    if [ ! -f "$component_yaml" ]; then
+        log_error "Component not found: $component"
+        return 1
+    fi
+
+    local description
+    description=$(yq -r '.description // "No description"' "$component_yaml" 2>/dev/null)
+    log_info "Installing $component: $description"
+
+    local installed_something=false
+
+    # Platform-specific package managers
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        local brew_packages
+        brew_packages=$(yq -r '.setup.brew // [] | join(" ")' "$component_yaml" 2>/dev/null)
+        if [ -n "$brew_packages" ] && [ "$brew_packages" != "" ]; then
+            log_info "Installing via Homebrew: $brew_packages"
+            # shellcheck disable=SC2086
+            brew install $brew_packages || log_warn "Some packages may have failed"
+            installed_something=true
+        fi
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        local apt_packages
+        apt_packages=$(yq -r '.setup.apt // [] | join(" ")' "$component_yaml" 2>/dev/null)
+        if [ -n "$apt_packages" ] && [ "$apt_packages" != "" ]; then
+            log_info "Installing via apt: $apt_packages"
+            # shellcheck disable=SC2086
+            sudo apt-get install -y $apt_packages || log_warn "Some packages may have failed"
+            installed_something=true
+        fi
+    fi
+
+    # NPM packages (cross-platform)
+    local npm_packages
+    npm_packages=$(yq -r '.setup.npm // [] | join(" ")' "$component_yaml" 2>/dev/null)
+    if [ -n "$npm_packages" ] && [ "$npm_packages" != "" ]; then
+        if command_exists npm; then
+            log_info "Installing via npm: $npm_packages"
+            # shellcheck disable=SC2086
+            npm install -g $npm_packages || log_warn "Some npm packages may have failed"
+            installed_something=true
+        elif command_exists pnpm; then
+            log_info "Installing via pnpm: $npm_packages"
+            # shellcheck disable=SC2086
+            pnpm add -g $npm_packages || log_warn "Some npm packages may have failed"
+            installed_something=true
+        else
+            log_warn "npm/pnpm not found. Install Node.js first to install: $npm_packages"
+        fi
+    fi
+
+    # Show install note if nothing was installed
+    if [ "$installed_something" = false ]; then
+        local install_note
+        install_note=$(yq -r '.setup.install_note // ""' "$component_yaml" 2>/dev/null)
+        if [ -n "$install_note" ] && [ "$install_note" != "" ]; then
+            log_info "Install note: $install_note"
+        fi
+    fi
+
+    # Run post_install script if specified
+    local post_install
+    post_install=$(yq -r '.setup.post_install // ""' "$component_yaml" 2>/dev/null)
+    if [ -n "$post_install" ] && [ "$post_install" != "" ] && [ -f "$component_dir/$post_install" ]; then
+        log_info "Running post-install script..."
+        bash "$component_dir/$post_install"
+    fi
+
+    log_success "Component $component tools installed!"
+}
+
+# List all components with their install status
+list_components_status() {
+    log_info "Component Installation Status"
+    echo "=============================="
+    echo ""
+
+    for component_dir in "$SCRIPT_DIR/components"/*/; do
+        local component
+        component=$(basename "$component_dir")
+        [ "$component" = "_template" ] && continue
+
+        local component_yaml="$component_dir/component.yaml"
+        [ ! -f "$component_yaml" ] && continue
+
+        local description category
+        description=$(yq -r '.description // "No description"' "$component_yaml" 2>/dev/null)
+        category=$(yq -r '.category // "unknown"' "$component_yaml" 2>/dev/null)
+
+        # Check required tools
+        local tools_status="OK"
+        local missing_tools=""
+        local required_tools
+        required_tools=$(yq -r '.requires.tools // [] | .[]' "$component_yaml" 2>/dev/null)
+
+        for tool in $required_tools; do
+            if ! command_exists "$tool"; then
+                tools_status="MISSING"
+                missing_tools="$missing_tools $tool"
+            fi
+        done
+
+        if [ "$tools_status" = "OK" ]; then
+            echo -e "  ${GREEN}✓${NC} $component [$category]"
+        else
+            echo -e "  ${YELLOW}○${NC} $component [$category] - missing:$missing_tools"
+        fi
+        echo "      $description"
+    done
+    echo ""
+}
+
+# Interactive component installer menu
+install_components_interactive() {
+    log_info "Component-based Tool Installation"
+    echo "==================================="
+    echo ""
+    echo "Available component categories:"
+    echo "  1) Core (shell, fzf, git, tmux)"
+    echo "  2) Development (go, node, python)"
+    echo "  3) Cloud (kubernetes, cloudflare)"
+    echo "  4) AI (claude, ollama, huggingface)"
+    echo "  5) Database (database tools)"
+    echo "  6) All components"
+    echo "  7) Select individual components"
+    echo "  8) Show component status"
+    echo "  9) Skip"
+    echo ""
+
+    printf "Select option [1-9]: "
+    read -r choice
+
+    case "$choice" in
+        1)
+            for comp in shell fzf git tmux; do
+                install_component_tools "$comp"
+            done
+            ;;
+        2)
+            for comp in go node python; do
+                install_component_tools "$comp"
+            done
+            ;;
+        3)
+            for comp in kubernetes cloudflare; do
+                install_component_tools "$comp"
+            done
+            ;;
+        4)
+            for comp in claude ollama huggingface; do
+                install_component_tools "$comp"
+            done
+            ;;
+        5)
+            install_component_tools "database"
+            ;;
+        6)
+            for component_dir in "$SCRIPT_DIR/components"/*/; do
+                local comp
+                comp=$(basename "$component_dir")
+                [ "$comp" = "_template" ] && continue
+                install_component_tools "$comp"
+            done
+            ;;
+        7)
+            install_components_selective
+            ;;
+        8)
+            list_components_status
+            install_components_interactive
+            ;;
+        9)
+            log_info "Skipping component installation"
+            ;;
+        *)
+            log_warn "Invalid choice"
+            ;;
+    esac
+}
+
+# Select individual components to install
+install_components_selective() {
+    echo ""
+    echo "Available components:"
+    local components=()
+    local i=1
+
+    for component_dir in "$SCRIPT_DIR/components"/*/; do
+        local comp
+        comp=$(basename "$component_dir")
+        [ "$comp" = "_template" ] && continue
+        components+=("$comp")
+        local desc
+        desc=$(yq -r '.description // ""' "$component_dir/component.yaml" 2>/dev/null | head -c 50)
+        echo "  $i) $comp - $desc"
+        ((i++))
+    done
+    echo "  0) Done"
+    echo ""
+
+    while true; do
+        printf "Enter component number (0 to finish): "
+        read -r num
+        [ "$num" = "0" ] && break
+        if [ "$num" -ge 1 ] && [ "$num" -le "${#components[@]}" ]; then
+            local selected="${components[$((num-1))]}"
+            install_component_tools "$selected"
+        else
+            log_warn "Invalid selection"
+        fi
+    done
+}
+
+# Install CloudFlare/Wrangler tools
+install_cloudflare_tools() {
+    log_info "Installing CloudFlare CLI (wrangler)..."
+
+    if command_exists wrangler; then
+        log_info "Wrangler is already installed: $(wrangler --version 2>/dev/null | head -1)"
+        return 0
+    fi
+
+    if command_exists npm; then
+        log_info "Installing wrangler via npm..."
+        npm install -g wrangler
+        log_success "Wrangler installed successfully!"
+    elif command_exists pnpm; then
+        log_info "Installing wrangler via pnpm..."
+        pnpm add -g wrangler
+        log_success "Wrangler installed successfully!"
+    else
+        log_warn "npm/pnpm not found. Install Node.js first, then run: npm install -g wrangler"
+        return 1
+    fi
+}
+
 # Install cloud and container tools
 install_cloud_tools() {
     log_info "Installing cloud and container tools..."
@@ -394,6 +637,11 @@ install_cloud_tools() {
                 brew install doctl
             fi
 
+            getResponse -m "Install CloudFlare CLI (wrangler)?"
+            if [ "$RESPONSE" = 'y' ]; then
+                install_cloudflare_tools
+            fi
+
             CLOUD_TOOLS_INSTALLED=true
         fi
 
@@ -413,6 +661,12 @@ install_cloud_tools() {
         if ! command_exists helm; then
             log_info "Installing Helm..."
             curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        fi
+
+        # CloudFlare CLI
+        getResponse -m "Install CloudFlare CLI (wrangler)?"
+        if [ "$RESPONSE" = 'y' ]; then
+            install_cloudflare_tools
         fi
 
         log_info "Manual cloud CLI installation needed:"
@@ -490,82 +744,104 @@ setup_neovim() {
 link_app_configs() {
     log_info "Linking application configurations..."
 
-    # Git config
-    if [ -d "$SCRIPT_DIR/config/git" ]; then
-        if [ ! -d "$HOME/.config/git" ]; then
-            mkdir -p "$HOME/.config/git"
-        fi
+    # Check for yq
+    if ! command -v yq &>/dev/null; then
+        log_error "yq is required for config linking. Install with: brew install yq"
+        return 1
+    fi
 
-        for file in "$SCRIPT_DIR/config/git/"*; do
-            local filename=$(basename "$file")
-            local target="$HOME/.config/git/$filename"
-            if [ ! -e "$target" ]; then
-                ln -s "$file" "$target"
-                log_info "Linked git/$filename"
+    # Set up environment for config linking
+    export DOTFILES_ROOT="$SCRIPT_DIR"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        export CURRENT_PLATFORM="darwin"
+    else
+        export CURRENT_PLATFORM="linux"
+    fi
+
+    # Process each component
+    for comp_dir in "$SCRIPT_DIR/components"/*/; do
+        [ -d "$comp_dir" ] || continue
+        local component=$(basename "$comp_dir")
+        [ "$component" = "_template" ] && continue
+
+        local yaml_file="${comp_dir}component.yaml"
+        [ -f "$yaml_file" ] || continue
+
+        # Check if component has config section
+        local file_count
+        file_count=$(yq -r '.config.files | length // 0' "$yaml_file" 2>/dev/null)
+        [ "$file_count" = "0" ] || [ -z "$file_count" ] && continue
+
+        # Check platform support
+        local platforms
+        platforms=$(yq -r '.platforms // []' "$yaml_file" 2>/dev/null)
+        if [ "$platforms" != "[]" ] && [ "$platforms" != "null" ]; then
+            if ! echo "$platforms" | grep -q "$CURRENT_PLATFORM"; then
+                continue
             fi
+        fi
+
+        # Create directories first
+        local dir_count i
+        dir_count=$(yq -r '.config.directories | length // 0' "$yaml_file" 2>/dev/null)
+        for i in $(seq 0 $((dir_count - 1))); do
+            local target perms
+            target=$(yq -r ".config.directories[$i].target" "$yaml_file")
+            perms=$(yq -r ".config.directories[$i].permissions // \"\"" "$yaml_file")
+            target="${target/#\~/$HOME}"
+            mkdir -p "$target"
+            [ -n "$perms" ] && [ "$perms" != "null" ] && chmod "$perms" "$target" 2>/dev/null
         done
-    fi
 
-    # SSH config (be careful with this)
-    if [ -f "$SCRIPT_DIR/config/ssh/config" ]; then
-        mkdir -p "$HOME/.ssh"
-        if [ ! -f "$HOME/.ssh/config" ]; then
-            cp "$SCRIPT_DIR/config/ssh/config" "$HOME/.ssh/config"
-            chmod 600 "$HOME/.ssh/config"
-            log_info "Copied SSH config"
-        else
-            log_info "SSH config already exists, skipping"
+        # Process each config file
+        local linked_count=0
+        for i in $(seq 0 $((file_count - 1))); do
+            local source target method platform perms
+            source=$(yq -r ".config.files[$i].source" "$yaml_file")
+            target=$(yq -r ".config.files[$i].target" "$yaml_file")
+            method=$(yq -r ".config.files[$i].method // \"symlink\"" "$yaml_file")
+            platform=$(yq -r ".config.files[$i].platform // \"\"" "$yaml_file")
+            perms=$(yq -r ".config.files[$i].permissions // \"\"" "$yaml_file")
+
+            # Skip if platform-specific and not matching
+            if [ -n "$platform" ] && [ "$platform" != "null" ] && [ "$platform" != "$CURRENT_PLATFORM" ]; then
+                continue
+            fi
+
+            # Resolve paths
+            local source_path="${comp_dir}${source}"
+            local target_path="${target/#\~/$HOME}"
+
+            # Ensure source exists
+            if [ ! -e "$source_path" ]; then
+                continue
+            fi
+
+            # Ensure target directory exists
+            mkdir -p "$(dirname "$target_path")"
+
+            # Deploy based on method
+            case "$method" in
+                symlink)
+                    ln -sf "$source_path" "$target_path"
+                    ;;
+                copy)
+                    cp "$source_path" "$target_path"
+                    ;;
+            esac
+
+            # Apply permissions if specified
+            if [ -n "$perms" ] && [ "$perms" != "null" ]; then
+                chmod "$perms" "$target_path" 2>/dev/null
+            fi
+
+            linked_count=$((linked_count + 1))
+        done
+
+        if [ "$linked_count" -gt 0 ]; then
+            log_info "Linked $component: $linked_count file(s)"
         fi
-    fi
-
-    # Ghostty config
-    if [ -f "$SCRIPT_DIR/config/ghostty/config" ]; then
-        mkdir -p "$HOME/.config/ghostty"
-        ln -sf "$SCRIPT_DIR/config/ghostty/config" "$HOME/.config/ghostty/config"
-        log_info "Linked Ghostty config"
-    fi
-
-    # Tmux config
-    if [ -f "$SCRIPT_DIR/config/tmux/tmux.conf" ]; then
-        mkdir -p "$HOME/.config/tmux"
-        ln -sf "$SCRIPT_DIR/config/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
-        # Also link to traditional location for older tmux versions
-        ln -sf "$SCRIPT_DIR/config/tmux/tmux.conf" "$HOME/.tmux.conf"
-        log_info "Linked tmux config"
-    fi
-
-    # VS Code config
-    if [ -d "$SCRIPT_DIR/config/vscode" ]; then
-        local vscode_dir
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            vscode_dir="$HOME/Library/Application Support/Code/User"
-        else
-            vscode_dir="$HOME/.config/Code/User"
-        fi
-        mkdir -p "$vscode_dir"
-
-        if [ -f "$SCRIPT_DIR/config/vscode/settings.json" ]; then
-            ln -sf "$SCRIPT_DIR/config/vscode/settings.json" "$vscode_dir/settings.json"
-            log_info "Linked VS Code settings.json"
-        fi
-        if [ -f "$SCRIPT_DIR/config/vscode/keybindings.json" ]; then
-            ln -sf "$SCRIPT_DIR/config/vscode/keybindings.json" "$vscode_dir/keybindings.json"
-            log_info "Linked VS Code keybindings.json"
-        fi
-    fi
-
-    # Claude Code config
-    if [ -f "$SCRIPT_DIR/config/claude/settings.json" ]; then
-        mkdir -p "$HOME/.claude"
-        ln -sf "$SCRIPT_DIR/config/claude/settings.json" "$HOME/.claude/settings.json"
-        log_info "Linked Claude Code settings"
-    fi
-
-    # IntelliJ config (reference only)
-    if [ -d "$SCRIPT_DIR/config/intellij" ]; then
-        log_info "IntelliJ configs available at: $SCRIPT_DIR/config/intellij/"
-        log_info "  - Manual linking required due to version-specific paths"
-    fi
+    done
 
     log_success "Application configs linked!"
 }
@@ -766,14 +1042,25 @@ case "${1:-}" in
         echo "Usage: $0 [options]"
         echo
         echo "Options:"
-        echo "  --help, -h     Show this help message"
-        echo "  --auto         Run with all defaults (non-interactive)"
-        echo "  --yes-to-all   Answer yes to all prompts (interactive but automatic)"
-        echo "  --dotfiles     Install only dotfiles"
-        echo "  --dev-tools    Install only development tools"
-        echo "  --cloud-tools  Install only cloud tools"
-        echo "  --skip-gui     Skip GUI applications (VS Code, Docker Desktop)"
-        echo "  --test         Run tests only"
+        echo "  --help, -h          Show this help message"
+        echo "  --auto              Run with all defaults (non-interactive)"
+        echo "  --yes-to-all        Answer yes to all prompts (interactive but automatic)"
+        echo "  --dotfiles          Install only dotfiles"
+        echo "  --dev-tools         Install only development tools"
+        echo "  --cloud-tools       Install only cloud tools"
+        echo "  --skip-gui          Skip GUI applications (VS Code, Docker Desktop)"
+        echo "  --test              Run tests only"
+        echo ""
+        echo "Component-based installation:"
+        echo "  --components        Interactive component-based tool installer"
+        echo "  --component <name>  Install tools for a specific component"
+        echo "  --list-components   List all components and their status"
+        echo
+        echo "Examples:"
+        echo "  $0 --components              # Interactive component menu"
+        echo "  $0 --component cloudflare    # Install CloudFlare/wrangler tools"
+        echo "  $0 --component python        # Install Python tools (python3, uv)"
+        echo "  $0 --list-components         # Show which tools are installed"
         echo
         exit 0
         ;;
@@ -816,6 +1103,26 @@ case "${1:-}" in
         ;;
     "--test")
         run_installation_tests
+        ;;
+    "--components")
+        # Interactive component-based installer
+        install_components_interactive
+        ;;
+    "--component")
+        # Install specific component
+        if [ -z "${2:-}" ]; then
+            log_error "Usage: $0 --component <component_name>"
+            echo "Available components:"
+            for d in "$SCRIPT_DIR/components"/*/; do
+                comp=$(basename "$d")
+                [ "$comp" != "_template" ] && echo "  - $comp"
+            done
+            exit 1
+        fi
+        install_component_tools "$2"
+        ;;
+    "--list-components")
+        list_components_status
         ;;
     *)
         # Interactive mode
