@@ -16,3 +16,7 @@ tmp-dotfiles/
 *~
 .idea/
 *.iml
+
+# Go build artifacts
+build/
+dist/

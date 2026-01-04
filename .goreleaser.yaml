@@ -1,0 +1,117 @@
+# GoReleaser configuration for acorn CLI
+# Run with: make acorn-release (requires git tag)
+# Snapshot: make acorn-snapshot
+
+version: 2
+
+project_name: acorn
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod verify
+
+builds:
+  - id: acorn
+    main: ./cmd/acorn
+    binary: acorn
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/mistergrinvalds/acorn/internal/version.Version={{.Version}}
+      - -X github.com/mistergrinvalds/acorn/internal/version.Commit={{.ShortCommit}}
+      - -X github.com/mistergrinvalds/acorn/internal/version.Date={{.Date}}
+      - -X github.com/mistergrinvalds/acorn/internal/version.BuiltBy=goreleaser
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: 'Features'
+      regexp: "^.*feat.*:+.*$"
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: "^.*fix.*:+.*$"
+      order: 1
+    - title: 'Performance'
+      regexp: "^.*perf.*:+.*$"
+      order: 2
+    - title: 'Refactoring'
+      regexp: "^.*refactor.*:+.*$"
+      order: 3
+    - title: 'Other'
+      order: 999
+
+release:
+  github:
+    owner: mistergrinvalds
+    name: acorn
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Acorn {{ .Tag }}
+
+    Development environment management CLI.
+  footer: |
+    ---
+
+    **Full Changelog**: https://github.com/mistergrinvalds/acorn/compare/{{ .PreviousTag }}...{{ .Tag }}
+  name_template: "v{{ .Version }}"
+
+# Homebrew tap (optional - enable when ready)
+# brews:
+#   - name: acorn
+#     repository:
+#       owner: mistergrinvalds
+#       name: homebrew-tap
+#     homepage: "https://github.com/mistergrinvalds/acorn"
+#     description: "Development environment management CLI"
+#     license: "MIT"
+#     folder: Formula
+#     install: |
+#       bin.install "acorn"
+#     test: |
+#       system "#{bin}/acorn", "version"
+
+announce:
+  skip: true

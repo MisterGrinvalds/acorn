@@ -1,0 +1,135 @@
+# golangci-lint configuration for acorn CLI
+# Run with: make acorn-lint
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  modules-download-mode: readonly
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+linters:
+  enable:
+    # Default linters
+    - errcheck       # Check for unchecked errors
+    - gosimple       # Simplify code
+    - govet          # Report suspicious constructs
+    - ineffassign    # Detect ineffective assignments
+    - staticcheck    # Static analysis
+    - unused         # Check for unused code
+
+    # Additional linters
+    - bodyclose      # HTTP response body close
+    - dogsled        # Too many blank identifiers
+    - dupl           # Code duplication
+    - errname        # Error naming conventions
+    - errorlint      # Error wrapping issues
+    - exhaustive     # Exhaustive switch statements
+    - exportloopref  # Export loop variable references
+    - gochecknoinits # No init functions
+    - goconst        # Repeated strings to constants
+    - gocritic       # Various code issues
+    - gocyclo        # Cyclomatic complexity
+    - gofmt          # Format check
+    - goimports      # Import order
+    - gosec          # Security issues
+    - misspell       # Spelling errors
+    - nakedret       # Naked returns
+    - nilerr         # nil error returns
+    - nolintlint     # Proper nolint usage
+    - prealloc       # Slice preallocation
+    - predeclared    # Predeclared identifier shadowing
+    - revive         # Replacement for golint
+    - stylecheck     # Style issues
+    - tparallel      # Parallel test issues
+    - unconvert      # Unnecessary conversions
+    - unparam        # Unused parameters
+    - whitespace     # Whitespace issues
+
+  disable:
+    - funlen         # Allow long functions
+    - gocognit       # Cognitive complexity (use gocyclo instead)
+    - lll            # Line length (handled by editor)
+    - wsl            # Whitespace linter (too strict)
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    enable-all: true
+
+  gocyclo:
+    min-complexity: 15
+
+  dupl:
+    threshold: 150
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: var-declaration
+      - name: var-naming
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - hugeParam  # Allow large parameters
+
+  gosec:
+    excludes:
+      - G104  # Errors unhandled (covered by errcheck)
+
+issues:
+  exclude-rules:
+    # Ignore long lines in generated files
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+
+    # Allow dot imports for test files
+    - path: _test\.go
+      linters:
+        - revive
+      text: "dot-imports"
+
+    # Ignore magic numbers in tests
+    - path: _test\.go
+      linters:
+        - gomnd
+
+  max-issues-per-linter: 50
+  max-same-issues: 10
+  new: false

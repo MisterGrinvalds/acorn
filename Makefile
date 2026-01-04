@@ -1490,6 +1490,175 @@ go-tools: ## Install common Go development tools
 	@echo -e "$(GREEN)✅ Go tools installed$(NC)"
 
 # =============================================================================
+# Acorn CLI Build System
+# =============================================================================
+
+# Build configuration
+BINARY_NAME := acorn
+GO_MODULE := github.com/mistergrinvalds/acorn
+VERSION_PKG := $(GO_MODULE)/internal/version
+BUILD_DIR := build
+CMD_DIR := cmd/acorn
+
+# Version information (extracted from git)
+GIT_VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+BUILT_BY := $(shell whoami)
+
+# Build flags for version embedding
+LDFLAGS := -s -w \
+	-X '$(VERSION_PKG).Version=$(GIT_VERSION)' \
+	-X '$(VERSION_PKG).Commit=$(GIT_COMMIT)' \
+	-X '$(VERSION_PKG).Date=$(BUILD_DATE)' \
+	-X '$(VERSION_PKG).BuiltBy=$(BUILT_BY)'
+
+# Cross-compilation targets
+PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64
+
+.PHONY: acorn acorn-build acorn-install acorn-clean acorn-test acorn-lint acorn-fmt acorn-vet acorn-check acorn-release acorn-snapshot acorn-deps acorn-tidy acorn-verify acorn-coverage acorn-bench acorn-security
+
+acorn: acorn-build ## Build acorn CLI (alias)
+
+acorn-build: ## Build acorn CLI binary
+	@echo -e "$(BLUE)Building acorn CLI...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) ./$(CMD_DIR)
+	@echo -e "$(GREEN)✅ Built $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
+	@echo "   Version: $(GIT_VERSION)"
+	@echo "   Commit:  $(GIT_COMMIT)"
+
+acorn-install: acorn-build ## Install acorn to GOPATH/bin
+	@echo -e "$(BLUE)Installing acorn...$(NC)"
+	@go install -ldflags "$(LDFLAGS)" ./$(CMD_DIR)
+	@echo -e "$(GREEN)✅ Installed acorn to $$(go env GOPATH)/bin$(NC)"
+
+acorn-clean: ## Clean build artifacts
+	@echo -e "$(BLUE)Cleaning build artifacts...$(NC)"
+	@rm -rf $(BUILD_DIR)
+	@go clean -cache -testcache
+	@echo -e "$(GREEN)✅ Clean complete$(NC)"
+
+acorn-test: ## Run all tests with race detection
+	@echo -e "$(BLUE)Running tests...$(NC)"
+	@go test -race -v ./...
+	@echo -e "$(GREEN)✅ Tests passed$(NC)"
+
+acorn-coverage: ## Run tests with coverage report
+	@echo -e "$(BLUE)Running tests with coverage...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@go test -race -coverprofile=$(BUILD_DIR)/coverage.out -covermode=atomic ./...
+	@go tool cover -html=$(BUILD_DIR)/coverage.out -o $(BUILD_DIR)/coverage.html
+	@go tool cover -func=$(BUILD_DIR)/coverage.out | tail -1
+	@echo -e "$(GREEN)✅ Coverage report: $(BUILD_DIR)/coverage.html$(NC)"
+
+acorn-bench: ## Run benchmarks
+	@echo -e "$(BLUE)Running benchmarks...$(NC)"
+	@go test -bench=. -benchmem ./...
+	@echo -e "$(GREEN)✅ Benchmarks complete$(NC)"
+
+acorn-lint: ## Run golangci-lint
+	@echo -e "$(BLUE)Running linter...$(NC)"
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run --timeout 5m; \
+		echo -e "$(GREEN)✅ Linting passed$(NC)"; \
+	else \
+		echo -e "$(YELLOW)⚠️  golangci-lint not installed. Run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest$(NC)"; \
+		exit 1; \
+	fi
+
+acorn-fmt: ## Format Go code
+	@echo -e "$(BLUE)Formatting code...$(NC)"
+	@gofmt -s -w .
+	@goimports -w . 2>/dev/null || true
+	@echo -e "$(GREEN)✅ Code formatted$(NC)"
+
+acorn-vet: ## Run go vet
+	@echo -e "$(BLUE)Running go vet...$(NC)"
+	@go vet ./...
+	@echo -e "$(GREEN)✅ Vet passed$(NC)"
+
+acorn-security: ## Run security scanners (gosec, govulncheck)
+	@echo -e "$(BLUE)Running security checks...$(NC)"
+	@if command -v gosec >/dev/null 2>&1; then \
+		echo "Running gosec..."; \
+		gosec -quiet ./...; \
+	else \
+		echo -e "$(YELLOW)⚠️  gosec not installed. Run: go install github.com/securego/gosec/v2/cmd/gosec@latest$(NC)"; \
+	fi
+	@if command -v govulncheck >/dev/null 2>&1; then \
+		echo "Running govulncheck..."; \
+		govulncheck ./...; \
+	else \
+		echo -e "$(YELLOW)⚠️  govulncheck not installed. Run: go install golang.org/x/vuln/cmd/govulncheck@latest$(NC)"; \
+	fi
+	@echo -e "$(GREEN)✅ Security checks complete$(NC)"
+
+acorn-check: acorn-fmt acorn-vet acorn-lint acorn-test ## Run all checks (fmt, vet, lint, test)
+	@echo -e "$(GREEN)✅ All checks passed$(NC)"
+
+acorn-deps: ## Install development dependencies
+	@echo -e "$(BLUE)Installing development dependencies...$(NC)"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@go install github.com/securego/gosec/v2/cmd/gosec@latest
+	@go install golang.org/x/vuln/cmd/govulncheck@latest
+	@go install github.com/goreleaser/goreleaser/v2@latest
+	@echo -e "$(GREEN)✅ Dependencies installed$(NC)"
+
+acorn-tidy: ## Tidy go modules
+	@echo -e "$(BLUE)Tidying modules...$(NC)"
+	@go mod tidy
+	@go mod verify
+	@echo -e "$(GREEN)✅ Modules tidied$(NC)"
+
+acorn-verify: ## Verify module checksums
+	@echo -e "$(BLUE)Verifying modules...$(NC)"
+	@go mod verify
+	@echo -e "$(GREEN)✅ Modules verified$(NC)"
+
+acorn-cross: ## Build for all platforms
+	@echo -e "$(BLUE)Cross-compiling for all platforms...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@for platform in $(PLATFORMS); do \
+		GOOS=$${platform%/*} GOARCH=$${platform#*/} \
+		go build -ldflags "$(LDFLAGS)" \
+			-o $(BUILD_DIR)/$(BINARY_NAME)-$${platform%/*}-$${platform#*/}$$([ "$${platform%/*}" = "windows" ] && echo ".exe") \
+			./$(CMD_DIR); \
+		echo "   Built: $(BINARY_NAME)-$${platform%/*}-$${platform#*/}"; \
+	done
+	@echo -e "$(GREEN)✅ Cross-compilation complete$(NC)"
+
+acorn-snapshot: ## Build snapshot release with goreleaser
+	@echo -e "$(BLUE)Building snapshot release...$(NC)"
+	@if command -v goreleaser >/dev/null 2>&1; then \
+		goreleaser release --snapshot --clean; \
+		echo -e "$(GREEN)✅ Snapshot built in dist/$(NC)"; \
+	else \
+		echo -e "$(YELLOW)⚠️  goreleaser not installed. Run: make acorn-deps$(NC)"; \
+		exit 1; \
+	fi
+
+acorn-release: ## Create tagged release with goreleaser
+	@echo -e "$(BLUE)Creating release...$(NC)"
+	@if [ -z "$(shell git tag -l --points-at HEAD)" ]; then \
+		echo -e "$(RED)❌ No tag on current commit. Tag with: git tag vX.Y.Z$(NC)"; \
+		exit 1; \
+	fi
+	@if command -v goreleaser >/dev/null 2>&1; then \
+		goreleaser release --clean; \
+		echo -e "$(GREEN)✅ Release created$(NC)"; \
+	else \
+		echo -e "$(YELLOW)⚠️  goreleaser not installed. Run: make acorn-deps$(NC)"; \
+		exit 1; \
+	fi
+
+acorn-version: ## Show version that would be embedded
+	@echo "Version:  $(GIT_VERSION)"
+	@echo "Commit:   $(GIT_COMMIT)"
+	@echo "Date:     $(BUILD_DATE)"
+	@echo "Built By: $(BUILT_BY)"
+
+# =============================================================================
 # Brew Package Management
 # =============================================================================
 
