@@ -43,6 +43,12 @@ provides:
     - smug_edit
     - smug_install
     - smug_link_configs
+    # Smug git sync (cross-machine portability)
+    - smug_repo_init
+    - smug_status
+    - smug_pull
+    - smug_push
+    - smug_sync
     # Window alerts
     - tmux_alert
     - tmux_alert_color
@@ -64,12 +70,13 @@ setup:
   brew: [tmux, smug, fzf, zoxide]
   apt: [tmux, fzf]
   npm: []
-  post_install: "tmux_install_tpm && tmux_install_plugins && smug_link_configs"
+  post_install: "tmux_install_tpm && tmux_install_plugins && smug_repo_init"
   install_note: |
     After installation:
     1. Run: tmux_install_tpm (installs TPM)
     2. Start tmux and press prefix + I to install plugins
-    3. For smug on Linux: go install github.com/ivaaaan/smug@latest
+    3. Run: smug_repo_init (clones session configs from git)
+    4. For smug on Linux: go install github.com/ivaaaan/smug@latest
 
 # Configuration files to deploy
 # Tmux config is linked to both XDG and legacy locations for compatibility

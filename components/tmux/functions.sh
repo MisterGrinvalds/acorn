@@ -464,19 +464,30 @@ smug_install() {
     smug_link_configs
 }
 
-# Link smug configs from dotfiles
+# Link smug configs from git repo (or dotfiles fallback)
 smug_link_configs() {
-    local source_dir="${DOTFILES_ROOT}/components/tmux/config/smug"
-    local target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+    local repo_dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+    local target_dir="${SMUG_CONFIG_DIR:-$HOME/.config/smug}"
 
+    # Prefer git repo if initialized
+    if [ -d "$repo_dir/.git" ]; then
+        echo "Linking smug configs from git repo..."
+        rm -rf "$target_dir"
+        ln -sf "$repo_dir" "$target_dir"
+        echo "Linked: $target_dir -> $repo_dir"
+        return 0
+    fi
+
+    # Fallback to dotfiles
+    local source_dir="${DOTFILES_ROOT}/components/tmux/config/smug"
     if [ ! -d "$source_dir" ]; then
-        echo "No smug configs in dotfiles"
+        echo "No smug configs found. Run smug_repo_init to clone the repo."
         return 1
     fi
 
     mkdir -p "$target_dir"
 
-    echo "Linking smug configs..."
+    echo "Linking smug configs from dotfiles..."
     for config in "$source_dir"/*.yml; do
         [ -f "$config" ] || continue
         local name
@@ -485,6 +496,157 @@ smug_link_configs() {
         echo "  Linked: $name"
     done
     echo "Done!"
+}
+
+# =============================================================================
+# Smug Git Sync - Cross-machine session portability
+# =============================================================================
+# Syncs smug session configs via git repo for cross-machine portability
+
+# Initialize smug sessions repo (clone or update)
+smug_repo_init() {
+    local repo="${SMUG_REPO:-https://github.com/MisterGrinvalds/fmux.git}"
+    local dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+
+    if [ -d "$dir/.git" ]; then
+        echo "Smug repo already initialized at: $dir"
+        echo "Pulling latest..."
+        git -C "$dir" pull --rebase
+    else
+        echo "Cloning smug sessions repo..."
+        mkdir -p "$(dirname "$dir")"
+        git clone "$repo" "$dir"
+    fi
+
+    if [ -d "$dir/.git" ]; then
+        echo ""
+        echo "Smug repo initialized!"
+        echo "Location: $dir"
+        echo ""
+        smug_link_configs
+        echo ""
+        echo "Commands:"
+        echo "  smug_status     - Show repo status"
+        echo "  smug_pull       - Pull latest sessions"
+        echo "  smug_push       - Commit and push changes"
+        echo "  smug_sync       - Full sync (pull + push)"
+    else
+        echo "Failed to initialize smug repo"
+        return 1
+    fi
+}
+
+# Show smug repo status
+smug_status() {
+    local dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+
+    if [ ! -d "$dir/.git" ]; then
+        echo "Smug repo not initialized. Run: smug_repo_init"
+        return 1
+    fi
+
+    echo "Smug Sessions Status"
+    echo "===================="
+    echo "Location: $dir"
+    echo ""
+
+    git -C "$dir" status --short --branch
+
+    echo ""
+    echo "Sessions:"
+    for config in "$dir"/*.yml; do
+        [ -f "$config" ] || continue
+        local name
+        name=$(basename "$config" .yml)
+        echo "  - $name"
+    done
+}
+
+# Pull latest sessions from remote
+smug_pull() {
+    local dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+
+    if [ ! -d "$dir/.git" ]; then
+        echo "Smug repo not initialized. Run: smug_repo_init"
+        return 1
+    fi
+
+    echo "Pulling latest sessions..."
+    git -C "$dir" pull --rebase
+
+    if [ $? -eq 0 ]; then
+        echo "Sessions updated!"
+    else
+        echo "Pull failed. Check for conflicts."
+        return 1
+    fi
+}
+
+# Commit and push session changes
+smug_push() {
+    local dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+    local message="${1:-Update smug sessions}"
+
+    if [ ! -d "$dir/.git" ]; then
+        echo "Smug repo not initialized. Run: smug_repo_init"
+        return 1
+    fi
+
+    # Check for changes
+    if [ -z "$(git -C "$dir" status --porcelain)" ]; then
+        echo "No changes to push"
+        return 0
+    fi
+
+    echo "Changes to commit:"
+    git -C "$dir" status --short
+    echo ""
+
+    # Add all session files
+    git -C "$dir" add "*.yml" "*.yaml" README.md 2>/dev/null
+
+    # Commit
+    git -C "$dir" commit -m "$message"
+
+    # Push
+    echo "Pushing to remote..."
+    git -C "$dir" push
+
+    if [ $? -eq 0 ]; then
+        echo "Sessions pushed!"
+    else
+        echo "Push failed. Check remote access."
+        return 1
+    fi
+}
+
+# Full sync: pull, commit local changes, push
+smug_sync() {
+    local dir="${SMUG_REPO_DIR:-$HOME/.local/share/smug-sessions}"
+
+    if [ ! -d "$dir/.git" ]; then
+        echo "Smug repo not initialized. Run: smug_repo_init"
+        return 1
+    fi
+
+    echo "Syncing smug sessions..."
+    echo ""
+
+    local has_changes=false
+    if [ -n "$(git -C "$dir" status --porcelain)" ]; then
+        has_changes=true
+        git -C "$dir" stash
+    fi
+
+    smug_pull || return 1
+
+    if [ "$has_changes" = true ]; then
+        git -C "$dir" stash pop
+        smug_push "Sync local session changes"
+    fi
+
+    echo ""
+    echo "Sync complete!"
 }
 
 # =============================================================================
