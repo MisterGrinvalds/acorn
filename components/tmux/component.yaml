@@ -43,6 +43,12 @@ provides:
     - smug_edit
     - smug_install
     - smug_link_configs
+    # Window alerts
+    - tmux_alert
+    - tmux_alert_color
+    - tmux_alert_high
+    - tmux_alert_medium
+    - tmux_alert_low
   completions: [tswitch, tkill, tmux_attach, dev_session, project_session, smug_start, smug_stop, smug_edit]
 
 xdg:
@@ -79,6 +85,11 @@ config:
     - source: config/smug
       target: ~/.config/smug
       method: symlink
+    # Alert scripts
+    - source: config/scripts
+      target: ~/.config/tmux/scripts
+      method: symlink
   directories:
     - target: ~/.config/tmux
+    - target: ~/.config/tmux/scripts
     - target: ~/.config/smug

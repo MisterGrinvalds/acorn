@@ -486,3 +486,57 @@ smug_link_configs() {
     done
     echo "Done!"
 }
+
+# =============================================================================
+# Window Alerts
+# =============================================================================
+# Trigger visual alerts on tmux window tabs that auto-clear when you switch to them
+
+# Set alert on current window (default: red)
+tmux_alert() {
+    if [ -z "$TMUX" ]; then
+        echo "Error: Not in a tmux session"
+        return 1
+    fi
+
+    local window_id
+    window_id=$(tmux display-message -p '#{window_id}')
+
+    # Set alert flag
+    tmux set-window-option -t "$window_id" @alert 1
+
+    # Change window color to Catppuccin red (bold)
+    tmux set-window-option -t "$window_id" window-status-style "fg=#f38ba8,bold,bg=#45475a"
+
+    echo "Alert set for window $window_id"
+}
+
+# Set alert with custom color
+tmux_alert_color() {
+    if [ -z "$TMUX" ]; then
+        echo "Error: Not in a tmux session"
+        return 1
+    fi
+
+    local color="${1:-#f38ba8}"  # Default to red if no color specified
+    local window_id
+    window_id=$(tmux display-message -p '#{window_id}')
+
+    tmux set-window-option -t "$window_id" @alert 1
+    tmux set-window-option -t "$window_id" window-status-style "fg=$color,bold,bg=#45475a"
+
+    echo "Alert set with color: $color"
+}
+
+# Priority alert levels using Catppuccin Mocha colors
+tmux_alert_high() {
+    tmux_alert_color "#f38ba8"  # red
+}
+
+tmux_alert_medium() {
+    tmux_alert_color "#f9e2af"  # yellow
+}
+
+tmux_alert_low() {
+    tmux_alert_color "#94e2d5"  # teal
+}
