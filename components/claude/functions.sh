@@ -404,6 +404,192 @@ claude_clear() {
 }
 
 # =============================================================================
+# Aggregation - Collect agents/commands from other repos
+# =============================================================================
+
+# Aggregate Claude agents/commands from multiple repos
+claude_aggregate() {
+    local search_dir="${1:-$HOME/Repos}"
+    local target_dir="${DOTFILES_ROOT}/components/claude/config"
+    local verbose="${2:-false}"
+
+    if [ ! -d "$search_dir" ]; then
+        echo "Directory not found: $search_dir"
+        return 1
+    fi
+
+    if [ ! -d "$target_dir" ]; then
+        echo "Target directory not found: $target_dir"
+        echo "Ensure DOTFILES_ROOT is set correctly"
+        return 1
+    fi
+
+    echo "Scanning $search_dir for Claude Code configurations..."
+    echo ""
+
+    local repos_scanned=0
+    local agents_added=0
+    local commands_added=0
+    local subagents_added=0
+    local skipped=0
+    local renamed=0
+
+    # Find all .claude directories
+    find "$search_dir" -maxdepth 3 -type d -name ".claude" 2>/dev/null | while read -r claude_dir; do
+        local repo_dir
+        repo_dir=$(dirname "$claude_dir")
+        local repo_name
+        repo_name=$(basename "$repo_dir")
+
+        # Skip the dotfiles repo itself
+        if [ "$repo_dir" = "$DOTFILES_ROOT" ]; then
+            continue
+        fi
+
+        local found_something=false
+
+        # Process agents
+        if [ -d "$claude_dir/agents" ]; then
+            for agent_file in "$claude_dir/agents"/*.md; do
+                [ -f "$agent_file" ] || continue
+                local filename
+                filename=$(basename "$agent_file")
+
+                # Skip session files
+                case "$filename" in
+                    SESSION_CONTEXT.md|session-notes.md|*.local.md) continue ;;
+                esac
+
+                local target_file="$target_dir/agents/$filename"
+
+                if [ -f "$target_file" ]; then
+                    # Compare contents
+                    if diff -q "$agent_file" "$target_file" >/dev/null 2>&1; then
+                        [ "$verbose" = "true" ] && echo "  Skipped (duplicate): agents/$filename"
+                        skipped=$((skipped + 1))
+                    else
+                        # Rename with repo prefix
+                        local new_name="${repo_name}-${filename}"
+                        cp "$agent_file" "$target_dir/agents/$new_name"
+                        echo "  Added (renamed): agents/$new_name (from $repo_name)"
+                        renamed=$((renamed + 1))
+                        agents_added=$((agents_added + 1))
+                    fi
+                else
+                    cp "$agent_file" "$target_file"
+                    echo "  Added: agents/$filename (from $repo_name)"
+                    agents_added=$((agents_added + 1))
+                fi
+                found_something=true
+            done
+        fi
+
+        # Process commands
+        if [ -d "$claude_dir/commands" ]; then
+            for cmd_file in "$claude_dir/commands"/*.md; do
+                [ -f "$cmd_file" ] || continue
+                local filename
+                filename=$(basename "$cmd_file")
+
+                local target_file="$target_dir/commands/$filename"
+
+                if [ -f "$target_file" ]; then
+                    if diff -q "$cmd_file" "$target_file" >/dev/null 2>&1; then
+                        [ "$verbose" = "true" ] && echo "  Skipped (duplicate): commands/$filename"
+                        skipped=$((skipped + 1))
+                    else
+                        local new_name="${repo_name}-${filename}"
+                        cp "$cmd_file" "$target_dir/commands/$new_name"
+                        echo "  Added (renamed): commands/$new_name (from $repo_name)"
+                        renamed=$((renamed + 1))
+                        commands_added=$((commands_added + 1))
+                    fi
+                else
+                    cp "$cmd_file" "$target_file"
+                    echo "  Added: commands/$filename (from $repo_name)"
+                    commands_added=$((commands_added + 1))
+                fi
+                found_something=true
+            done
+        fi
+
+        # Process subagents
+        if [ -d "$claude_dir/subagents" ]; then
+            for sub_file in "$claude_dir/subagents"/*.md; do
+                [ -f "$sub_file" ] || continue
+                local filename
+                filename=$(basename "$sub_file")
+
+                local target_file="$target_dir/subagents/$filename"
+
+                if [ -f "$target_file" ]; then
+                    if diff -q "$sub_file" "$target_file" >/dev/null 2>&1; then
+                        [ "$verbose" = "true" ] && echo "  Skipped (duplicate): subagents/$filename"
+                        skipped=$((skipped + 1))
+                    else
+                        local new_name="${repo_name}-${filename}"
+                        cp "$sub_file" "$target_dir/subagents/$new_name"
+                        echo "  Added (renamed): subagents/$new_name (from $repo_name)"
+                        renamed=$((renamed + 1))
+                        subagents_added=$((subagents_added + 1))
+                    fi
+                else
+                    cp "$sub_file" "$target_file"
+                    echo "  Added: subagents/$filename (from $repo_name)"
+                    subagents_added=$((subagents_added + 1))
+                fi
+                found_something=true
+            done
+        fi
+
+        if [ "$found_something" = true ]; then
+            repos_scanned=$((repos_scanned + 1))
+        fi
+    done
+
+    echo ""
+    echo "Summary:"
+    echo "  Repos with configs: $repos_scanned"
+    echo "  Agents added: $agents_added"
+    echo "  Commands added: $commands_added"
+    echo "  Subagents added: $subagents_added"
+    echo "  Skipped (duplicates): $skipped"
+    echo "  Renamed (conflicts): $renamed"
+}
+
+# List all agents and commands
+claude_list() {
+    local target_dir="${DOTFILES_ROOT}/components/claude/config"
+
+    echo "Claude Code Agents & Commands"
+    echo "=============================="
+    echo ""
+
+    if [ -d "$target_dir/agents" ]; then
+        echo "Agents:"
+        ls -1 "$target_dir/agents/"*.md 2>/dev/null | while read -r f; do
+            echo "  $(basename "$f" .md)"
+        done
+        echo ""
+    fi
+
+    if [ -d "$target_dir/commands" ]; then
+        echo "Commands:"
+        ls -1 "$target_dir/commands/"*.md 2>/dev/null | while read -r f; do
+            echo "  /$(basename "$f" .md)"
+        done
+        echo ""
+    fi
+
+    if [ -d "$target_dir/subagents" ]; then
+        echo "Subagents:"
+        ls -1 "$target_dir/subagents/"*.md 2>/dev/null | while read -r f; do
+            echo "  $(basename "$f" .md)"
+        done
+    fi
+}
+
+# =============================================================================
 # Help
 # =============================================================================
 
@@ -443,5 +629,9 @@ Utilities:
   claude_dir           - Open Claude config directory
   claude_clear         - Clear cache/stats
   claude_help          - Show this help
+
+Aggregation:
+  claude_aggregate [dir] - Collect agents/commands from repos
+  claude_list            - List all agents and commands
 EOF
 }
