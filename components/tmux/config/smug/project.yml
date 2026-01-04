@@ -1,0 +1,33 @@
+# smug session: project
+# Project-specific workspace template
+# Usage: smug start project root=/path/to/project name=myproject
+# Variables: root (project path), name (session name)
+
+session: ${name:-project}
+root: ${root:-.}
+attach: true
+
+before_start:
+  - echo "Starting project session..."
+
+windows:
+  - name: code
+    commands:
+      - nvim .
+
+  - name: shell
+    panes:
+      - type: horizontal
+        commands:
+          - git status
+      - type: horizontal
+        commands:
+          - echo "Ready for commands"
+
+  - name: server
+    commands:
+      - echo "Server/runner pane - start your dev server here"
+
+  - name: tests
+    commands:
+      - echo "Test runner pane"

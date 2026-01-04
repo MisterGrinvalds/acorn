@@ -1,29 +1,49 @@
 name: tmux
-version: 1.0.0
-description: Tmux configuration with Catppuccin theme, TPM plugin manager, and session helpers
+version: 1.1.0
+description: Tmux with TPM, session-wizard, smug session configs, and Catppuccin theme
 category: dev
 
 requires:
   tools: [tmux]
-  components: [shell]
+  components: [shell, fzf]
+
+dependencies:
+  tools:
+    required: [tmux]
+    optional:
+      - fzf      # For session selection
+      - zoxide   # For session-wizard directory jumping
+      - smug     # For persistent session configurations
 
 provides:
   aliases: [tm, tma, tmat, tmn, tmns, tml, tmk, tmka, tmx, tmdev]
   functions:
+    # Session templates
     - dev_session
     - k8s_session
     - project_session
+    # FZF integration
     - tswitch
     - tkill
+    # TPM management
     - tmux_install_tpm
     - tmux_update_tpm
     - tmux_install_plugins
     - tmux_update_plugins
+    # Config management
     - tmux_config
     - tmux_reload
     - tmux_info
     - tmux_attach
-  completions: [tswitch, tkill, tmux_attach, dev_session, project_session]
+    # Smug session management
+    - smug_list
+    - smug_start
+    - smug_stop
+    - smug_new
+    - smug_edit
+    - smug_install
+    - smug_link_configs
+  completions: [tswitch, tkill, tmux_attach, dev_session, project_session, smug_start, smug_stop, smug_edit]
 
 xdg:
   config: tmux
@@ -35,11 +55,15 @@ platforms: [darwin, linux]
 shells: [bash, zsh]
 
 setup:
-  brew: [tmux]
-  apt: [tmux]
+  brew: [tmux, smug, fzf, zoxide]
+  apt: [tmux, fzf]
   npm: []
-  post_install: "tmux_install_tpm && tmux_install_plugins"
-  install_note: ""
+  post_install: "tmux_install_tpm && tmux_install_plugins && smug_link_configs"
+  install_note: |
+    After installation:
+    1. Run: tmux_install_tpm (installs TPM)
+    2. Start tmux and press prefix + I to install plugins
+    3. For smug on Linux: go install github.com/ivaaaan/smug@latest
 
 # Configuration files to deploy
 # Tmux config is linked to both XDG and legacy locations for compatibility
@@ -51,5 +75,10 @@ config:
     - source: config/tmux.conf
       target: ~/.tmux.conf
       method: symlink
+    # Smug session configs
+    - source: config/smug
+      target: ~/.config/smug
+      method: symlink
   directories:
     - target: ~/.config/tmux
+    - target: ~/.config/smug

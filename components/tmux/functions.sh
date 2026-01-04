@@ -261,3 +261,228 @@ tmux_attach() {
         tmux new-session -s "$session"
     fi
 }
+
+# =============================================================================
+# Smug Session Management
+# =============================================================================
+# Smug provides persistent, versioned session configurations
+# Install: brew install smug (or: go install github.com/ivaaaan/smug@latest)
+# Configs: ~/.config/smug/*.yml
+
+# List available smug sessions
+smug_list() {
+    local smug_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+
+    if ! command -v smug >/dev/null 2>&1; then
+        echo "smug not installed. Install with: brew install smug"
+        return 1
+    fi
+
+    echo "Available Smug Sessions"
+    echo "======================="
+    echo ""
+
+    if [ -d "$smug_dir" ]; then
+        for config in "$smug_dir"/*.yml; do
+            [ -f "$config" ] || continue
+            local name
+            name=$(basename "$config" .yml)
+            local desc
+            desc=$(grep -m1 "^# smug session:" "$config" 2>/dev/null | sed 's/^# smug session: //')
+            echo "  $name - ${desc:-No description}"
+        done
+    else
+        echo "  No sessions found in $smug_dir"
+    fi
+
+    echo ""
+    echo "Commands:"
+    echo "  smug start <name>    - Start a session"
+    echo "  smug stop <name>     - Stop a session"
+    echo "  smug new <name>      - Create new config"
+    echo "  smug edit <name>     - Edit config"
+}
+
+# Start smug session with fzf selection
+smug_start() {
+    local session="$1"
+    local smug_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+
+    if ! command -v smug >/dev/null 2>&1; then
+        echo "smug not installed. Install with: brew install smug"
+        return 1
+    fi
+
+    # If no session given, use fzf to select
+    if [ -z "$session" ]; then
+        if ! command -v fzf >/dev/null 2>&1; then
+            echo "Usage: smug_start <session_name>"
+            smug_list
+            return 1
+        fi
+
+        session=$(ls "$smug_dir"/*.yml 2>/dev/null | xargs -I {} basename {} .yml | fzf --prompt="Start session: ")
+        [ -z "$session" ] && return 0
+    fi
+
+    shift 2>/dev/null  # Remove first arg, rest are variables
+    smug start "$session" "$@"
+}
+
+# Stop smug session with fzf selection
+smug_stop() {
+    local session="$1"
+
+    if ! command -v smug >/dev/null 2>&1; then
+        echo "smug not installed"
+        return 1
+    fi
+
+    # If no session given, use fzf to select from active sessions
+    if [ -z "$session" ]; then
+        if ! command -v fzf >/dev/null 2>&1; then
+            echo "Usage: smug_stop <session_name>"
+            return 1
+        fi
+
+        session=$(tmux list-sessions -F '#S' 2>/dev/null | fzf --prompt="Stop session: ")
+        [ -z "$session" ] && return 0
+    fi
+
+    smug stop "$session"
+}
+
+# Create a new smug session config
+smug_new() {
+    local name="$1"
+    local smug_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+
+    if [ -z "$name" ]; then
+        echo "Usage: smug_new <session_name>"
+        return 1
+    fi
+
+    if ! command -v smug >/dev/null 2>&1; then
+        echo "smug not installed. Install with: brew install smug"
+        return 1
+    fi
+
+    mkdir -p "$smug_dir"
+
+    local config_file="$smug_dir/$name.yml"
+    if [ -f "$config_file" ]; then
+        echo "Config already exists: $config_file"
+        printf "Edit it? [Y/n] "
+        read -r response
+        if [ "$response" != "n" ] && [ "$response" != "N" ]; then
+            ${EDITOR:-vim} "$config_file"
+        fi
+        return 0
+    fi
+
+    # Create from template
+    cat > "$config_file" << EOF
+# smug session: $name
+# Created: $(date +%Y-%m-%d)
+# Usage: smug start $name
+
+session: $name
+root: ~/
+attach: true
+
+windows:
+  - name: main
+    commands:
+      - echo "Welcome to $name session"
+
+  - name: editor
+    commands:
+      - nvim
+
+  - name: terminal
+    panes:
+      - type: horizontal
+        commands:
+          - echo "Ready"
+EOF
+
+    echo "Created: $config_file"
+    ${EDITOR:-vim} "$config_file"
+}
+
+# Edit existing smug config
+smug_edit() {
+    local name="$1"
+    local smug_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+
+    if ! command -v smug >/dev/null 2>&1; then
+        echo "smug not installed"
+        return 1
+    fi
+
+    # If no name given, use fzf to select
+    if [ -z "$name" ]; then
+        if command -v fzf >/dev/null 2>&1; then
+            name=$(ls "$smug_dir"/*.yml 2>/dev/null | xargs -I {} basename {} .yml | fzf --prompt="Edit config: ")
+            [ -z "$name" ] && return 0
+        else
+            echo "Usage: smug_edit <session_name>"
+            return 1
+        fi
+    fi
+
+    local config_file="$smug_dir/$name.yml"
+    if [ ! -f "$config_file" ]; then
+        echo "Config not found: $config_file"
+        return 1
+    fi
+
+    ${EDITOR:-vim} "$config_file"
+}
+
+# Install smug
+smug_install() {
+    if command -v smug >/dev/null 2>&1; then
+        echo "smug already installed: $(smug --version 2>/dev/null || echo 'version unknown')"
+        return 0
+    fi
+
+    echo "Installing smug..."
+
+    if command -v brew >/dev/null 2>&1; then
+        brew install smug
+    elif command -v go >/dev/null 2>&1; then
+        go install github.com/ivaaaan/smug@latest
+    else
+        echo "Install manually:"
+        echo "  brew install smug"
+        echo "  go install github.com/ivaaaan/smug@latest"
+        return 1
+    fi
+
+    # Link config directory
+    smug_link_configs
+}
+
+# Link smug configs from dotfiles
+smug_link_configs() {
+    local source_dir="${DOTFILES_ROOT}/components/tmux/config/smug"
+    local target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+
+    if [ ! -d "$source_dir" ]; then
+        echo "No smug configs in dotfiles"
+        return 1
+    fi
+
+    mkdir -p "$target_dir"
+
+    echo "Linking smug configs..."
+    for config in "$source_dir"/*.yml; do
+        [ -f "$config" ] || continue
+        local name
+        name=$(basename "$config")
+        ln -sf "$config" "$target_dir/$name"
+        echo "  Linked: $name"
+    done
+    echo "Done!"
+}
