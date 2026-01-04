@@ -4,6 +4,9 @@
 # Default location for cloned config repos
 NVIM_REPOS_DIR="${HOME}/Repos/personal"
 
+# Path to dotfiles.nvim plugin
+NVIM_DOTFILES_PLUGIN="${DOTFILES_ROOT}/components/neovim/plugin"
+
 # =============================================================================
 # Setup Functions
 # =============================================================================
@@ -181,4 +184,50 @@ nvim_health() {
     elif [ -d "${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/packer" ]; then
         echo "Plugin manager: packer.nvim (detected)"
     fi
+
+    # Show dotfiles plugin info
+    echo ""
+    if [ -d "$NVIM_DOTFILES_PLUGIN" ]; then
+        echo "Dotfiles plugin: $NVIM_DOTFILES_PLUGIN"
+    fi
+}
+
+# Show dotfiles.nvim plugin setup instructions
+nvim_plugin_info() {
+    echo "=== dotfiles.nvim Plugin ==="
+    echo ""
+    echo "The dotfiles.nvim plugin lets you run the installer from within Neovim."
+    echo ""
+    echo "Plugin location: $NVIM_DOTFILES_PLUGIN"
+    echo ""
+    echo "=== Setup Instructions ==="
+    echo ""
+    echo "For lazy.nvim, add to your plugins:"
+    echo ""
+    cat << 'EOF'
+{
+  dir = vim.env.DOTFILES_ROOT and (vim.env.DOTFILES_ROOT .. "/components/neovim/plugin") or nil,
+  name = "dotfiles",
+  config = function()
+    require("dotfiles").setup({
+      auto_setup = { enabled = true },  -- Prompt if not installed
+    })
+  end,
+  cond = vim.env.DOTFILES_ROOT ~= nil,
+}
+EOF
+    echo ""
+    echo "=== Quick Setup (no config needed) ==="
+    echo ""
+    echo "Just run this command in Neovim:"
+    echo "  :DotfilesSetup"
+    echo ""
+    echo "=== Available Commands ==="
+    echo ""
+    echo "  :Dotfiles           - Interactive installer"
+    echo "  :DotfilesMinimal    - Quick install (dotfiles + configs)"
+    echo "  :DotfilesComponents - Component-based installer"
+    echo "  :DotfilesComponent <name> - Install specific component"
+    echo "  :DotfilesUpdate     - Git pull dotfiles repo"
+    echo "  :DotfilesStatus     - Check installation status"
 }

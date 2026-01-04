@@ -1049,6 +1049,7 @@ case "${1:-}" in
         echo "  --dev-tools         Install only development tools"
         echo "  --cloud-tools       Install only cloud tools"
         echo "  --skip-gui          Skip GUI applications (VS Code, Docker Desktop)"
+        echo "  --minimal           Minimal install (dotfiles + app configs only)"
         echo "  --test              Run tests only"
         echo ""
         echo "Component-based installation:"
@@ -1100,6 +1101,16 @@ case "${1:-}" in
     "--skip-gui")
         export SKIP_GUI_APPS=true
         main
+        ;;
+    "--minimal")
+        # Minimal install for foreign/remote environments
+        log_info "Running minimal install (dotfiles + app configs only)..."
+        create_backup
+        install_dotfiles
+        link_app_configs
+        log_success "Minimal installation complete!"
+        echo ""
+        echo "Restart your shell or run: source ~/.bashrc"
         ;;
     "--test")
         run_installation_tests
