@@ -19,6 +19,7 @@
     ],
     "deny": []
   },
+  "model": "claude-opus-4-5-20251101[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -120,11 +121,12 @@
     "command": "~/.claude/statusline-bridge.sh",
     "padding": 0
   },
+  "enabledPlugins": {
+    "lua-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
+  },
   "preferences": {
     "autoApproveReadOperations": true,
     "preferredShell": "bash"
-  },
-  "enabledPlugins": {
-    "lua-lsp@claude-plugins-official": true
   }
 }
