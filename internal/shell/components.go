@@ -16,6 +16,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(GhosttyComponent())
 	m.RegisterComponent(GitComponent())
 	m.RegisterComponent(GitHubComponent())
+	m.RegisterComponent(HuggingFaceComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1891,6 +1892,77 @@ ghpush() {
 # Clean merged branches (wrapper for acorn gh cleanup)
 ghcleanup() {
     acorn gh cleanup "$@"
+}
+`,
+	}
+}
+
+// HuggingFaceComponent returns Hugging Face shell integration.
+func HuggingFaceComponent() *Component {
+	return &Component{
+		Name:        "huggingface",
+		Description: "Hugging Face model management",
+		Env: `
+# XDG-compliant cache location for Hugging Face models
+export HF_HOME="${XDG_CACHE_HOME:-$HOME/.cache}/huggingface"
+export TRANSFORMERS_CACHE="$HF_HOME/transformers"
+`,
+		Aliases: `
+# Hugging Face aliases
+alias hf-status='acorn hf status'
+alias hf-models='acorn hf models'
+alias hf-pipelines='acorn hf pipelines'
+alias hf-cache='acorn hf cache'
+alias hf-clear='acorn hf clear'
+`,
+		Functions: `
+# Hugging Face status (wrapper for acorn hf status)
+hf_status() {
+    acorn hf status "$@"
+}
+
+# List popular models (wrapper for acorn hf models)
+hf_models() {
+    acorn hf models "$@"
+}
+
+# List pipelines (wrapper for acorn hf pipelines)
+hf_pipelines() {
+    acorn hf pipelines "$@"
+}
+
+# Show cache info (wrapper for acorn hf cache)
+hf_cache() {
+    acorn hf cache "$@"
+}
+
+# Clear cache (wrapper for acorn hf clear)
+hf_clear_cache() {
+    acorn hf clear --force "$@"
+}
+
+# Setup Hugging Face environment (stays as shell - uses venv functions)
+hf_setup() {
+    echo "Setting up Hugging Face environment..."
+
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo "Creating virtual environment for Hugging Face..."
+        if command -v mkvenv >/dev/null 2>&1; then
+            mkvenv huggingface
+            venv huggingface
+        else
+            python3 -m venv ~/.venvs/huggingface
+            . ~/.venvs/huggingface/bin/activate
+        fi
+    fi
+
+    echo "Installing Hugging Face packages..."
+    pip install --upgrade pip
+    pip install transformers torch torchvision torchaudio
+    pip install datasets tokenizers accelerate
+    pip install huggingface_hub
+
+    echo "Hugging Face environment setup complete!"
 }
 `,
 	}
