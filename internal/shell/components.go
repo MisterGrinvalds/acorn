@@ -18,6 +18,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(GitHubComponent())
 	m.RegisterComponent(HuggingFaceComponent())
 	m.RegisterComponent(KubernetesComponent())
+	m.RegisterComponent(NeovimComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -2088,6 +2089,138 @@ ksh() {
 # Watch pods (stays as shell - interactive)
 kwatch() {
     kubectl get pods -w "$@"
+}
+`,
+	}
+}
+
+// NeovimComponent returns Neovim shell integration.
+func NeovimComponent() *Component {
+	return &Component{
+		Name:        "neovim",
+		Description: "Neovim editor configuration management",
+		Env:         ``,
+		Aliases: `
+# Neovim aliases
+alias v='nvim'
+alias vi='nvim'
+alias vim='nvim'
+alias nv='nvim'
+alias nvd='nvim -d'
+`,
+		Functions: `
+# Default location for cloned config repos
+NVIM_REPOS_DIR="${HOME}/Repos/personal"
+
+# Path to dotfiles.nvim plugin
+NVIM_DOTFILES_PLUGIN="${DOTFILES_ROOT}/components/neovim/plugin"
+
+# Health check (wrapper for acorn nvim health)
+nvim_health() {
+    acorn nvim health "$@"
+}
+
+# Update config repo (wrapper for acorn nvim update)
+nvim_update() {
+    acorn nvim update "$@"
+}
+
+# Clean cache/data (wrapper for acorn nvim clean)
+nvim_clean() {
+    if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
+        acorn nvim clean --force
+    else
+        echo "This will remove Neovim data, cache, and state directories."
+        printf "Continue? [y/N] "
+        read -r response
+        if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+            acorn nvim clean --force
+        else
+            echo "Cancelled."
+        fi
+    fi
+}
+
+# Plugin info (wrapper for acorn nvim plugin)
+nvim_plugin_info() {
+    acorn nvim plugin "$@"
+}
+
+# Setup Neovim with external config repo (stays as shell - interactive)
+nvim_setup() {
+    local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+    local repo_url=""
+    local repo_name=""
+    local repo_path=""
+
+    echo "=== Neovim Configuration Setup ==="
+    echo ""
+
+    # Check if config already exists
+    if [ -L "$config_dir" ]; then
+        local current_target
+        current_target=$(readlink "$config_dir")
+        echo "Neovim config already linked to: $current_target"
+        printf "Reconfigure? [y/N] "
+        read -r response
+        [ "$response" != "y" ] && [ "$response" != "Y" ] && return 0
+        rm "$config_dir"
+    elif [ -d "$config_dir" ]; then
+        echo "Existing config directory found at $config_dir"
+        printf "Backup and replace? [y/N] "
+        read -r response
+        if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+            mv "$config_dir" "${config_dir}.backup.$(date +%Y%m%d%H%M%S)"
+            echo "Backed up to ${config_dir}.backup.*"
+        else
+            return 0
+        fi
+    fi
+
+    echo ""
+    echo "Enter your Neovim config GitHub repo URL"
+    echo "Examples:"
+    echo "  https://github.com/username/nvim-config"
+    echo "  git@github.com:username/kickstart.nvim.git"
+    echo ""
+    printf "Repo URL (or 'skip' to skip): "
+    read -r repo_url
+
+    if [ "$repo_url" = "skip" ] || [ -z "$repo_url" ]; then
+        echo "Skipping Neovim config setup"
+        return 0
+    fi
+
+    # Extract repo name from URL
+    repo_name=$(basename "$repo_url" .git)
+    repo_path="${NVIM_REPOS_DIR}/${repo_name}"
+
+    # Ensure repos directory exists
+    mkdir -p "$NVIM_REPOS_DIR"
+
+    # Clone or update repo
+    if [ -d "$repo_path" ]; then
+        echo "Repo already exists at $repo_path"
+        printf "Pull latest changes? [Y/n] "
+        read -r response
+        if [ "$response" != "n" ] && [ "$response" != "N" ]; then
+            (cd "$repo_path" && git pull)
+        fi
+    else
+        echo "Cloning $repo_url to $repo_path..."
+        git clone "$repo_url" "$repo_path"
+        if [ $? -ne 0 ]; then
+            echo "Failed to clone repository"
+            return 1
+        fi
+    fi
+
+    # Create symlink
+    ln -s "$repo_path" "$config_dir"
+    echo ""
+    echo "✓ Neovim config linked: $config_dir -> $repo_path"
+    echo ""
+    echo "Run 'nvim' to start Neovim and install plugins"
 }
 `,
 	}
