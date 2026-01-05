@@ -10,6 +10,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(TmuxComponent())
 	m.RegisterComponent(ClaudeComponent())
 	m.RegisterComponent(CloudFlareComponent())
+	m.RegisterComponent(SecretsComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1130,6 +1131,118 @@ cf_help() {
     echo "Aliases:"
     echo "  wr, wrd, wrp, wrr2, wrkv, wrd1"
     echo "  wrlogin, wrlogout, wrwhoami"
+}
+`,
+	}
+}
+
+// SecretsComponent returns the secrets shell integration component.
+func SecretsComponent() *Component {
+	return &Component{
+		Name:        "secrets",
+		Description: "Secrets management and credential loading",
+		Env: `# Secrets directory (XDG-compliant)
+export SECRETS_DIR="${SECRETS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/secrets}"
+
+# Auto-load secrets if enabled
+if [ "$AUTO_LOAD_SECRETS" = "true" ]; then
+    if [ -f "$SECRETS_DIR/.env" ]; then
+        set -a
+        . "$SECRETS_DIR/.env"
+        set +a
+    fi
+fi
+`,
+		Aliases: `# Secrets management aliases
+alias secrets-load='load_secrets'
+alias secrets-status='acorn secrets status'
+alias secrets-validate='acorn secrets validate'
+alias secrets-list='acorn secrets list'
+alias check-aws='acorn secrets check aws'
+alias check-azure='acorn secrets check azure'
+alias check-github='acorn secrets check github'
+alias check-do='acorn secrets check digitalocean'
+`,
+		Functions: `# Load secrets into current shell environment
+# Note: This must be a shell function to affect the current shell
+load_secrets() {
+    local secrets_file="${SECRETS_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/secrets}/.env"
+
+    if [ -f "$secrets_file" ]; then
+        if [ -r "$secrets_file" ]; then
+            set -a
+            . "$secrets_file"
+            set +a
+            echo "Secrets loaded into environment"
+        else
+            echo "Cannot read secrets file (check permissions)"
+            return 1
+        fi
+    else
+        echo "No secrets file found at: $secrets_file"
+        echo "Run: acorn secrets init"
+        return 1
+    fi
+}
+
+# Show secrets status (wrapper for acorn secrets status)
+secrets_status() {
+    acorn secrets status "$@"
+}
+
+# Validate secrets (wrapper for acorn secrets validate)
+validate_secrets() {
+    acorn secrets validate "$@"
+}
+
+# List secrets (wrapper for acorn secrets list)
+list_secrets() {
+    acorn secrets list "$@"
+}
+
+# Check AWS credentials (wrapper for acorn secrets check)
+check_aws_key() {
+    acorn secrets check aws
+}
+
+# Check Azure credentials (wrapper for acorn secrets check)
+check_azure_key() {
+    acorn secrets check azure
+}
+
+# Check GitHub token (wrapper for acorn secrets check)
+check_github_key() {
+    acorn secrets check github
+}
+
+# Check DigitalOcean token (wrapper for acorn secrets check)
+check_digitalocean_key() {
+    acorn secrets check digitalocean
+}
+
+# Check OpenAI API key (wrapper for acorn secrets check)
+check_openai_key() {
+    acorn secrets check openai
+}
+
+# Check Anthropic API key (wrapper for acorn secrets check)
+check_anthropic_key() {
+    acorn secrets check anthropic
+}
+
+# Check all credentials (wrapper for acorn secrets check)
+check_all_keys() {
+    acorn secrets check
+}
+
+# Initialize secrets file (wrapper for acorn secrets init)
+secrets_init() {
+    acorn secrets init
+}
+
+# Show secrets path (wrapper for acorn secrets path)
+secrets_path() {
+    acorn secrets path
 }
 `,
 	}
