@@ -17,6 +17,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(GitComponent())
 	m.RegisterComponent(GitHubComponent())
 	m.RegisterComponent(HuggingFaceComponent())
+	m.RegisterComponent(KubernetesComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1963,6 +1964,130 @@ hf_setup() {
     pip install huggingface_hub
 
     echo "Hugging Face environment setup complete!"
+}
+`,
+	}
+}
+
+// KubernetesComponent returns Kubernetes shell integration.
+func KubernetesComponent() *Component {
+	return &Component{
+		Name:        "kubernetes",
+		Description: "Kubernetes and Helm development tools",
+		Env: `
+# Kubeconfig location
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
+
+# Helm XDG paths
+export HELM_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/helm"
+export HELM_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/helm"
+export HELM_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}/helm"
+`,
+		Aliases: `
+# kubectl aliases
+alias k='kubectl'
+alias kd='kubectl describe'
+alias kg='kubectl get'
+alias kl='kubectl logs'
+alias kx='kubectl exec -it'
+alias kdel='kubectl delete'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl delete -f'
+
+# Common resources
+alias kgp='kubectl get pods'
+alias kgs='kubectl get services'
+alias kgd='kubectl get deployments'
+alias kgn='kubectl get nodes'
+alias kgcm='kubectl get configmaps'
+alias kgsec='kubectl get secrets'
+
+# Context and namespace
+alias kctx='kubectl config current-context'
+alias kns='kubectl config view --minify --output jsonpath={..namespace}'
+alias kgctx='kubectl config get-contexts'
+alias kgns='kubectl get namespaces'
+
+# Helm aliases
+alias hm='helm'
+alias hls='helm list'
+alias hla='helm list -A'
+alias hin='helm install'
+alias hup='helm upgrade'
+alias hun='helm uninstall'
+alias hval='helm get values'
+alias hs='helm search'
+alias hsr='helm search repo'
+
+# k9s shortcut
+alias k9='k9s'
+`,
+		Functions: `
+# Context info (wrapper for acorn k8s info)
+kinfo() {
+    acorn k8s info "$@"
+}
+
+# List pods with optional filter (wrapper for acorn k8s pods)
+kpods() {
+    acorn k8s pods "$@"
+}
+
+# Context switching (wrapper for acorn k8s context)
+kuse() {
+    acorn k8s context "$@"
+}
+
+# Namespace switching (wrapper for acorn k8s namespace)
+knsuse() {
+    acorn k8s namespace "$@"
+}
+
+# Get all resources (wrapper for acorn k8s all)
+kall() {
+    acorn k8s all "$@"
+}
+
+# Clean evicted pods (wrapper for acorn k8s clean)
+kcleanpods() {
+    acorn k8s clean "$@"
+}
+
+# Get pod logs with follow (stays as shell - interactive)
+klf() {
+    if [ -z "$1" ]; then
+        echo "Usage: klf <pod-name> [container]"
+        return 1
+    fi
+    if [ -n "$2" ]; then
+        kubectl logs -f "$1" -c "$2"
+    else
+        kubectl logs -f "$1"
+    fi
+}
+
+# Port forward helper (stays as shell - interactive)
+kpf() {
+    if [ -z "$2" ]; then
+        echo "Usage: kpf <pod-name> <local-port:remote-port>"
+        return 1
+    fi
+    kubectl port-forward "$1" "$2"
+}
+
+# Exec into pod (stays as shell - interactive)
+ksh() {
+    if [ -z "$1" ]; then
+        echo "Usage: ksh <pod-name> [command]"
+        return 1
+    fi
+    local cmd="${2:-/bin/sh}"
+    kubectl exec -it "$1" -- "$cmd"
+}
+
+# Watch pods (stays as shell - interactive)
+kwatch() {
+    kubectl get pods -w "$@"
 }
 `,
 	}
