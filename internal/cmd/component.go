@@ -66,8 +66,8 @@ Examples:
   acorn component status           # Check all components
   acorn component status python    # Check specific component
   acorn component status -o json   # JSON output`,
-	Args:    cobra.MaximumNArgs(1),
-	RunE:    runComponentStatus,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runComponentStatus,
 }
 
 // componentValidateCmd validates component configurations
@@ -86,8 +86,8 @@ Performs strict validation including:
 Examples:
   acorn component validate         # Validate all
   acorn component validate python  # Validate specific component`,
-	Args:    cobra.MaximumNArgs(1),
-	RunE:    runComponentValidate,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runComponentValidate,
 }
 
 // componentInfoCmd shows detailed info about a component

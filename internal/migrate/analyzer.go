@@ -30,24 +30,24 @@ const (
 
 // ShellFunction represents a parsed shell function.
 type ShellFunction struct {
-	Name        string       `json:"name" yaml:"name"`
-	File        string       `json:"file" yaml:"file"`
-	LineNumber  int          `json:"line_number" yaml:"line_number"`
-	Body        string       `json:"body" yaml:"body"`
-	LineCount   int          `json:"line_count" yaml:"line_count"`
-	Type        FunctionType `json:"type" yaml:"type"`
-	Suggestion  string       `json:"suggestion" yaml:"suggestion"`
-	Complexity  string       `json:"complexity" yaml:"complexity"` // low, medium, high
-	UsesExternal []string    `json:"uses_external,omitempty" yaml:"uses_external,omitempty"`
+	Name         string       `json:"name" yaml:"name"`
+	File         string       `json:"file" yaml:"file"`
+	LineNumber   int          `json:"line_number" yaml:"line_number"`
+	Body         string       `json:"body" yaml:"body"`
+	LineCount    int          `json:"line_count" yaml:"line_count"`
+	Type         FunctionType `json:"type" yaml:"type"`
+	Suggestion   string       `json:"suggestion" yaml:"suggestion"`
+	Complexity   string       `json:"complexity" yaml:"complexity"` // low, medium, high
+	UsesExternal []string     `json:"uses_external,omitempty" yaml:"uses_external,omitempty"`
 }
 
 // ComponentAnalysis contains migration analysis for a component.
 type ComponentAnalysis struct {
-	Component   *component.Component `json:"component" yaml:"component"`
-	Functions   []ShellFunction      `json:"functions" yaml:"functions"`
-	Aliases     []ShellAlias         `json:"aliases" yaml:"aliases"`
-	EnvVars     []EnvVar             `json:"env_vars" yaml:"env_vars"`
-	Summary     AnalysisSummary      `json:"summary" yaml:"summary"`
+	Component *component.Component `json:"component" yaml:"component"`
+	Functions []ShellFunction      `json:"functions" yaml:"functions"`
+	Aliases   []ShellAlias         `json:"aliases" yaml:"aliases"`
+	EnvVars   []EnvVar             `json:"env_vars" yaml:"env_vars"`
+	Summary   AnalysisSummary      `json:"summary" yaml:"summary"`
 }
 
 // ShellAlias represents a shell alias.
@@ -66,12 +66,12 @@ type EnvVar struct {
 
 // AnalysisSummary summarizes the migration analysis.
 type AnalysisSummary struct {
-	TotalFunctions    int `json:"total_functions" yaml:"total_functions"`
-	ActionFunctions   int `json:"action_functions" yaml:"action_functions"`
-	WrapperFunctions  int `json:"wrapper_functions" yaml:"wrapper_functions"`
-	TotalAliases      int `json:"total_aliases" yaml:"total_aliases"`
-	TotalEnvVars      int `json:"total_env_vars" yaml:"total_env_vars"`
-	MigrationScore    int `json:"migration_score" yaml:"migration_score"` // 0-100
+	TotalFunctions    int    `json:"total_functions" yaml:"total_functions"`
+	ActionFunctions   int    `json:"action_functions" yaml:"action_functions"`
+	WrapperFunctions  int    `json:"wrapper_functions" yaml:"wrapper_functions"`
+	TotalAliases      int    `json:"total_aliases" yaml:"total_aliases"`
+	TotalEnvVars      int    `json:"total_env_vars" yaml:"total_env_vars"`
+	MigrationScore    int    `json:"migration_score" yaml:"migration_score"` // 0-100
 	RecommendedAction string `json:"recommended_action" yaml:"recommended_action"`
 }
 

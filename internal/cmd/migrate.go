@@ -248,7 +248,7 @@ func runMigratePlan(cmd *cobra.Command, args []string) error {
 
 	// Table format
 	fmt.Fprintln(os.Stdout, "\nMigration Plan (Prioritized)")
-	fmt.Fprintln(os.Stdout, "============================\n")
+	fmt.Fprintln(os.Stdout, "============================")
 
 	table := output.NewTable("PRIORITY", "COMPONENT", "SCORE", "FUNCTIONS", "ACTIONS", "RECOMMENDATION")
 
@@ -340,7 +340,7 @@ func runMigrateReport(cmd *cobra.Command, args []string) error {
 	// Table format report
 	fmt.Fprintln(os.Stdout, "\n╔════════════════════════════════════════════════════════════╗")
 	fmt.Fprintln(os.Stdout, "║           ACORN MIGRATION REPORT                           ║")
-	fmt.Fprintln(os.Stdout, "╚════════════════════════════════════════════════════════════╝\n")
+	fmt.Fprintln(os.Stdout, "╚════════════════════════════════════════════════════════════╝")
 
 	fmt.Fprintln(os.Stdout, "SUMMARY")
 	fmt.Fprintln(os.Stdout, "-------")
