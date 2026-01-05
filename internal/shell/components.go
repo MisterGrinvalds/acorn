@@ -15,6 +15,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(FzfComponent())
 	m.RegisterComponent(GhosttyComponent())
 	m.RegisterComponent(GitComponent())
+	m.RegisterComponent(GitHubComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1816,6 +1817,80 @@ gcontrib() {
 # Clean merged branches (wrapper for acorn git clean-branches)
 gcleanb() {
     acorn git clean-branches "$@"
+}
+`,
+	}
+}
+
+// GitHubComponent returns GitHub CLI integration shell functions.
+func GitHubComponent() *Component {
+	return &Component{
+		Name:        "github",
+		Description: "GitHub CLI workflow helpers",
+		Env:         ``,
+		Aliases: `
+# GitHub aliases
+alias ghst='acorn gh status'
+alias ghpr='acorn gh pr'
+alias ghrun='acorn gh run'
+`,
+		Functions: `
+# GitHub status (wrapper for acorn gh status)
+ghstatus() {
+    acorn gh status "$@"
+}
+
+# Quick PR creation (wrapper for acorn gh pr create)
+quickpr() {
+    acorn gh pr create "$@"
+}
+
+# PR status (wrapper for acorn gh pr status)
+prstatus() {
+    acorn gh pr status "$@"
+}
+
+# PR checks (wrapper for acorn gh pr checks)
+prchecks() {
+    acorn gh pr checks "$@"
+}
+
+# Watch workflow run (wrapper for acorn gh run watch)
+ghwatch() {
+    acorn gh run watch "$@"
+}
+
+# Rerun failed jobs (wrapper for acorn gh run rerun)
+ghrerun() {
+    acorn gh run rerun "$@"
+}
+
+# Quick commit (wrapper for acorn gh commit)
+qcommit() {
+    if [ -z "$1" ]; then
+        echo "Usage: qcommit <message>"
+        return 1
+    fi
+    acorn gh commit "$1"
+}
+
+# Create new branch (wrapper for acorn gh branch)
+ghbranch() {
+    if [ -z "$1" ]; then
+        echo "Usage: ghbranch <name>"
+        return 1
+    fi
+    acorn gh branch "$1"
+}
+
+# Push current branch (wrapper for acorn gh push)
+ghpush() {
+    acorn gh push "$@"
+}
+
+# Clean merged branches (wrapper for acorn gh cleanup)
+ghcleanup() {
+    acorn gh cleanup "$@"
 }
 `,
 	}
