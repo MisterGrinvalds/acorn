@@ -14,6 +14,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(DatabaseComponent())
 	m.RegisterComponent(FzfComponent())
 	m.RegisterComponent(GhosttyComponent())
+	m.RegisterComponent(GitComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1667,6 +1668,154 @@ ghostty_restore() {
 # Show Ghostty info (wrapper for acorn ghostty info)
 ghostty_info() {
     acorn ghostty info "$@"
+}
+`,
+	}
+}
+
+// GitComponent returns the Git shell integration component.
+func GitComponent() *Component {
+	return &Component{
+		Name:        "git",
+		Description: "Git version control aliases and functions",
+		Env: `# Default directory for git repositories
+export DEFAULT_REPOS_DIR="${DEFAULT_REPOS_DIR:-$HOME/Repos}"
+`,
+		Aliases: `# Basic git commands
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gaa='git add --all'
+alias gc='git commit'
+alias gcm='git commit -m'
+alias gca='git commit --amend'
+alias gco='git checkout'
+
+# Branch management
+alias gb='git branch'
+alias gba='git branch -a'
+alias gbd='git branch -d'
+alias gbD='git branch -D'
+
+# Diff
+alias gd='git diff'
+alias gds='git diff --staged'
+
+# Push/Pull
+alias gp='git push'
+alias gpf='git push --force-with-lease'
+alias gpl='git pull'
+alias gplr='git pull --rebase'
+
+# Fetch
+alias gf='git fetch'
+alias gfa='git fetch --all'
+
+# Merge/Rebase
+alias gm='git merge'
+alias gr='git rebase'
+alias gri='git rebase -i'
+alias grc='git rebase --continue'
+alias gra='git rebase --abort'
+
+# Stash
+alias gst='git stash'
+alias gstp='git stash pop'
+alias gstl='git stash list'
+
+# Log
+alias gl='git log --oneline -20'
+alias glog='git log --oneline --graph --decorate'
+alias glg='git log --graph --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset"'
+alias gla='git log --oneline --all --graph --decorate'
+
+# Remote
+alias grv='git remote -v'
+alias gru='git remote update'
+
+# Reset
+alias grh='git reset HEAD'
+alias grhh='git reset HEAD --hard'
+alias grhs='git reset HEAD --soft'
+
+# Clean
+alias gclean='git clean -fd'
+alias gpristine='git reset --hard && git clean -fdx'
+`,
+		Functions: `# Clone and cd into repository (must stay in shell for cd)
+gclone() {
+    git clone "$1" && cd "$(basename "$1" .git)" || return
+}
+
+# Create and checkout new branch
+gcob() {
+    if [ -z "$1" ]; then
+        echo "Usage: gcob <branch-name>"
+        return 1
+    fi
+    git checkout -b "$1"
+}
+
+# Push with upstream tracking
+gpush() {
+    local branch
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    git push -u origin "$branch"
+}
+
+# Pull with rebase
+gpull() {
+    git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
+}
+
+# Interactive add
+gadd() {
+    git add -p "$@"
+}
+
+# Show git status with branch info (wrapper for acorn git info)
+ginfo() {
+    acorn git info "$@"
+}
+
+# Undo last commit (keep changes)
+gundo() {
+    git reset --soft HEAD~1
+}
+
+# Amend last commit without editing message
+gamend() {
+    git add --all
+    git commit --amend --no-edit
+}
+
+# Show files changed in a commit
+gshow() {
+    git show --stat "${1:-HEAD}"
+}
+
+# Git blame with line numbers
+gblame() {
+    if [ -z "$1" ]; then
+        echo "Usage: gblame <file>"
+        return 1
+    fi
+    git blame -n "$1"
+}
+
+# Find commits by message (wrapper for acorn git find)
+gfind() {
+    acorn git find "$@"
+}
+
+# Show contribution stats (wrapper for acorn git contributors)
+gcontrib() {
+    acorn git contributors "$@"
+}
+
+# Clean merged branches (wrapper for acorn git clean-branches)
+gcleanb() {
+    acorn git clean-branches "$@"
 }
 `,
 	}
