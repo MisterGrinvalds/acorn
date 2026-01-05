@@ -13,6 +13,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(SecretsComponent())
 	m.RegisterComponent(DatabaseComponent())
 	m.RegisterComponent(FzfComponent())
+	m.RegisterComponent(GhosttyComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -1603,6 +1604,70 @@ if command -v docker >/dev/null 2>&1; then
     }
     alias fdx='fzf_docker_exec'
 fi
+`,
+	}
+}
+
+// GhosttyComponent returns the Ghostty shell integration component.
+func GhosttyComponent() *Component {
+	return &Component{
+		Name:        "ghostty",
+		Description: "Ghostty terminal emulator configuration",
+		Env: `# Ghostty config location (XDG compliant)
+export GHOSTTY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
+
+# Ghostty resources directory
+export GHOSTTY_RESOURCES_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
+`,
+		Aliases: `# Ghostty shortcuts
+alias ghostty-config='ghostty_config'
+alias ghostty-themes='ghostty +list-themes'
+alias ghostty-help='ghostty +help'
+alias ghostty-dark='acorn ghostty theme "Catppuccin Mocha"'
+alias ghostty-light='acorn ghostty theme "Catppuccin Latte"'
+`,
+		Functions: `# Open Ghostty config in editor (must stay in shell for $EDITOR)
+ghostty_config() {
+    local config="${GHOSTTY_CONFIG:-$HOME/.config/ghostty/config}"
+
+    if [ ! -f "$config" ]; then
+        echo "Ghostty config not found: $config"
+        return 1
+    fi
+
+    ${EDITOR:-vim} "$config"
+    echo "Config saved. Press Cmd+Shift+, (macOS) or Ctrl+Shift+, (Linux) to reload."
+}
+
+# Switch Ghostty theme (wrapper for acorn ghostty theme)
+ghostty_theme() {
+    acorn ghostty theme "$@"
+}
+
+# Change Ghostty font (wrapper for acorn ghostty font)
+ghostty_font() {
+    acorn ghostty font "$@"
+}
+
+# Backup current config (wrapper for acorn ghostty backup)
+ghostty_backup() {
+    acorn ghostty backup
+}
+
+# List config backups (wrapper for acorn ghostty backups)
+ghostty_backups() {
+    acorn ghostty backups "$@"
+}
+
+# Restore config from backup (wrapper for acorn ghostty restore)
+ghostty_restore() {
+    acorn ghostty restore "$@"
+}
+
+# Show Ghostty info (wrapper for acorn ghostty info)
+ghostty_info() {
+    acorn ghostty info "$@"
+}
 `,
 	}
 }
