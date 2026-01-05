@@ -19,6 +19,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(HuggingFaceComponent())
 	m.RegisterComponent(KubernetesComponent())
 	m.RegisterComponent(NeovimComponent())
+	m.RegisterComponent(NodeComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -2221,6 +2222,168 @@ nvim_setup() {
     echo "✓ Neovim config linked: $config_dir -> $repo_path"
     echo ""
     echo "Run 'nvim' to start Neovim and install plugins"
+}
+`,
+	}
+}
+
+// NodeComponent returns Node.js shell integration.
+func NodeComponent() *Component {
+	return &Component{
+		Name:        "node",
+		Description: "Node.js, NVM, and pnpm management",
+		Env: `
+# NVM (Node Version Manager) - XDG compliant location
+export NVM_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvm"
+
+# Load NVM if available
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# Load NVM bash completion
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# pnpm home directory
+export PNPM_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/pnpm"
+case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# npm cache location
+export npm_config_cache="${XDG_CACHE_HOME:-$HOME/.cache}/npm"
+`,
+		Aliases: `
+# npm shortcuts
+alias ni='npm install'
+alias nid='npm install --save-dev'
+alias nig='npm install -g'
+alias nr='npm run'
+alias nrd='npm run dev'
+alias nrt='npm run test'
+alias nrb='npm run build'
+alias nrs='npm run start'
+
+# pnpm shortcuts
+alias pi='pnpm install'
+alias pa='pnpm add'
+alias pad='pnpm add -D'
+alias pr='pnpm run'
+alias prd='pnpm run dev'
+alias prt='pnpm run test'
+alias prb='pnpm run build'
+alias prs='pnpm run start'
+
+# npx shortcuts
+alias nx='npx'
+
+# NVM shortcuts
+alias nvml='nvm ls'
+alias nvmr='nvm ls-remote'
+alias nvmu='nvm use'
+alias nvmi='nvm install'
+`,
+		Functions: `
+# Node status (wrapper for acorn node status)
+node_status() {
+    acorn node status "$@"
+}
+
+# Detect package manager (wrapper for acorn node detect)
+npm_detect() {
+    acorn node detect "$@"
+}
+
+# Find all node_modules (wrapper for acorn node find)
+nfind() {
+    acorn node find "$@"
+}
+
+# Clean and reinstall node_modules (wrapper for acorn node clean)
+nclean() {
+    acorn node clean "$@"
+}
+
+# Remove all node_modules (interactive wrapper)
+ncleanall() {
+    if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
+        acorn node cleanall --force "$@"
+    else
+        acorn node find
+        echo ""
+        printf "Remove all? [y/N] "
+        read -r confirm
+        if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+            acorn node cleanall --force
+        fi
+    fi
+}
+
+# NVM status (wrapper for acorn nvm status)
+nvm_status() {
+    acorn nvm status "$@"
+}
+
+# NVM setup/install (wrapper for acorn nvm install)
+nvm_setup() {
+    acorn nvm install "$@"
+}
+
+# Install and use latest LTS (stays as shell - uses nvm function)
+nvm_latest() {
+    if ! command -v nvm >/dev/null 2>&1; then
+        echo "NVM not installed. Run: acorn nvm install"
+        return 1
+    fi
+    nvm install --lts
+    nvm use --lts
+}
+
+# pnpm status (wrapper for acorn pnpm status)
+pnpm_status() {
+    acorn pnpm status "$@"
+}
+
+# Create new Node.js project with TypeScript (stays as shell - uses cd)
+node_init() {
+    local name="${1:-.}"
+
+    if [ "$name" != "." ]; then
+        mkdir -p "$name"
+        cd "$name" || return 1
+    fi
+
+    echo "Initializing Node.js project..."
+
+    # Initialize package.json
+    if command -v pnpm >/dev/null 2>&1; then
+        pnpm init
+        pnpm add -D typescript @types/node tsx
+    else
+        npm init -y
+        npm install --save-dev typescript @types/node tsx
+    fi
+
+    # Create tsconfig.json
+    cat > tsconfig.json << 'TSEOF'
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+TSEOF
+
+    mkdir -p src
+    echo 'console.log("Hello, TypeScript!");' > src/index.ts
+
+    echo "Node.js TypeScript project initialized!"
 }
 `,
 	}
