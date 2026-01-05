@@ -109,3 +109,35 @@ export LESS='-R -F -X'
 # =============================================================================
 
 export ANTHROPIC_MODEL='claude-opus-4-5-20251101[1m]'
+
+# =============================================================================
+# FZF Keybindings
+# =============================================================================
+
+if command -v fzf >/dev/null 2>&1; then
+    case "$CURRENT_SHELL" in
+        bash)
+            # Ctrl+r: fzf history search
+            __fzf_history__() {
+                local selected
+                selected=$(history | sed 's/^[ ]*[0-9]*[ ]*//' | fzf --tac --no-sort --reverse --query="$READLINE_LINE")
+                READLINE_LINE="$selected"
+                READLINE_POINT=${#READLINE_LINE}
+            }
+            bind -x '"\C-r": __fzf_history__'
+            ;;
+        zsh)
+            # Ctrl+r: fzf history search
+            fzf-history-widget() {
+                local selected
+                selected=$(fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | fzf --tac --no-sort --reverse --query="$LBUFFER")
+                if [[ -n "$selected" ]]; then
+                    LBUFFER="$selected"
+                fi
+                zle reset-prompt
+            }
+            zle -N fzf-history-widget
+            bindkey '^R' fzf-history-widget
+            ;;
+    esac
+fi
