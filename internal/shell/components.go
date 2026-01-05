@@ -20,6 +20,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(KubernetesComponent())
 	m.RegisterComponent(NeovimComponent())
 	m.RegisterComponent(NodeComponent())
+	m.RegisterComponent(OllamaComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -2384,6 +2385,112 @@ TSEOF
     echo 'console.log("Hello, TypeScript!");' > src/index.ts
 
     echo "Node.js TypeScript project initialized!"
+}
+`,
+	}
+}
+
+// OllamaComponent returns Ollama shell integration.
+func OllamaComponent() *Component {
+	return &Component{
+		Name:        "ollama",
+		Description: "Ollama local AI model management",
+		Env: `
+# Ollama data directory
+export OLLAMA_HOME="${OLLAMA_HOME:-$HOME/.ollama}"
+`,
+		Aliases: `
+# Ollama shortcuts
+alias ollama-start='acorn ollama start'
+alias ollama-stop='acorn ollama stop'
+alias ollama-status='acorn ollama status'
+alias ollama-models='acorn ollama models'
+alias ollama-examples='acorn ollama examples'
+`,
+		Functions: `
+# Ollama status (wrapper for acorn ollama status)
+ollama_status() {
+    acorn ollama status "$@"
+}
+
+# List models (wrapper for acorn ollama models)
+ollama_models() {
+    acorn ollama models "$@"
+}
+
+# Pull model (wrapper for acorn ollama pull)
+ollama_pull() {
+    if [ -z "$1" ]; then
+        echo "Usage: ollama_pull <model_name>"
+        echo "Popular models: llama3.2, codellama, mistral, phi3, gemma2"
+        return 1
+    fi
+    acorn ollama pull "$1"
+}
+
+# Remove model (wrapper for acorn ollama rm)
+ollama_remove() {
+    if [ -z "$1" ]; then
+        echo "Usage: ollama_remove <model_name>"
+        acorn ollama models
+        return 1
+    fi
+    acorn ollama rm "$1"
+}
+
+# Start service (wrapper for acorn ollama start)
+ollama_start() {
+    acorn ollama start "$@"
+}
+
+# Stop service (wrapper for acorn ollama stop)
+ollama_stop() {
+    acorn ollama stop "$@"
+}
+
+# Install Ollama (wrapper for acorn ollama install)
+ollama_install() {
+    acorn ollama install "$@"
+}
+
+# Quick chat (wrapper for acorn ollama chat)
+ollama_chat() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Usage: ollama_chat <model_name> <prompt>"
+        return 1
+    fi
+    acorn ollama chat "$1" "$2"
+}
+
+# Code generation (wrapper for acorn ollama code)
+ollama_code() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Usage: ollama_code <language> <description>"
+        return 1
+    fi
+    acorn ollama code "$1" "$2"
+}
+
+# Show examples (wrapper for acorn ollama examples)
+ollama_examples() {
+    acorn ollama examples
+}
+
+# Run model interactively (stays as shell - interactive)
+ollama_run() {
+    if [ -z "$1" ]; then
+        echo "Usage: ollama_run <model_name>"
+        acorn ollama models
+        return 1
+    fi
+
+    if ! command -v ollama >/dev/null 2>&1; then
+        echo "Ollama not installed. Run: acorn ollama install"
+        return 1
+    fi
+
+    echo "Starting interactive session with $1"
+    ollama run "$1"
 }
 `,
 	}
