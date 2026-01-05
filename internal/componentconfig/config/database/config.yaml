@@ -1,0 +1,116 @@
+# Database component configuration
+name: database
+description: Database tools and service management
+version: 1.0.0
+
+# Basic aliases (unconditional)
+aliases:
+  # PostgreSQL
+  pg: "pgcli"
+  psqlc: "psql"
+  # SQLite
+  sq: "sqlite3"
+  sqr: "sqlite3 -readonly"
+  sqh: "sqlite3 -header -column"
+
+# Wrapper functions
+wrappers:
+  - name: db_status
+    command: "acorn db status"
+
+  - name: db_start_all
+    command: "acorn db start-all"
+
+  - name: db_stop_all
+    command: "acorn db stop-all"
+
+# Shell functions (includes conditional aliases and connection helpers)
+shell_functions:
+  # Conditional aliases based on available tools
+  _database_init: |
+    # MySQL
+    command -v mycli >/dev/null 2>&1 && alias my='mycli'
+
+    # MongoDB
+    if command -v mongosh >/dev/null 2>&1; then
+        alias mongo='mongosh'
+        alias msh='mongosh'
+    fi
+
+    # Redis
+    if command -v iredis >/dev/null 2>&1; then
+        alias rd='iredis'
+    elif command -v redis-cli >/dev/null 2>&1; then
+        alias rd='redis-cli'
+    fi
+
+    # Neo4j
+    command -v cypher-shell >/dev/null 2>&1 && alias neo='cypher-shell'
+
+    # macOS Brew service management
+    if [ "$CURRENT_PLATFORM" = "darwin" ]; then
+        # PostgreSQL
+        alias pgstart='brew services start postgresql@14'
+        alias pgstop='brew services stop postgresql@14'
+        alias pgrestart='brew services restart postgresql@14'
+        alias pgstatus='brew services info postgresql@14'
+        # MySQL
+        alias mystart='brew services start mysql'
+        alias mystop='brew services stop mysql'
+        alias myrestart='brew services restart mysql'
+        alias mystatus='brew services info mysql'
+        # MongoDB
+        alias mongostart='brew services start mongodb-community'
+        alias mongostop='brew services stop mongodb-community'
+        alias mongorestart='brew services restart mongodb-community'
+        alias mongostatus='brew services info mongodb-community'
+        # Redis
+        alias rdstart='brew services start redis'
+        alias rdstop='brew services stop redis'
+        alias rdrestart='brew services restart redis'
+        alias rdstatus='brew services info redis'
+        # Neo4j
+        alias neostart='brew services start neo4j'
+        alias neostop='brew services stop neo4j'
+        alias neorestart='brew services restart neo4j'
+        alias neostatus='brew services info neo4j'
+        # Kafka
+        alias kafkastart='brew services start kafka'
+        alias kafkastop='brew services stop kafka'
+        alias kafkarestart='brew services restart kafka'
+        alias kafkastatus='brew services info kafka'
+        alias zkstart='brew services start zookeeper'
+        alias zkstop='brew services stop zookeeper'
+    fi
+
+    # Kafka tools
+    if command -v kafka-console-producer >/dev/null 2>&1; then
+        alias kprod='kafka-console-producer'
+        alias kcons='kafka-console-consumer'
+        alias ktop='kafka-topics'
+        alias kgroups='kafka-consumer-groups'
+    fi
+
+  # PostgreSQL local connection
+  pglocal: |
+    pgcli -h localhost -U "${1:-postgres}" "${2:-postgres}"
+
+  # MySQL local connection
+  mylocal: |
+    mycli -h localhost -u "${1:-root}" "${2:-}"
+
+  # MongoDB local connection
+  mongolocal: |
+    mongosh "mongodb://localhost:27017/${1:-test}"
+
+  # Redis local connection
+  rdlocal: |
+    if command -v iredis >/dev/null 2>&1; then
+        iredis -h localhost -p "${1:-6379}"
+    else
+        redis-cli -h localhost -p "${1:-6379}"
+    fi
+
+  # Neo4j local connection
+  neolocal: |
+    cypher-shell -u "${1:-neo4j}" -p "${2:-neo4j}" -a "bolt://localhost:7687"

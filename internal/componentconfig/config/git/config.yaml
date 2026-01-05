@@ -1,0 +1,124 @@
+# Git component configuration
+name: git
+description: Git version control aliases and functions
+version: 1.0.0
+
+# Environment variables
+env:
+  DEFAULT_REPOS_DIR: "${DEFAULT_REPOS_DIR:-$HOME/Repos}"
+
+# Shell aliases
+aliases:
+  # Basic git commands
+  g: "git"
+  gs: "git status"
+  ga: "git add"
+  gaa: "git add --all"
+  gc: "git commit"
+  gcm: "git commit -m"
+  gca: "git commit --amend"
+  gco: "git checkout"
+  # Branch management
+  gb: "git branch"
+  gba: "git branch -a"
+  gbd: "git branch -d"
+  gbD: "git branch -D"
+  # Diff
+  gd: "git diff"
+  gds: "git diff --staged"
+  # Push/Pull
+  gp: "git push"
+  gpf: "git push --force-with-lease"
+  gpl: "git pull"
+  gplr: "git pull --rebase"
+  # Fetch
+  gf: "git fetch"
+  gfa: "git fetch --all"
+  # Merge/Rebase
+  gm: "git merge"
+  gr: "git rebase"
+  gri: "git rebase -i"
+  grc: "git rebase --continue"
+  gra: "git rebase --abort"
+  # Stash
+  gst: "git stash"
+  gstp: "git stash pop"
+  gstl: "git stash list"
+  # Log
+  gl: "git log --oneline -20"
+  glog: "git log --oneline --graph --decorate"
+  glg: 'git log --graph --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset"'
+  gla: "git log --oneline --all --graph --decorate"
+  # Remote
+  grv: "git remote -v"
+  gru: "git remote update"
+  # Reset
+  grh: "git reset HEAD"
+  grhh: "git reset HEAD --hard"
+  grhs: "git reset HEAD --soft"
+  # Clean
+  gclean: "git clean -fd"
+  gpristine: "git reset --hard && git clean -fdx"
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: ginfo
+    command: "acorn git info"
+
+  - name: gfind
+    command: "acorn git find"
+
+  - name: gcontrib
+    command: "acorn git contributors"
+
+  - name: gcleanb
+    command: "acorn git clean-branches"
+
+# Shell functions (need cd, interactive git)
+shell_functions:
+  # Clone and cd into repository
+  gclone: |
+    git clone "$1" && cd "$(basename "$1" .git)" || return
+
+  # Create and checkout new branch
+  gcob: |
+    if [ -z "$1" ]; then
+        echo "Usage: gcob <branch-name>"
+        return 1
+    fi
+    git checkout -b "$1"
+
+  # Push with upstream tracking
+  gpush: |
+    local branch
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    git push -u origin "$branch"
+
+  # Pull with rebase
+  gpull: |
+    git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
+
+  # Interactive add
+  gadd: |
+    git add -p "$@"
+
+  # Undo last commit (keep changes)
+  gundo: |
+    git reset --soft HEAD~1
+
+  # Amend last commit without editing message
+  gamend: |
+    git add --all
+    git commit --amend --no-edit
+
+  # Show files changed in a commit
+  gshow: |
+    git show --stat "${1:-HEAD}"
+
+  # Git blame with line numbers
+  gblame: |
+    if [ -z "$1" ]; then
+        echo "Usage: gblame <file>"
+        return 1
+    fi
+    git blame -n "$1"

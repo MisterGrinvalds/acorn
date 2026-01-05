@@ -1,0 +1,46 @@
+# GitHub component configuration
+name: github
+description: GitHub CLI workflow helpers
+version: 1.0.0
+
+# Shell aliases
+aliases:
+  ghst: "acorn gh status"
+  ghpr: "acorn gh pr"
+  ghrun: "acorn gh run"
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: ghstatus
+    command: "acorn gh status"
+
+  - name: quickpr
+    command: "acorn gh pr create"
+
+  - name: prstatus
+    command: "acorn gh pr status"
+
+  - name: prchecks
+    command: "acorn gh pr checks"
+
+  - name: ghwatch
+    command: "acorn gh run watch"
+
+  - name: ghrerun
+    command: "acorn gh run rerun"
+
+  - name: qcommit
+    command: "acorn gh commit"
+    usage: "qcommit <message>"
+    requires_arg: true
+
+  - name: ghbranch
+    command: "acorn gh branch"
+    usage: "ghbranch <name>"
+    requires_arg: true
+
+  - name: ghpush
+    command: "acorn gh push"
+
+  - name: ghcleanup
+    command: "acorn gh cleanup"

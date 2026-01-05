@@ -1,0 +1,50 @@
+# Ghostty component configuration
+name: ghostty
+description: Ghostty terminal emulator configuration
+version: 1.0.0
+
+# Environment variables
+env:
+  GHOSTTY_CONFIG: "${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
+  GHOSTTY_RESOURCES_DIR: "${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
+
+# Shell aliases
+aliases:
+  ghostty-config: "ghostty_config"
+  ghostty-themes: "ghostty +list-themes"
+  ghostty-help: "ghostty +help"
+  ghostty-dark: 'acorn ghostty theme "Catppuccin Mocha"'
+  ghostty-light: 'acorn ghostty theme "Catppuccin Latte"'
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: ghostty_theme
+    command: "acorn ghostty theme"
+
+  - name: ghostty_font
+    command: "acorn ghostty font"
+
+  - name: ghostty_backup
+    command: "acorn ghostty backup"
+
+  - name: ghostty_backups
+    command: "acorn ghostty backups"
+
+  - name: ghostty_restore
+    command: "acorn ghostty restore"
+
+  - name: ghostty_info
+    command: "acorn ghostty info"
+
+# Shell functions (need $EDITOR)
+shell_functions:
+  ghostty_config: |
+    local config="${GHOSTTY_CONFIG:-$HOME/.config/ghostty/config}"
+
+    if [ ! -f "$config" ]; then
+        echo "Ghostty config not found: $config"
+        return 1
+    fi
+
+    ${EDITOR:-vim} "$config"
+    echo "Config saved. Press Cmd+Shift+, (macOS) or Ctrl+Shift+, (Linux) to reload."

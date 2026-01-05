@@ -1,0 +1,97 @@
+# Go component configuration
+# This file defines environment variables, aliases, and functions for Go development
+name: go
+description: Go development environment and helpers
+version: 1.0.0
+
+# Environment variables
+env:
+  GOPATH: "${GOPATH:-$HOME/go}"
+  GOBIN: "$GOPATH/bin"
+  GO111MODULE: "on"
+
+# Paths to add to PATH
+paths:
+  - path: "$GOBIN"
+  - path: "/usr/local/go/bin"
+  - path: "/opt/homebrew/opt/go/bin"
+    condition: darwin
+
+# Shell aliases
+aliases:
+  # Build and run
+  gob: "go build"
+  gor: "go run"
+  goi: "go install"
+  # Testing
+  got: "go test"
+  gotv: "go test -v"
+  gotc: "go test -cover"
+  # Module management
+  gom: "go mod"
+  gomi: "go mod init"
+  gomt: "go mod tidy"
+  gomd: "go mod download"
+  # Dependencies
+  gog: "go get"
+  gou: "go get -u"
+  # Code quality
+  gof: "go fmt ./..."
+  gov: "go vet ./..."
+  # Info
+  gover: "go version"
+  goenv: "go env"
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: gotest
+    command: "acorn go test"
+
+  - name: gotestcover
+    command: "acorn go cover"
+
+  - name: gobench
+    command: "acorn go bench"
+
+  - name: gobuildall
+    command: "acorn go build-all"
+    default_arg: "app"
+
+  - name: goclean
+    command: "acorn go clean"
+
+  - name: cobradd
+    command: "acorn go cobra add"
+    usage: "cobradd <command-name>"
+    requires_arg: true
+
+# Shell functions that need special handling (cd, source, etc.)
+shell_functions:
+  gonew: |
+    if [ -z "$1" ]; then
+        echo "Usage: gonew <module-name>"
+        return 1
+    fi
+    acorn go new "$1" && cd "$1"
+
+  cobranew: |
+    if [ -z "$1" ]; then
+        echo "Usage: cobranew <app-name>"
+        return 1
+    fi
+    acorn go cobra new "$1" && cd "$1"
+
+# Component-specific configuration
+config:
+  default_gopath: "$HOME/go"
+  build_targets:
+    - os: linux
+      arch: amd64
+    - os: linux
+      arch: arm64
+    - os: darwin
+      arch: amd64
+    - os: darwin
+      arch: arm64
+    - os: windows
+      arch: amd64

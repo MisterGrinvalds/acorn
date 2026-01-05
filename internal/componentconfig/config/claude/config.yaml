@@ -1,0 +1,114 @@
+# Claude component configuration
+name: claude
+description: Claude Code management and utilities
+version: 1.0.0
+
+# Environment variables
+env:
+  CLAUDE_DIR: "${HOME}/.claude"
+  CLAUDE_CONFIG: "${HOME}/.claude.json"
+  CLAUDE_SETTINGS: "${CLAUDE_DIR}/settings.json"
+  CLAUDE_LOCAL: "${CLAUDE_DIR}/settings.local.json"
+  CLAUDE_STATS: "${CLAUDE_DIR}/stats-cache.json"
+  CLAUDE_PROJECTS: "${CLAUDE_DIR}/projects"
+
+# Shell aliases
+aliases:
+  # Quick CLI access
+  cc: "claude"
+  ccc: "claude --continue"
+  ccr: "claude --resume"
+  ccp: "claude -p"
+  # Acorn wrappers
+  cc-stats: "acorn claude stats"
+  cc-tokens: "acorn claude stats tokens"
+  cc-info: "acorn claude info"
+  cc-perms: "acorn claude permissions"
+  cc-settings: "acorn claude settings"
+  cc-help: "acorn claude help"
+
+# Wrapper functions
+wrappers:
+  - name: claude_info
+    command: "acorn claude info"
+
+  - name: claude_stats
+    command: "acorn claude stats"
+
+  - name: claude_tokens
+    command: "acorn claude stats tokens"
+
+  - name: claude_daily
+    command: "acorn claude stats daily"
+
+  - name: claude_permissions
+    command: "acorn claude permissions"
+
+  - name: claude_permission_add
+    command: "acorn claude permissions add"
+
+  - name: claude_permission_remove
+    command: "acorn claude permissions remove"
+
+  - name: claude_settings
+    command: "acorn claude settings"
+
+  - name: claude_projects
+    command: "acorn claude projects"
+
+  - name: claude_mcp
+    command: "acorn claude mcp"
+
+  - name: claude_mcp_add
+    command: "acorn claude mcp add"
+
+  - name: claude_commands
+    command: "acorn claude commands"
+
+  - name: claude_clear
+    command: "acorn claude clear"
+
+  - name: claude_aggregate
+    command: "acorn claude aggregate"
+
+  - name: claude_list
+    command: "acorn claude aggregate list"
+
+  - name: claude_help
+    command: "acorn claude help"
+
+# Shell functions (uses $EDITOR, cd)
+shell_functions:
+  # Edit settings (requires $EDITOR)
+  claude_settings_edit: |
+    local file="${1:-global}"
+    local target
+
+    case "$file" in
+        global|g) target="${CLAUDE_SETTINGS}" ;;
+        local|l)  target="${CLAUDE_LOCAL}" ;;
+        config|c) target="${CLAUDE_CONFIG}" ;;
+        *)
+            echo "Usage: claude_settings_edit [global|local|config]"
+            return 1
+            ;;
+    esac
+
+    if [ -f "$target" ]; then
+        ${EDITOR:-vim} "$target"
+    else
+        echo "File not found: $target"
+        return 1
+    fi
+
+  # Open Claude directory (requires cd)
+  claude_dir: |
+    local dir="${CLAUDE_DIR:-$HOME/.claude}"
+    if [ -d "$dir" ]; then
+        cd "$dir" || return 1
+        echo "Changed to $dir"
+        ls -la
+    else
+        echo "Claude directory not found: $dir"
+        return 1
+    fi

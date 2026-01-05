@@ -1,0 +1,58 @@
+# Hugging Face component configuration
+name: huggingface
+description: Hugging Face model management
+version: 1.0.0
+
+# Environment variables
+env:
+  HF_HOME: "${XDG_CACHE_HOME:-$HOME/.cache}/huggingface"
+  TRANSFORMERS_CACHE: "$HF_HOME/transformers"
+
+# Shell aliases
+aliases:
+  hf-status: "acorn hf status"
+  hf-models: "acorn hf models"
+  hf-pipelines: "acorn hf pipelines"
+  hf-cache: "acorn hf cache"
+  hf-clear: "acorn hf clear"
+
+# Wrapper functions
+wrappers:
+  - name: hf_status
+    command: "acorn hf status"
+
+  - name: hf_models
+    command: "acorn hf models"
+
+  - name: hf_pipelines
+    command: "acorn hf pipelines"
+
+  - name: hf_cache
+    command: "acorn hf cache"
+
+  - name: hf_clear_cache
+    command: "acorn hf clear --force"
+
+# Shell functions (uses venv functions, pip)
+shell_functions:
+  hf_setup: |
+    echo "Setting up Hugging Face environment..."
+
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo "Creating virtual environment for Hugging Face..."
+        if command -v mkvenv >/dev/null 2>&1; then
+            mkvenv huggingface
+            venv huggingface
+        else
+            python3 -m venv ~/.venvs/huggingface
+            . ~/.venvs/huggingface/bin/activate
+        fi
+    fi
+
+    echo "Installing Hugging Face packages..."
+    pip install --upgrade pip
+    pip install transformers torch torchvision torchaudio
+    pip install datasets tokenizers accelerate
+    pip install huggingface_hub
+
+    echo "Hugging Face environment setup complete!"

@@ -1,0 +1,96 @@
+# VS Code component configuration
+name: vscode
+description: VS Code integration and project helpers
+version: 1.0.0
+
+# Shell aliases
+aliases:
+  # Open current directory
+  c: "code ."
+  # Open with options
+  cg: "code --goto"
+  cn: "code --new-window"
+  ca: "code --add"
+  cr: "code --reuse-window"
+  # Diff mode
+  cdiff: "code --diff"
+  # Extensions
+  cext: "code --list-extensions"
+  cexti: "code --install-extension"
+  cextu: "code --uninstall-extension"
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: workspace
+    command: "acorn vscode workspace"
+    usage: "workspace <workspace-name>"
+    requires_arg: true
+
+  - name: workspaces
+    command: "acorn vscode workspaces"
+
+  - name: newproject
+    command: "acorn vscode project new"
+    usage: "newproject <project-name> [language]"
+    requires_arg: true
+
+  - name: vscode_install_extensions
+    command: "acorn vscode ext install"
+
+  - name: vscode_sync_config
+    command: "acorn vscode config sync"
+
+  - name: vscode_install_essentials
+    command: "acorn vscode ext essentials"
+
+  - name: vscode_export_extensions
+    command: "acorn vscode ext export"
+    default_arg: "vscode-extensions.txt"
+
+  - name: vscode_import_extensions
+    command: "acorn vscode ext install"
+    default_arg: "vscode-extensions.txt"
+
+# Shell functions that need special handling (fzf, read, interactive)
+shell_functions:
+  # Open Python files with fzf
+  cpy: |
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "fzf required"
+        return 1
+    fi
+    find . -name "*.py" -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
+
+  # Open Go files with fzf
+  cgo: |
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "fzf required"
+        return 1
+    fi
+    find . -name "*.go" -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
+
+  # Open TypeScript/JavaScript files with fzf
+  cts: |
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "fzf required"
+        return 1
+    fi
+    find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
+
+  # Full VS Code setup (extensions + config)
+  vscode_setup: |
+    echo "VS Code Setup"
+    echo "============="
+    echo "1) Install extensions only"
+    echo "2) Sync config only"
+    echo "3) Both (full setup)"
+    echo ""
+    printf "Choice [1-3]: "
+    read -r choice
+
+    case "$choice" in
+        1) acorn vscode ext install ;;
+        2) acorn vscode config sync ;;
+        3) acorn vscode ext install && acorn vscode config sync ;;
+        *) echo "Invalid choice" ;;
+    esac
