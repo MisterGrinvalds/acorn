@@ -9,6 +9,7 @@ func RegisterAllComponents(m *Manager) {
 	m.RegisterComponent(PythonComponent())
 	m.RegisterComponent(TmuxComponent())
 	m.RegisterComponent(ClaudeComponent())
+	m.RegisterComponent(CloudFlareComponent())
 }
 
 // GoComponent returns the Go shell integration component.
@@ -948,6 +949,187 @@ claude_list() {
 # Show help (wrapper for acorn claude help)
 claude_help() {
     acorn claude help "$@"
+}
+`,
+	}
+}
+
+// CloudFlareComponent returns the CloudFlare shell integration component.
+func CloudFlareComponent() *Component {
+	return &Component{
+		Name:        "cloudflare",
+		Description: "CloudFlare CLI (wrangler) integration for Workers, Pages, R2, KV, and D1",
+		Env: `# CloudFlare/Wrangler environment setup (XDG-compliant)
+export WRANGLER_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/wrangler"
+
+# Ensure wrangler config directory exists
+if [ ! -d "${WRANGLER_HOME}" ]; then
+    mkdir -p "${WRANGLER_HOME}" 2>/dev/null
+fi
+`,
+		Aliases: `# Core wrangler aliases
+alias wr='wrangler'
+alias wrd='wrangler dev'
+alias wrp='wrangler pages'
+alias wrr2='wrangler r2'
+alias wrkv='wrangler kv'
+
+# Workers management
+alias wrlist='wrangler deployments list'
+alias wrtail='wrangler tail'
+alias wrpub='wrangler deploy'
+
+# Pages management
+alias wrplist='wrangler pages project list'
+alias wrpdeploy='wrangler pages deploy'
+
+# R2 storage
+alias wrr2list='wrangler r2 bucket list'
+
+# KV storage
+alias wrkvlist='wrangler kv namespace list'
+
+# D1 database
+alias wrd1='wrangler d1'
+alias wrd1list='wrangler d1 list'
+
+# Secrets management
+alias wrsecret='wrangler secret'
+alias wrsecrets='wrangler secret list'
+
+# Login/logout
+alias wrlogin='wrangler login'
+alias wrlogout='wrangler logout'
+alias wrwhoami='wrangler whoami'
+`,
+		Functions: `# Check CloudFlare CLI status (wrapper for acorn cf status)
+cf_status() {
+    acorn cf status "$@"
+}
+
+# Show current account (wrapper for acorn cf whoami)
+cf_whoami() {
+    acorn cf whoami
+}
+
+# List Workers (wrapper for acorn cf workers)
+cf_workers() {
+    acorn cf workers
+}
+
+# List Pages projects (wrapper for acorn cf pages)
+cf_pages() {
+    acorn cf pages
+}
+
+# List R2 buckets (wrapper for acorn cf r2 list)
+cf_r2_buckets() {
+    acorn cf r2 list
+}
+
+# List KV namespaces (wrapper for acorn cf kv list)
+cf_kv_namespaces() {
+    acorn cf kv list
+}
+
+# List D1 databases (wrapper for acorn cf d1 list)
+cf_d1_databases() {
+    acorn cf d1 list
+}
+
+# Tail worker logs (wrapper for acorn cf logs)
+cf_logs() {
+    acorn cf logs "$@"
+}
+
+# Deploy current worker (wrapper for acorn cf deploy)
+cf_deploy() {
+    acorn cf deploy "$@"
+}
+
+# Initialize Worker project (wrapper for acorn cf init worker)
+cf_worker_init() {
+    acorn cf init worker "$@"
+}
+
+# Initialize Pages project (wrapper for acorn cf init pages)
+cf_pages_init() {
+    acorn cf init pages "$@"
+}
+
+# Create R2 bucket (wrapper for acorn cf r2 create)
+cf_r2_create() {
+    acorn cf r2 create "$@"
+}
+
+# Create KV namespace (wrapper for acorn cf kv create)
+cf_kv_create() {
+    acorn cf kv create "$@"
+}
+
+# Create D1 database (wrapper for acorn cf d1 create)
+cf_d1_create() {
+    acorn cf d1 create "$@"
+}
+
+# Put secret (wrapper for acorn cf secret-put)
+cf_secret_put() {
+    acorn cf secret-put "$@"
+}
+
+# List secrets (wrapper for acorn cf secrets)
+cf_secrets() {
+    acorn cf secrets
+}
+
+# Show overview (wrapper for acorn cf overview)
+cf_overview() {
+    acorn cf overview "$@"
+}
+
+# Login (wrapper for acorn cf login)
+cf_login() {
+    acorn cf login
+}
+
+# Logout (wrapper for acorn cf logout)
+cf_logout() {
+    acorn cf logout
+}
+
+# Show help
+cf_help() {
+    echo "CloudFlare Component Functions"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Status & Info:"
+    echo "  cf_status           Check CLI status and auth"
+    echo "  cf_whoami           Show current account"
+    echo "  cf_overview         Overview of all resources"
+    echo ""
+    echo "List Resources:"
+    echo "  cf_workers          List Workers"
+    echo "  cf_pages            List Pages projects"
+    echo "  cf_r2_buckets       List R2 buckets"
+    echo "  cf_kv_namespaces    List KV namespaces"
+    echo "  cf_d1_databases     List D1 databases"
+    echo ""
+    echo "Create Resources:"
+    echo "  cf_worker_init      Create new Worker project"
+    echo "  cf_pages_init       Create new Pages project"
+    echo "  cf_r2_create        Create R2 bucket"
+    echo "  cf_kv_create        Create KV namespace"
+    echo "  cf_d1_create        Create D1 database"
+    echo ""
+    echo "Operations:"
+    echo "  cf_deploy           Deploy current worker"
+    echo "  cf_logs <worker>    Tail worker logs"
+    echo "  cf_secret_put       Add worker secret"
+    echo "  cf_secrets          List worker secrets"
+    echo ""
+    echo "Aliases:"
+    echo "  wr, wrd, wrp, wrr2, wrkv, wrd1"
+    echo "  wrlogin, wrlogout, wrwhoami"
 }
 `,
 	}
