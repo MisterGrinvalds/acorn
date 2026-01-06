@@ -28,8 +28,8 @@ If `$ARGUMENTS` is provided, explain that specific topic. Common topics include:
 
 Reference these files for accurate information:
 @components/tmux/component.yaml
-@components/tmux/functions.sh
-@components/tmux/aliases.sh
+@components/tmux/config.yaml
+@components/tmux/config/tmux.conf
 
 ## Response Format
 

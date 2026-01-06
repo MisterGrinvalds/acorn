@@ -19,6 +19,7 @@ Manage smug tmux session configurations through commands. You wield these skills
 | **Edit** | `/smug-edit [name]` | Modify existing session config |
 | **Delete** | `/smug-delete <name>` | Remove a session configuration |
 | **Sync** | `/smug-sync [action]` | Git sync (pull/push/status/init) |
+| **Setup** | `/smug-setup` | Initial smug setup and configuration |
 
 ## Workflow Patterns
 
@@ -57,6 +58,8 @@ User Request
     |
     +-- "sync/push/pull" --> /smug-sync
     |
+    +-- "setup/install smug" --> /smug-setup
+    |
     +-- "start/stop session" --> Direct: smug start/stop <name>
 ```
 
@@ -88,9 +91,25 @@ stop:                  # Cleanup commands
 
 ## Environment
 
+Defined in `components/tmux/config.yaml`:
 - `SMUG_CONFIG_DIR` - Config location (~/.config/smug)
 - `SMUG_REPO_DIR` - Git repo location (~/.local/share/smug-sessions)
 - `SMUG_REPO` - Git remote URL
+
+## Shell Functions
+
+From `components/tmux/config.yaml`:
+- `smug_list` - List available session configs
+- `smug_start [name]` - Start session (fzf selection if no name)
+- `smug_stop [name]` - Stop session
+- `smug_new <name>` - Create new session config
+- `smug_edit [name]` - Edit session config
+- `smug_sync` / `smug_pull` / `smug_push` - Git sync operations
+
+## Component Files
+
+- **Config**: `components/tmux/config.yaml` - shell functions and env vars
+- **Templates**: `components/tmux/config/smug/*.yml` - session templates
 
 ## Your Approach
 

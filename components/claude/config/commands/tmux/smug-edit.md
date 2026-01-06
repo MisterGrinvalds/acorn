@@ -76,4 +76,4 @@ smug_push "Update <session-name> configuration"
 
 ## Context
 
-@components/tmux/functions.sh
+@components/tmux/config.yaml

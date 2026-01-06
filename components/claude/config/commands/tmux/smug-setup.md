@@ -130,8 +130,8 @@ Setup:
 
 ## Context
 
-@components/tmux/functions.sh
-@components/tmux/env.sh
+@components/tmux/config.yaml
+@components/tmux/config/smug/project.yml
 
 ## Tips
 

@@ -80,4 +80,5 @@ Remind user to:
 
 ## Context
 
-@components/tmux/functions.sh
+@components/tmux/config.yaml
+@components/tmux/config/smug/project.yml

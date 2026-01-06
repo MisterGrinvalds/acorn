@@ -103,7 +103,7 @@ tmux_update_plugins   # Update all plugins
 
 ## Context
 
-@components/tmux/functions.sh
+@components/tmux/config.yaml
 @components/tmux/config/tmux.conf
 
 ## Troubleshooting

@@ -32,4 +32,4 @@ ls -1 "${SMUG_CONFIG_DIR:-$HOME/.config/smug}"/*.yml 2>/dev/null | xargs -I {} b
 
 ## Context
 
-@components/tmux/functions.sh
+@components/tmux/config.yaml

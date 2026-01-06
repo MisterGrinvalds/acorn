@@ -51,8 +51,8 @@ Guide users through these hands-on tasks:
 
 ## Context
 
-@components/tmux/functions.sh
-@components/tmux/aliases.sh
+@components/tmux/config.yaml
+@components/tmux/config/tmux.conf
 
 ## Coaching Style
 

@@ -52,4 +52,4 @@ stop:
 
 ## Context
 
-@components/tmux/functions.sh
+@components/tmux/config.yaml

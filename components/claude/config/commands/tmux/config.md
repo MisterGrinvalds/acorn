@@ -126,8 +126,8 @@ run '~/.config/tmux/plugins/tpm/tpm'
 
 ## Context
 
+@components/tmux/config.yaml
 @components/tmux/config/tmux.conf
-@components/tmux/functions.sh
 
 ## Tips
 

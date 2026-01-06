@@ -69,3 +69,7 @@ smug_repo_init
    ```bash
    smug_sync
    ```
+
+## Context
+
+@components/tmux/config.yaml

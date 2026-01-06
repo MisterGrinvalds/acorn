@@ -48,7 +48,7 @@ Default: `Ctrl-b` (often remapped to `Ctrl-a`)
 - `tswitch` - Fuzzy session switcher
 - `tkill` - Fuzzy session killer
 
-### TPM Management
+### TPM Management (acorn wrappers)
 - `tmux_install_tpm` - Install Tmux Plugin Manager
 - `tmux_update_tpm` - Update TPM itself
 - `tmux_install_plugins` - Install all plugins (outside tmux)
@@ -60,20 +60,29 @@ Default: `Ctrl-b` (often remapped to `Ctrl-a`)
 - `smug_stop [name]` - Stop session
 - `smug_new <name>` - Create new session config
 - `smug_edit [name]` - Edit session config
+- `smug_sync` / `smug_pull` / `smug_push` - Git sync operations
 
 ### Configuration
-- `tmux_config` - Edit tmux.conf
+- `tmux_config` - Edit tmux.conf ($EDITOR)
 - `tmux_reload` - Reload configuration
 - `tmux_info` - Show tmux status and configuration
 - `tmux_attach [name]` - Attach or create session
 
+### Window Alerts
+- `tmux_alert` - Set red alert on current window
+- `tmux_alert_high` / `tmux_alert_medium` / `tmux_alert_low` - Priority alerts
+
 ## Key Aliases
 - `tm` - tmux
 - `tma` - tmux attach-session
+- `tmat` - tmux attach-session -t
 - `tmn` - tmux new-session
+- `tmns` - tmux new-session -s
 - `tml` - tmux list-sessions
 - `tmk` - tmux kill-session -t
+- `tmka` - tmux kill-server
 - `tmx` - Attach to last or create new
+- `tm0` / `tm1` - Attach to session 0 or 1
 - `tmdev` - Attach to dev session or create one
 
 ## Best Practices
@@ -93,11 +102,21 @@ Default: `Ctrl-b` (often remapped to `Ctrl-a`)
 ### Plugin Recommendations
 1. **tpm** - Plugin manager (required)
 2. **tmux-sensible** - Sensible defaults
-3. **catppuccin/tmux** - Theme
-4. **tmux-resurrect** - Session persistence
-5. **tmux-continuum** - Auto-save sessions
-6. **tmux-vim-navigator** - Seamless vim navigation
-7. **tmux-sessionx** or **tmux-session-wizard** - Enhanced session management
+3. **tmux-resurrect** - Session persistence
+4. **tmux-continuum** - Auto-save sessions
+5. **tmux-vim-navigator** - Seamless vim navigation
+6. **tmux-session-wizard** - Enhanced session management with fzf
+
+## Available Commands
+
+Use these slash commands for specific tasks:
+- `/coach` - Interactive tmux learning (project:tmux)
+- `/config` - Configure tmux settings (project:tmux)
+- `/explain` - Explain tmux concepts (project:tmux)
+- `/layout` - Window and pane layouts (project:tmux)
+- `/plugins` - TPM plugin management (project:tmux)
+- `/session-create` - Create custom sessions (project:tmux)
+- `/smug-setup` - Set up smug session manager (project:tmux)
 
 ## Your Approach
 
@@ -108,4 +127,11 @@ When providing tmux guidance:
 4. **Explain** key bindings and shortcuts
 5. **Reference** available shell functions from the dotfiles
 
-Always reference file locations (e.g., `components/tmux/functions.sh:48`) when discussing code.
+## Component Files
+
+- **Config**: `components/tmux/config.yaml` - env, aliases, wrappers, shell_functions
+- **Tmux conf**: `components/tmux/config/tmux.conf` - tmux configuration
+- **Smug templates**: `components/tmux/config/smug/*.yml` - session templates
+- **Component meta**: `components/tmux/component.yaml` - dependencies and provides
+
+Always reference file locations (e.g., `components/tmux/config.yaml`) when discussing code.
