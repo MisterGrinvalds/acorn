@@ -1,14 +1,15 @@
 # CloudFlare Component
 
-Shell integration for CloudFlare CLI (wrangler) providing aliases and functions for Workers, Pages, R2, KV, and D1.
+Shell integration for CloudFlare CLI (wrangler) providing aliases for Workers, Pages, R2, KV, and D1.
 
-## Prerequisites
-
-Install wrangler CLI:
+## Installation
 
 ```bash
+# Install wrangler via npm
+./install/install.sh
+
+# Or manually
 npm install -g wrangler
-# or use npx wrangler
 ```
 
 ## Quick Start
@@ -17,14 +18,13 @@ npm install -g wrangler
 # Login to CloudFlare
 wrlogin
 
-# Check status
-cf_status
-
-# See all available functions
-cf_help
+# Check current account
+wrwhoami
 ```
 
 ## Aliases
+
+### Core Wrangler
 
 | Alias | Command | Description |
 |-------|---------|-------------|
@@ -34,59 +34,64 @@ cf_help
 | `wrr2` | `wrangler r2` | R2 storage commands |
 | `wrkv` | `wrangler kv` | KV store commands |
 | `wrd1` | `wrangler d1` | D1 database commands |
+
+### Workers
+
+| Alias | Command | Description |
+|-------|---------|-------------|
 | `wrlist` | `wrangler deployments list` | List deployments |
 | `wrtail` | `wrangler tail` | Tail worker logs |
 | `wrpub` | `wrangler deploy` | Deploy worker |
+
+### Pages
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `wrplist` | `wrangler pages project list` | List Pages projects |
+| `wrpdeploy` | `wrangler pages deploy` | Deploy to Pages |
+
+### Authentication
+
+| Alias | Command | Description |
+|-------|---------|-------------|
 | `wrlogin` | `wrangler login` | Login to CloudFlare |
 | `wrlogout` | `wrangler logout` | Logout |
 | `wrwhoami` | `wrangler whoami` | Show current account |
 
-## Functions
+## Claude Code Integration
 
-### Status & Info
+This component includes AI assistance for CloudFlare development:
 
-| Function | Description |
-|----------|-------------|
-| `cf_status` | Check CLI installation and auth status |
-| `cf_whoami` | Show current CloudFlare account |
-| `cf_overview` | Overview of all CloudFlare resources |
-| `cf_help` | Show all available functions |
+### Agent
 
-### List Resources
+- `cloudflare-expert` - Expert guidance on Wrangler CLI, Workers, Pages, R2, KV, and D1
 
-| Function | Description |
-|----------|-------------|
-| `cf_workers` | List all Workers |
-| `cf_pages` | List Pages projects |
-| `cf_r2_buckets` | List R2 buckets |
-| `cf_kv_namespaces` | List KV namespaces |
-| `cf_d1_databases` | List D1 databases |
+### Commands
 
-### Create Resources
+| Command | Description |
+|---------|-------------|
+| `/cf-coach` | Interactive coaching session for CloudFlare development |
+| `/cf-explain` | Explain CloudFlare concepts and services |
+| `/cf-worker-deploy` | Deploy a CloudFlare Worker |
+| `/cf-pages-setup` | Set up a CloudFlare Pages project |
+| `/cf-r2-manage` | Manage R2 object storage |
+| `/cf-kv-manage` | Manage KV key-value storage |
 
-| Function | Description |
-|----------|-------------|
-| `cf_worker_init [name]` | Create new Worker project |
-| `cf_pages_init [name]` | Create new Pages project |
-| `cf_r2_create <name>` | Create R2 bucket |
-| `cf_kv_create <name>` | Create KV namespace |
-| `cf_d1_create <name>` | Create D1 database |
+## Component Structure
 
-### Operations
+```
+cloudflare/
+├── config.yaml           # Aliases configuration
+├── README.md             # This file
+└── install/
+    └── install.sh        # Wrangler installation script
+```
 
-| Function | Description |
-|----------|-------------|
-| `cf_deploy` | Deploy current worker |
-| `cf_logs <worker>` | Tail worker logs |
-| `cf_secret_put <name>` | Add worker secret |
-| `cf_secrets` | List worker secrets |
-
-## XDG Compliance
-
-Wrangler configuration is stored in XDG-compliant locations:
-- Config: `~/.config/wrangler/`
+Claude Code AI integration files are in:
+- Agent: `components/claude/config/agents/cloudflare-expert.md`
+- Commands: `components/claude/config/commands/cloudflare/`
 
 ## Dependencies
 
-- **Required tools**: `wrangler`
+- **Required tools**: `wrangler` (via npm)
 - **Required components**: `shell`

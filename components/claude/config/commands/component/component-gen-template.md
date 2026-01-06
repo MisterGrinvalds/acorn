@@ -20,21 +20,18 @@ Create the following directories:
 
 ```
 components/$ARGUMENTS/
-├── ai/
-│   └── claude/
-│       ├── agents/
-│       └── commands/
 ├── shell/
 ├── install/
 └── config/
 ```
+
+Note: Claude agents/commands are centralized in `components/claude/config/`, not per-component.
 
 ### 2. Read Existing Config (if any)
 
 Check for existing configuration:
 - `components/$ARGUMENTS/config.yaml` - current location
 - `internal/componentconfig/config/$ARGUMENTS/config.yaml` - legacy Go location
-- `components/$ARGUMENTS/component.yaml` - legacy component location
 
 ### 3. Generate config.yaml
 
@@ -111,12 +108,21 @@ shell_functions: <approved functions only>
 
 ### 5. Create Placeholder Files
 
-**ai/claude/agents/.gitkeep** - placeholder for agent
-**ai/claude/commands/.gitkeep** - placeholder for commands
 **install/.gitkeep** - placeholder for install scripts
 **config/.gitkeep** - placeholder for tool configs
 
-### 6. Report Created Files
+### 6. Create Claude Integration (Centralized)
+
+Create the command subdirectory (agents and commands are centralized):
+```bash
+mkdir -p components/claude/config/commands/$ARGUMENTS
+```
+
+Note: Agent and commands will be created by:
+- `/component-gen-agent $ARGUMENTS`
+- `/component-gen-commands $ARGUMENTS`
+
+### 7. Report Created Files
 
 Output:
 ```
@@ -124,11 +130,10 @@ Generated Template: $ARGUMENTS
 ==============================
 
 Created directories:
-  - components/$ARGUMENTS/ai/claude/agents/
-  - components/$ARGUMENTS/ai/claude/commands/
   - components/$ARGUMENTS/shell/
   - components/$ARGUMENTS/install/
   - components/$ARGUMENTS/config/
+  - components/claude/config/commands/$ARGUMENTS/
 
 Created files:
   - components/$ARGUMENTS/config.yaml
@@ -143,5 +148,4 @@ Next steps:
   3. Run /component-gen-install $ARGUMENTS
   4. Run /component-gen-completions $ARGUMENTS
   5. Run /component-gen-validate $ARGUMENTS
-  6. Run: acorn ai inject $ARGUMENTS
 ```

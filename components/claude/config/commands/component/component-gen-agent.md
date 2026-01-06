@@ -22,9 +22,11 @@ Read the component's configuration to understand:
 - Configuration locations
 - Common workflows
 
+Check: `components/$ARGUMENTS/config.yaml`
+
 ### 2. Create Agent File
 
-Create `components/$ARGUMENTS/ai/claude/agents/$ARGUMENTS-expert.md`:
+Create `components/claude/config/agents/$ARGUMENTS-expert.md`:
 
 ```yaml
 ---
@@ -63,10 +65,18 @@ You are a **$ARGUMENTS Expert** specializing in <domain>.
 - List the most useful aliases
 - Format: `alias` - description
 
+**Available Commands:**
+- List slash commands in `components/claude/config/commands/$ARGUMENTS/`
+- Format: `/command-name` - description (project:$ARGUMENTS)
+
 **Best Practices:**
 - Include 3-5 sections with practical advice
 - Cover common workflows
 - Mention integration with other tools
+
+**Component Files:**
+- Reference: `components/$ARGUMENTS/config.yaml`
+- Reference: `components/$ARGUMENTS/config/<tool-configs>`
 
 **Your Approach:**
 ```markdown
@@ -80,13 +90,12 @@ When providing $ARGUMENTS guidance:
 Always reference file locations when discussing code.
 ```
 
-### 4. Reference Existing Agent
+### 4. Check for Existing Agent
 
-Check for existing agents to use as reference:
-- `components/$ARGUMENTS/ai/claude/agents/` (new location)
-- `components/claude/config/agents/$ARGUMENTS-expert.md` (legacy location)
+Look for existing agent to migrate or reference:
+- `components/claude/config/agents/$ARGUMENTS-expert.md` (current location)
 
-If no existing agent, model after a similar component's agent.
+If exists, preserve good content and update structure.
 
 ### 5. Report
 
@@ -95,15 +104,17 @@ Output:
 Generated Agent: $ARGUMENTS-expert
 ==================================
 
-Created: components/$ARGUMENTS/ai/claude/agents/$ARGUMENTS-expert.md
+Location: components/claude/config/agents/$ARGUMENTS-expert.md
 
 Sections included:
   - Core Competencies (N items)
   - Key Concepts
   - Available Shell Functions (N items)
   - Key Aliases (N items)
+  - Available Commands (N items)
   - Best Practices (N sections)
+  - Component Files
   - Approach
 
-To inject: acorn ai inject $ARGUMENTS
+The agent is immediately available via ~/.claude/agents/ symlink.
 ```

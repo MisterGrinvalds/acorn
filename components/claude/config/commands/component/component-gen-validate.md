@@ -19,10 +19,6 @@ Verify the component in `components/$ARGUMENTS/` is complete and valid.
 Verify all required directories exist:
 ```
 components/$ARGUMENTS/
-├── ai/
-│   └── claude/
-│       ├── agents/
-│       └── commands/
 ├── shell/
 ├── install/
 └── config/
@@ -66,10 +62,10 @@ Check each shell script in `components/$ARGUMENTS/shell/`:
 - [ ] Valid shell syntax
 - [ ] Handles both bash and zsh
 
-### 4. Validate AI Integration
+### 4. Validate Claude Integration (Centralized)
 
 **Agent file:**
-- [ ] `ai/claude/agents/$ARGUMENTS-expert.md` exists
+- [ ] `components/claude/config/agents/$ARGUMENTS-expert.md` exists
 - [ ] Valid YAML frontmatter
 - [ ] Required sections present:
   - [ ] Core Competencies
@@ -79,8 +75,9 @@ Check each shell script in `components/$ARGUMENTS/shell/`:
   - [ ] Approach
 
 **Command files:**
-- [ ] `ai/claude/commands/$ARGUMENTS-explain.md` exists
-- [ ] `ai/claude/commands/$ARGUMENTS-coach.md` exists
+- [ ] `components/claude/config/commands/$ARGUMENTS/` directory exists
+- [ ] At least `explain.md` or `$ARGUMENTS-explain.md` exists
+- [ ] At least `coach.md` or `$ARGUMENTS-coach.md` exists
 - [ ] All commands have valid frontmatter
 - [ ] All commands have clear instructions
 
@@ -122,35 +119,36 @@ done
 Component Validation: $ARGUMENTS
 ================================
 
-Structure:               [PASS/FAIL]
-  - config.yaml          [OK/MISSING]
-  - shell/               [OK/MISSING]
-  - ai/claude/agents/    [OK/MISSING]
-  - ai/claude/commands/  [OK/MISSING]
-  - install/             [OK/MISSING]
-  - config/              [OK/MISSING]
+Structure:                    [PASS/FAIL]
+  - config.yaml               [OK/MISSING]
+  - shell/                    [OK/MISSING]
+  - install/                  [OK/MISSING]
+  - config/                   [OK/MISSING]
 
-Config File:             [PASS/FAIL]
-  - config.yaml          [VALID/INVALID: <reason>]
+Config File:                  [PASS/FAIL]
+  - config.yaml               [VALID/INVALID: <reason>]
 
-Shell Scripts:           [PASS/FAIL]
-  - env.sh               [VALID/ERROR: line N]
-  - aliases.sh           [VALID/ERROR: line N]
-  - functions.sh         [VALID/ERROR: line N]
-  - completions.sh       [VALID/ERROR: line N]
+Shell Scripts:                [PASS/FAIL]
+  - env.sh                    [VALID/ERROR: line N]
+  - aliases.sh                [VALID/ERROR: line N]
+  - functions.sh              [VALID/ERROR: line N]
+  - completions.sh            [VALID/ERROR: line N]
 
-AI Integration:          [PASS/FAIL]
-  - Agent                [FOUND/MISSING]
-  - explain command      [FOUND/MISSING]
-  - coach command        [FOUND/MISSING]
-  - Other commands       [N found]
+Claude Integration:           [PASS/FAIL]
+  - Agent                     [FOUND/MISSING]
+    Location: components/claude/config/agents/$ARGUMENTS-expert.md
+  - Commands dir              [FOUND/MISSING]
+    Location: components/claude/config/commands/$ARGUMENTS/
+  - explain command           [FOUND/MISSING]
+  - coach command             [FOUND/MISSING]
+  - Other commands            [N found]
 
-Install Scripts:         [PASS/FAIL]
-  - install.sh           [VALID/ERROR]
-  - brew.yaml            [VALID/N/A]
-  - apt.yaml             [VALID/N/A]
+Install Scripts:              [PASS/FAIL]
+  - install.sh                [VALID/ERROR]
+  - brew.yaml                 [VALID/N/A]
+  - apt.yaml                  [VALID/N/A]
 
-Overall:                 [VALID/INVALID]
+Overall:                      [VALID/INVALID]
 
 Issues Found:
   1. <issue description>
@@ -158,7 +156,4 @@ Issues Found:
 
 To fix issues, run:
   - /component-gen-<type> $ARGUMENTS
-
-Ready for injection:
-  acorn ai inject $ARGUMENTS
 ```

@@ -14,11 +14,18 @@ Generate commands for: $ARGUMENTS
 
 Create standard and tool-specific Claude slash commands for the component.
 
-### 1. Generate Standard Commands
+### 1. Create Command Directory
 
-Every component gets these two commands in `components/$ARGUMENTS/ai/claude/commands/`:
+Create the subdirectory for this component's commands:
+```
+components/claude/config/commands/$ARGUMENTS/
+```
 
-**$ARGUMENTS-explain.md:**
+### 2. Generate Standard Commands
+
+Every component gets these two commands:
+
+**explain.md** (or $ARGUMENTS-explain.md):
 ```yaml
 ---
 description: Explain $ARGUMENTS concepts, commands, and workflows
@@ -54,13 +61,17 @@ If a specific topic is provided, focus on that. Otherwise, give an overview.
 - Best practices
 - Integration with other tools
 
+### Context
+
+@components/$ARGUMENTS/config.yaml
+
 ### Output Format
 
 Use clear headings, code examples, and practical tips.
 Reference file locations and available functions where relevant.
 ```
 
-**$ARGUMENTS-coach.md:**
+**coach.md** (or $ARGUMENTS-coach.md):
 ```yaml
 ---
 description: Interactive coaching session to learn $ARGUMENTS step by step
@@ -93,6 +104,10 @@ Run an interactive coaching session to help the user learn $ARGUMENTS.
 - Provide exercises to try
 - Reference available shell functions
 
+### Context
+
+@components/$ARGUMENTS/config.yaml
+
 ### Skill Levels
 
 **Beginner:**
@@ -111,52 +126,47 @@ Run an interactive coaching session to help the user learn $ARGUMENTS.
 - Performance optimization
 ```
 
-### 2. Generate Tool-Specific Commands
+### 3. Generate Tool-Specific Commands
 
 Based on the component's capabilities, create additional commands:
 
 | Component | Common Task Commands |
 |-----------|---------------------|
-| tmux | `tmux-session-create`, `tmux-layout`, `tmux-plugins`, `tmux-config` |
-| go | `go-project-init`, `go-test-coverage`, `go-benchmark`, `cobra-router` |
-| python | `python-venv-create`, `python-test-setup`, `python-uv-migrate` |
-| node | `node-clean`, `node-deps-audit` |
-| kubernetes | `k8s-deploy`, `k8s-logs`, `k8s-context-switch`, `k8s-resource-audit` |
-| git | `git-branch-cleanup`, `git-rebase-guide`, `git-conflict-resolve` |
-| fzf | `fzf-custom-finder`, `fzf-config` |
+| tmux | `session-create.md`, `layout.md`, `plugins.md`, `config.md` |
+| go | `project-init.md`, `test-coverage.md`, `benchmark.md` |
+| python | `venv-create.md`, `test-setup.md`, `uv-migrate.md` |
+| node | `clean.md`, `deps-audit.md`, `nvm-setup.md` |
+| kubernetes | `deploy.md`, `logs.md`, `context-switch.md`, `resource-audit.md` |
+| git | `branch-cleanup.md`, `rebase-guide.md`, `conflict-resolve.md` |
+| fzf | `custom-finder.md`, `config.md` |
 
-### 3. Check Existing Commands
+### 4. Check Existing Commands
 
 Look for existing commands to preserve:
 ```bash
-# New location
-ls components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-*.md 2>/dev/null
-
-# Legacy location
-ls components/claude/config/commands/$ARGUMENTS-*.md 2>/dev/null
+ls components/claude/config/commands/$ARGUMENTS/*.md 2>/dev/null
 ```
 
-Copy any existing commands that aren't being replaced.
+Migrate any existing commands that should be preserved.
 
-### 4. Report
+### 5. Report
 
 Output:
 ```
 Generated Commands: $ARGUMENTS
 ==============================
 
+Location: components/claude/config/commands/$ARGUMENTS/
+
 Standard commands:
-  - components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-explain.md
-  - components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-coach.md
+  - explain.md → /explain (project:$ARGUMENTS)
+  - coach.md → /coach (project:$ARGUMENTS)
 
 Tool-specific commands:
-  - components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-<task1>.md
-  - components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-<task2>.md
-
-Migrated from legacy:
-  - <any copied commands>
+  - <task1>.md → /<task1> (project:$ARGUMENTS)
+  - <task2>.md → /<task2> (project:$ARGUMENTS)
 
 Total: N commands
 
-To inject: acorn ai inject $ARGUMENTS
+Commands are immediately available via ~/.claude/commands/ symlink.
 ```
