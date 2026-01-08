@@ -7,17 +7,28 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/componentconfig"
+	"github.com/mistergrinvalds/acorn/internal/configfile"
 )
 
 // Generator creates shell scripts from component configuration.
 type Generator struct {
 	platform string
+	dryRun   bool
 }
 
 // NewGenerator creates a new Generator for the current platform.
 func NewGenerator() *Generator {
 	return &Generator{
 		platform: runtime.GOOS,
+		dryRun:   false,
+	}
+}
+
+// NewGeneratorWithDryRun creates a new Generator with dry run mode.
+func NewGeneratorWithDryRun(dryRun bool) *Generator {
+	return &Generator{
+		platform: runtime.GOOS,
+		dryRun:   dryRun,
 	}
 }
 
@@ -283,4 +294,15 @@ func (g *Generator) generateFunctionsString(cfg *componentconfig.BaseConfig) str
 	}
 
 	return b.String()
+}
+
+// GenerateConfigFiles generates all config files for a component.
+// Returns the list of generated files and any error.
+func (g *Generator) GenerateConfigFiles(cfg *componentconfig.BaseConfig) ([]*configfile.GeneratedFile, error) {
+	if len(cfg.Files) == 0 {
+		return nil, nil
+	}
+
+	manager := configfile.NewManager(g.dryRun)
+	return manager.GenerateFiles(cfg.Files)
 }

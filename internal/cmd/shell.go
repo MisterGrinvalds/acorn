@@ -297,12 +297,29 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, result.Entrypoint.TargetPath)
 	}
 
+	// Show config files
+	if len(result.ConfigFiles) > 0 {
+		fmt.Fprintln(os.Stdout)
+		if shellDryRun {
+			fmt.Fprintln(os.Stdout, "[dry-run] Would generate config files:")
+		} else {
+			fmt.Fprintln(os.Stdout, "Generated config files:")
+		}
+		for _, cf := range result.ConfigFiles {
+			status := output.Success("✓")
+			if shellDryRun {
+				status = output.Warning("○")
+			}
+			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.Target, cf.Format)
+		}
+	}
+
 	fmt.Fprintln(os.Stdout)
 	if shellDryRun {
 		fmt.Fprintf(os.Stdout, "Use without --dry-run to write files.\n")
 	} else {
-		fmt.Fprintf(os.Stdout, "%s Generated %d script(s) in %s\n",
-			output.Success("✓"), len(result.Scripts), result.AcornDir)
+		totalFiles := len(result.Scripts) + len(result.ConfigFiles)
+		fmt.Fprintf(os.Stdout, "%s Generated %d file(s)\n", output.Success("✓"), totalFiles)
 	}
 
 	return nil
@@ -432,6 +449,19 @@ func runShellInstall(cmd *cobra.Command, args []string) error {
 			status = output.Warning("○")
 		}
 		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, genResult.Entrypoint.TargetPath)
+	}
+
+	// Show config files
+	if len(genResult.ConfigFiles) > 0 {
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, "Generated config files:")
+		for _, cf := range genResult.ConfigFiles {
+			status := output.Success("✓")
+			if shellDryRun {
+				status = output.Warning("○")
+			}
+			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.Target, cf.Format)
+		}
 	}
 
 	fmt.Fprintln(os.Stdout)

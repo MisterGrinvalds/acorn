@@ -9,6 +9,9 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/mistergrinvalds/acorn/internal/componentconfig"
+	"github.com/mistergrinvalds/acorn/internal/configfile"
 )
 
 // Config holds shell integration configuration.
@@ -72,12 +75,13 @@ type GeneratedScript struct {
 
 // GenerateResult contains the result of a generate operation.
 type GenerateResult struct {
-	AcornDir   string             `json:"acorn_dir" yaml:"acorn_dir"`
-	Shell      string             `json:"shell" yaml:"shell"`
-	Platform   string             `json:"platform" yaml:"platform"`
-	DryRun     bool               `json:"dry_run" yaml:"dry_run"`
-	Scripts    []*GeneratedScript `json:"scripts" yaml:"scripts"`
-	Entrypoint *GeneratedScript   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	AcornDir    string                    `json:"acorn_dir" yaml:"acorn_dir"`
+	Shell       string                    `json:"shell" yaml:"shell"`
+	Platform    string                    `json:"platform" yaml:"platform"`
+	DryRun      bool                      `json:"dry_run" yaml:"dry_run"`
+	Scripts     []*GeneratedScript        `json:"scripts" yaml:"scripts"`
+	Entrypoint  *GeneratedScript          `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	ConfigFiles []*configfile.GeneratedFile `json:"config_files,omitempty" yaml:"config_files,omitempty"`
 }
 
 // InjectResult contains the result of an inject/eject operation.
@@ -93,6 +97,14 @@ type InjectResult struct {
 type Manager struct {
 	config     *Config
 	components map[string]*Component
+	fileSpecs  map[string][]FileSpec // component name -> file specs for config file generation
+}
+
+// FileSpec holds file generation specification.
+type FileSpec struct {
+	Target string                 `json:"target" yaml:"target"`
+	Format string                 `json:"format" yaml:"format"`
+	Values map[string]interface{} `json:"values" yaml:"values"`
 }
 
 // NewManager creates a new shell Manager.
@@ -100,12 +112,20 @@ func NewManager(config *Config) *Manager {
 	return &Manager{
 		config:     config,
 		components: make(map[string]*Component),
+		fileSpecs:  make(map[string][]FileSpec),
 	}
 }
 
 // RegisterComponent registers a component for shell integration.
 func (m *Manager) RegisterComponent(c *Component) {
 	m.components[c.Name] = c
+}
+
+// RegisterComponentFiles registers config files for a component.
+func (m *Manager) RegisterComponentFiles(name string, files []FileSpec) {
+	if len(files) > 0 {
+		m.fileSpecs[name] = files
+	}
 }
 
 // EnsureDir ensures the acorn config directory exists.
@@ -185,12 +205,15 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 	}
 
 	result := &GenerateResult{
-		AcornDir: m.config.AcornDir,
-		Shell:    m.config.Shell,
-		Platform: m.config.Platform,
-		DryRun:   m.config.DryRun,
-		Scripts:  make([]*GeneratedScript, 0, len(names)),
+		AcornDir:    m.config.AcornDir,
+		Shell:       m.config.Shell,
+		Platform:    m.config.Platform,
+		DryRun:      m.config.DryRun,
+		Scripts:     make([]*GeneratedScript, 0, len(names)),
+		ConfigFiles: make([]*configfile.GeneratedFile, 0),
 	}
+
+	cfManager := configfile.NewManager(m.config.DryRun)
 
 	// Generate each component script
 	for _, name := range names {
@@ -218,9 +241,30 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 		}
 
 		result.Scripts = append(result.Scripts, genScript)
+
+		// Generate config files for this component
+		if files, ok := m.fileSpecs[name]; ok {
+			for _, spec := range files {
+				fc := componentConfigFromSpec(spec)
+				genFile, err := cfManager.GenerateFile(fc)
+				if err != nil {
+					return nil, fmt.Errorf("failed to generate config for %s: %w", name, err)
+				}
+				result.ConfigFiles = append(result.ConfigFiles, genFile)
+			}
+		}
 	}
 
 	return result, nil
+}
+
+// componentConfigFromSpec converts a FileSpec to componentconfig.FileConfig.
+func componentConfigFromSpec(spec FileSpec) componentconfig.FileConfig {
+	return componentconfig.FileConfig{
+		Target: spec.Target,
+		Format: spec.Format,
+		Values: spec.Values,
+	}
 }
 
 // GenerateAll generates all component shell scripts and the entrypoint.

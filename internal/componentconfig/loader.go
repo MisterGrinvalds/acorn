@@ -138,6 +138,34 @@ func MergeConfigs(base, override *BaseConfig) *BaseConfig {
 		result.Wrappers = base.Wrappers
 	}
 
+	// Files are merged by target path - override wins for same target
+	result.Files = mergeFiles(base.Files, override.Files)
+
+	return result
+}
+
+// mergeFiles merges two FileConfig slices.
+// Files with the same target path are replaced by the override.
+func mergeFiles(base, override []FileConfig) []FileConfig {
+	if len(base) == 0 && len(override) == 0 {
+		return nil
+	}
+
+	// Index by target path
+	byTarget := make(map[string]FileConfig)
+	for _, f := range base {
+		byTarget[f.Target] = f
+	}
+	for _, f := range override {
+		byTarget[f.Target] = f
+	}
+
+	// Convert back to slice
+	result := make([]FileConfig, 0, len(byTarget))
+	for _, f := range byTarget {
+		result = append(result, f)
+	}
+
 	return result
 }
 
