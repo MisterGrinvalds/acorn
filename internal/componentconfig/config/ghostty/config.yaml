@@ -136,3 +136,16 @@ files:
         - "super+end=scroll_to_bottom"
         - "super+f=text:search"
         - "super+k=clear_screen"
+
+# Installation configuration
+install:
+  tools:
+    - name: ghostty
+      description: GPU-accelerated terminal emulator
+      check: "command -v ghostty"
+      methods:
+        darwin:
+          type: brew
+          package: ghostty
+      post_install:
+        message: "Run 'acorn ghostty config' to generate configuration"
