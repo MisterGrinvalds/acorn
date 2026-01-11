@@ -75,6 +75,18 @@ shell_functions:
     fi
     export FZF_LOCATION
 
+    # Source fzf shell integration (key bindings + completions)
+    # This enables Ctrl+R, Ctrl+T, Alt+C to insert selection into command line
+    if [ -n "$FZF_LOCATION" ]; then
+        if [ -n "$BASH_VERSION" ]; then
+            [ -f "$FZF_LOCATION/shell/key-bindings.bash" ] && source "$FZF_LOCATION/shell/key-bindings.bash"
+            [ -f "$FZF_LOCATION/shell/completion.bash" ] && source "$FZF_LOCATION/shell/completion.bash"
+        elif [ -n "$ZSH_VERSION" ]; then
+            [ -f "$FZF_LOCATION/shell/key-bindings.zsh" ] && source "$FZF_LOCATION/shell/key-bindings.zsh"
+            [ -f "$FZF_LOCATION/shell/completion.zsh" ] && source "$FZF_LOCATION/shell/completion.zsh"
+        fi
+    fi
+
   # Interactive file finder with preview
   fzf_files: |
     local file
