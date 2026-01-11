@@ -20,9 +20,10 @@ Verify all required directories exist:
 ```
 components/$ARGUMENTS/
 ├── shell/
-├── install/
 └── config/
 ```
+
+Note: Installation is configured via `install:` section in config.yaml (not shell scripts)
 
 ### 2. Validate Config
 
@@ -81,36 +82,37 @@ Check each shell script in `components/$ARGUMENTS/shell/`:
 - [ ] All commands have valid frontmatter
 - [ ] All commands have clear instructions
 
-### 5. Validate Install Scripts
+### 5. Validate Installation Config
 
-**install/install.sh:**
-- [ ] File exists
-- [ ] Valid shell syntax
-- [ ] Executable permissions (or can be set)
-- [ ] Handles multiple package managers
+**Check config.yaml `install:` section:**
+- [ ] `install:` section exists (if component requires tools)
+- [ ] Each tool has required fields:
+  - [ ] `name` - tool name
+  - [ ] `check` - command to verify installation
+  - [ ] `methods` - platform-specific install methods
+- [ ] Each method has:
+  - [ ] `type` - valid type (brew, apt, npm, pip, go, curl)
+  - [ ] `package` - package name if different from tool name
+- [ ] Prerequisites are valid (`requires` references existing components)
 
-**install/brew.yaml:**
-- [ ] File exists if macOS packages needed
-- [ ] Valid YAML syntax
-- [ ] Package names are correct
-
-**install/apt.yaml:**
-- [ ] File exists if Linux packages needed
-- [ ] Valid YAML syntax
-- [ ] Package names are correct
+**Test installation dry-run:**
+```bash
+acorn $ARGUMENTS install --dry-run
+```
 
 ### 6. Run Syntax Checks
 
 ```bash
-# Validate YAML files
-for f in components/$ARGUMENTS/config.yaml components/$ARGUMENTS/install/*.yaml; do
-    yq '.' "$f" >/dev/null 2>&1 || echo "YAML error: $f"
-done
+# Validate YAML config
+yq '.' components/$ARGUMENTS/config.yaml >/dev/null 2>&1 || echo "YAML error: config.yaml"
 
 # Validate shell scripts
-for f in components/$ARGUMENTS/shell/*.sh components/$ARGUMENTS/install/*.sh; do
+for f in components/$ARGUMENTS/shell/*.sh; do
     bash -n "$f" 2>&1 || echo "Syntax error: $f"
 done
+
+# Test installation config (if exists)
+acorn $ARGUMENTS install --dry-run 2>&1 || echo "Install config error"
 ```
 
 ### 7. Output Report
@@ -122,7 +124,6 @@ Component Validation: $ARGUMENTS
 Structure:                    [PASS/FAIL]
   - config.yaml               [OK/MISSING]
   - shell/                    [OK/MISSING]
-  - install/                  [OK/MISSING]
   - config/                   [OK/MISSING]
 
 Config File:                  [PASS/FAIL]
@@ -143,10 +144,11 @@ Claude Integration:           [PASS/FAIL]
   - coach command             [FOUND/MISSING]
   - Other commands            [N found]
 
-Install Scripts:              [PASS/FAIL]
-  - install.sh                [VALID/ERROR]
-  - brew.yaml                 [VALID/N/A]
-  - apt.yaml                  [VALID/N/A]
+Installation Config:          [PASS/FAIL/N/A]
+  - install: section          [FOUND/MISSING]
+  - Tools configured          [N tools]
+  - Dry-run test              [PASS/FAIL]
+  Test: acorn $ARGUMENTS install --dry-run
 
 Overall:                      [VALID/INVALID]
 
@@ -155,5 +157,5 @@ Issues Found:
   2. <issue description>
 
 To fix issues, run:
-  - /component-gen-<type> $ARGUMENTS
+  - /component:gen-<type> $ARGUMENTS
 ```

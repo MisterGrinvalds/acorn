@@ -21,11 +21,12 @@ Create the following directories:
 ```
 components/$ARGUMENTS/
 ├── shell/
-├── install/
 └── config/
 ```
 
-Note: Claude agents/commands are centralized in `components/claude/config/`, not per-component.
+Note:
+- Installation is configured via `install:` section in config.yaml (not shell scripts)
+- Claude agents/commands are centralized in `components/claude/config/`, not per-component
 
 ### 2. Read Existing Config (if any)
 
@@ -108,8 +109,7 @@ shell_functions: <approved functions only>
 
 ### 5. Create Placeholder Files
 
-**install/.gitkeep** - placeholder for install scripts
-**config/.gitkeep** - placeholder for tool configs
+**config/.gitkeep** - placeholder for tool-specific config files
 
 ### 6. Create Claude Integration (Centralized)
 
@@ -131,7 +131,6 @@ Generated Template: $ARGUMENTS
 
 Created directories:
   - components/$ARGUMENTS/shell/
-  - components/$ARGUMENTS/install/
   - components/$ARGUMENTS/config/
   - components/claude/config/commands/$ARGUMENTS/
 
@@ -143,9 +142,9 @@ Created files:
   - components/$ARGUMENTS/shell/completions.sh
 
 Next steps:
-  1. Run /component-gen-agent $ARGUMENTS
-  2. Run /component-gen-commands $ARGUMENTS
-  3. Run /component-gen-install $ARGUMENTS
-  4. Run /component-gen-completions $ARGUMENTS
-  5. Run /component-gen-validate $ARGUMENTS
+  1. Run /component:gen-agent $ARGUMENTS
+  2. Run /component:gen-commands $ARGUMENTS
+  3. Run /component:gen-install $ARGUMENTS  (adds install: section to config.yaml)
+  4. Run /component:gen-completions $ARGUMENTS
+  5. Run /component:gen-validate $ARGUMENTS
 ```

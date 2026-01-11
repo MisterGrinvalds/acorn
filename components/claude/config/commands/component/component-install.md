@@ -1,104 +1,169 @@
 ---
-description: Install tools for a component or update installer with component
+description: Install tools for a component using declarative config
+argument_hints:
+  - cloudflare
+  - node
+  - go
+  - python
+  - tmux
 ---
 
-Install a component's required tools or update the installer to include a component.
+Install a component's required tools via `acorn <component> install`.
 
 Component name: $ARGUMENTS
 
 ## Instructions
 
-### 1. Validate Component Exists
+### 1. Check Component Has Install Config
 
-Check that `components/$ARGUMENTS/component.yaml` exists and is valid.
+Read `internal/componentconfig/config/$ARGUMENTS/config.yaml` and verify it has an `install:` section.
 
-### 2. Read Component Setup Info
+If no `install:` section exists:
+```
+Component '$ARGUMENTS' does not have installation configuration.
 
-Extract from `component.yaml`:
-- `requires.tools` - CLI tools that must be installed
-- `setup.brew` - Homebrew packages (macOS)
-- `setup.apt` - APT packages (Linux)
-- `setup.post_install` - Post-installation script
-
-### 3. Check Current Tool Status
-
-For each tool in `requires.tools`:
-- Check if already installed with `command -v`
-- Report which tools are missing
-
-### 4. Installation Options
-
-Offer the user these options:
-1. **Install now** - Run brew/apt install for missing tools
-2. **Update installer** - Add an install function to `install.sh`
-3. **Generate script** - Create a standalone installation script
-4. **Skip** - Just show what would be installed
-
-### 5. If "Install now" Selected
-
-```bash
-# macOS
-brew install <packages from setup.brew>
-
-# Linux
-sudo apt-get install -y <packages from setup.apt>
+To add installation config, run:
+  /component:gen-install $ARGUMENTS
 ```
 
-### 6. If "Update installer" Selected
+### 2. Show Installation Plan (Dry Run)
 
-Add a function to `install.sh`:
+Run the install command in dry-run mode:
+
 ```bash
-# Install <component> tools
-install_<component>_tools() {
-    log_info "Installing <component> tools..."
+acorn $ARGUMENTS install --dry-run
+```
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        brew install <brew packages>
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sudo apt-get install -y <apt packages>
-    fi
+This shows:
+- Platform detected (darwin/linux)
+- Tools to install
+- Prerequisites resolved
+- Installation methods selected
 
-    log_success "<component> tools installed!"
+### 3. Confirm and Install
+
+If the user confirms, run the actual installation:
+
+```bash
+acorn $ARGUMENTS install
+```
+
+For verbose output:
+
+```bash
+acorn $ARGUMENTS install --verbose
+```
+
+### 4. Report Results
+
+```
+Installation: $ARGUMENTS
+========================
+
+Platform: <darwin|linux>
+Package Manager: <brew|apt>
+
+Tools Installed:
+  ✓ <tool1> - <description>
+  ✓ <tool2> - <description>
+
+Prerequisites Resolved:
+  ✓ <prereq> (from <component>)
+
+Post-Install Messages:
+  - <any messages from post_install.message>
+
+Status: Complete
+```
+
+## How Installation Works
+
+The `internal/installer/` package handles installation:
+
+1. **Platform Detection** - Identifies OS, distro, and package manager
+2. **Prerequisite Resolution** - Recursively resolves `requires` dependencies
+3. **Method Selection** - Chooses install method based on platform
+4. **Execution** - Runs the appropriate install command
+5. **Verification** - Runs `check` command to verify success
+
+## Supported Install Types
+
+| Type | Command | Example |
+|------|---------|---------|
+| brew | `brew install <package>` | go, tmux, fzf |
+| apt | `sudo apt-get install -y <package>` | golang-go, tmux |
+| npm | `npm install -g <package>` | wrangler, pnpm |
+| pip | `pip install <package>` | uv |
+| go | `go install <package>@latest` | cobra-cli |
+| curl | `curl -fsSL <url> \| sh` | nvm, rustup |
+
+## Adding Install Command to Components
+
+If a component doesn't have the `install` subcommand in its CLI, you need to add it.
+
+Example from `internal/cmd/cloudflare.go`:
+
+```go
+// Install subcommand
+installCmd := &cobra.Command{
+    Use:   "install",
+    Short: "Install cloudflare tools",
+    Long:  "Install required tools for the cloudflare component",
+    RunE: func(cmd *cobra.Command, args []string) error {
+        dryRun, _ := cmd.Flags().GetBool("dry-run")
+        verbose, _ := cmd.Flags().GetBool("verbose")
+
+        cfg, err := componentconfig.LoadComponent("cloudflare")
+        if err != nil {
+            return fmt.Errorf("failed to load config: %w", err)
+        }
+
+        inst := installer.New(verbose)
+        plan, err := inst.Plan(cfg)
+        if err != nil {
+            return fmt.Errorf("failed to plan installation: %w", err)
+        }
+
+        if dryRun {
+            plan.Print()
+            return nil
+        }
+
+        result := inst.Install(plan)
+        result.Print()
+        return nil
+    },
 }
+installCmd.Flags().Bool("dry-run", false, "Show what would be installed")
+installCmd.Flags().Bool("verbose", false, "Show detailed output")
 ```
 
-Then add to the appropriate section (dev-tools, cloud-tools, ai-tools, etc.) or create a new component-specific install option.
+## Example Workflow
 
-### 7. Report Summary
+```bash
+# Check what would be installed
+$ acorn cf install --dry-run
 
-```
-Component: <name>
-Category: <category>
-Required tools: <list>
-Status: <installed/missing>
+Installation Plan: cloudflare
+=============================
+Platform: darwin (brew)
 
-Installation options:
-- brew: <packages>
-- apt: <packages>
-- post_install: <script if any>
+Tools to install:
+  1. wrangler (npm) - CloudFlare Workers CLI
+     Requires: node:npm
 
-Installer: <updated/not updated>
-```
+Prerequisites:
+  - node (already installed)
+  - npm (already installed)
 
-## Example Output
+# Actually install
+$ acorn cf install
 
-```
-Component: cloudflare
-Category: cloud
-Description: CloudFlare CLI (wrangler) integration
+Installing cloudflare tools...
+  ✓ wrangler installed via npm
 
-Required Tools:
-  - wrangler: NOT INSTALLED
+Post-install:
+  Run 'wrangler login' to authenticate with CloudFlare
 
-Setup Configuration:
-  - brew: [] (npm-based, use: npm install -g wrangler)
-  - apt: []
-
-Recommended Installation:
-  npm install -g wrangler
-
-Would you like to:
-1. Install wrangler now (npm install -g wrangler)
-2. Add to installer under cloud tools
-3. Skip
+Installation complete!
 ```

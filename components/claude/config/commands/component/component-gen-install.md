@@ -1,5 +1,5 @@
 ---
-description: Generate installation scripts for a component
+description: Generate installation config for a component
 argument_hints:
   - tmux
   - go
@@ -8,186 +8,186 @@ argument_hints:
   - kubernetes
 ---
 
-Generate install scripts for: $ARGUMENTS
+Generate `install:` section in config.yaml for: $ARGUMENTS
 
 ## Instructions
 
-Create installation scripts and package manifests for the component.
+Add declarative installation configuration to a component's config.yaml file.
 
-### 1. Research Package Names
+### 1. Find Component Config
 
-Identify the correct package names for each package manager:
+Read `internal/componentconfig/config/$ARGUMENTS/config.yaml`
 
-| Manager | Example |
-|---------|---------|
-| brew | `tmux`, `go`, `python@3.11`, `node` |
-| apt | `tmux`, `golang-go`, `python3`, `nodejs` |
-| dnf | Similar to apt, may vary |
-| pacman | `tmux`, `go`, `python`, `nodejs` |
+### 2. Identify Required Tools
 
-### 2. Generate install/brew.yaml
+Determine what tools this component needs:
+
+| Component | Tools |
+|-----------|-------|
+| tmux | tmux, tpm (plugin manager) |
+| go | go |
+| python | python3, uv (package manager) |
+| node | node, nvm, pnpm |
+| kubernetes | kubectl, helm, k9s |
+| ollama | ollama |
+| neovim | nvim |
+| fzf | fzf |
+
+### 3. Research Package Names by Platform
+
+For each tool, determine installation methods:
+
+| Install Type | Use For | Example |
+|--------------|---------|---------|
+| brew | macOS packages | `type: brew` |
+| apt | Debian/Ubuntu | `type: apt` |
+| npm | Node packages | `type: npm`, `global: true` |
+| pip | Python packages | `type: pip`, `global: true` |
+| go | Go binaries | `type: go`, `package: github.com/...` |
+| curl | Script installers | `type: curl`, `url: https://...` |
+
+### 4. Generate install: Section
+
+Add to the component's config.yaml:
 
 ```yaml
-# Homebrew packages for $ARGUMENTS
-formulas:
-  - name: <package>
-    description: <what it provides>
-
-casks: []  # Desktop apps if needed
-
-taps: []   # Custom taps if needed
+# Installation configuration
+install:
+  tools:
+    - name: <tool-name>
+      description: <what it does>
+      check: "command -v <tool-name>"
+      methods:
+        darwin:
+          type: brew
+          package: <brew-package-name>
+        linux:
+          type: apt
+          package: <apt-package-name>
+      requires:
+        - <prerequisite-component:tool>  # e.g., node:npm
+      post_install:
+        message: "Run '<command>' to complete setup"
 ```
 
-### 3. Generate install/apt.yaml
+### 5. Schema Reference
+
+**ToolInstall fields:**
+- `name` (required): Tool/binary name
+- `description`: Human-readable description
+- `check` (required): Command to verify installation (e.g., `command -v go`)
+- `methods` (required): Platform-specific install methods
+- `requires`: Prerequisites (format: `component:tool` or just `tool`)
+- `post_install.message`: Message to show after install
+- `post_install.commands`: Commands to run after install
+
+**InstallMethod fields:**
+- `type` (required): brew, apt, npm, pip, go, curl, binary
+- `package`: Package name if different from tool name
+- `global`: For npm/pip, install globally (default: false)
+- `url`: For curl type, the script URL
+- `args`: Additional install arguments
+
+### 6. Example: Node Component
 
 ```yaml
-# APT packages for $ARGUMENTS
-packages:
-  - name: <package>
-    description: <what it provides>
+install:
+  tools:
+    - name: node
+      description: Node.js runtime (includes npm)
+      check: "command -v node"
+      methods:
+        darwin:
+          type: brew
+          package: node
+        linux:
+          type: apt
+          package: nodejs
 
-ppas: []  # Additional PPAs if needed
+    - name: pnpm
+      description: Fast, disk space efficient package manager
+      check: "command -v pnpm"
+      methods:
+        darwin:
+          type: npm
+          package: pnpm
+          global: true
+        linux:
+          type: npm
+          package: pnpm
+          global: true
+      requires:
+        - node:npm
 ```
 
-### 4. Generate install/install.sh
+### 7. Example: Go Component
+
+```yaml
+install:
+  tools:
+    - name: go
+      description: Go programming language
+      check: "command -v go"
+      methods:
+        darwin:
+          type: brew
+          package: go
+        linux:
+          type: apt
+          package: golang-go
+      post_install:
+        message: "Ensure GOPATH is set in your shell config"
+```
+
+### 8. Test Installation
+
+After adding the config, test with:
 
 ```bash
-#!/bin/bash
-# Installation script for $ARGUMENTS
-# Supports: macOS (brew), Ubuntu/Debian (apt), Fedora (dnf), Arch (pacman)
-
-set -e
-
-COMPONENT="$ARGUMENTS"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Color output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
-
-# Detect package manager
-detect_package_manager() {
-    if command -v brew &>/dev/null; then
-        echo "brew"
-    elif command -v apt-get &>/dev/null; then
-        echo "apt"
-    elif command -v dnf &>/dev/null; then
-        echo "dnf"
-    elif command -v pacman &>/dev/null; then
-        echo "pacman"
-    else
-        error "No supported package manager found"
-    fi
-}
-
-# Install with Homebrew
-install_brew() {
-    info "Installing with Homebrew..."
-    # Read from brew.yaml if yq is available
-    if command -v yq &>/dev/null && [ -f "$SCRIPT_DIR/brew.yaml" ]; then
-        yq -r '.formulas[].name' "$SCRIPT_DIR/brew.yaml" | while read -r pkg; do
-            brew install "$pkg" || warn "Failed to install $pkg"
-        done
-    else
-        # Fallback to hardcoded list
-        brew install <package> || warn "Failed to install <package>"
-    fi
-}
-
-# Install with APT
-install_apt() {
-    info "Installing with APT..."
-    sudo apt-get update
-    if command -v yq &>/dev/null && [ -f "$SCRIPT_DIR/apt.yaml" ]; then
-        yq -r '.packages[].name' "$SCRIPT_DIR/apt.yaml" | while read -r pkg; do
-            sudo apt-get install -y "$pkg" || warn "Failed to install $pkg"
-        done
-    else
-        sudo apt-get install -y <package> || warn "Failed to install <package>"
-    fi
-}
-
-# Install with DNF
-install_dnf() {
-    info "Installing with DNF..."
-    if command -v yq &>/dev/null && [ -f "$SCRIPT_DIR/apt.yaml" ]; then
-        yq -r '.packages[].name' "$SCRIPT_DIR/apt.yaml" | while read -r pkg; do
-            sudo dnf install -y "$pkg" || warn "Failed to install $pkg"
-        done
-    else
-        sudo dnf install -y <package> || warn "Failed to install <package>"
-    fi
-}
-
-# Install with Pacman
-install_pacman() {
-    info "Installing with Pacman..."
-    sudo pacman -S --noconfirm <package> || warn "Failed to install <package>"
-}
-
-# Post-install configuration
-post_install() {
-    info "Running post-install configuration..."
-    # Add any post-install steps here
-    # e.g., creating config directories, linking files
-}
-
-# Main
-main() {
-    info "Installing $COMPONENT..."
-
-    PM=$(detect_package_manager)
-    info "Detected package manager: $PM"
-
-    case "$PM" in
-        brew)   install_brew ;;
-        apt)    install_apt ;;
-        dnf)    install_dnf ;;
-        pacman) install_pacman ;;
-    esac
-
-    post_install
-
-    info "$COMPONENT installation complete!"
-}
-
-main "$@"
+acorn $ARGUMENTS install --dry-run
 ```
 
-### 5. Add Tool-Specific Post-Install
+This shows the installation plan without executing anything.
 
-For each component, add appropriate post-install steps:
+### 9. Report
 
-| Component | Post-Install Steps |
-|-----------|-------------------|
-| tmux | Install TPM, create config directory |
-| go | Set GOPATH, create go directories |
-| python | Create virtualenv directory, install pip |
-| node | Install NVM, configure npmrc |
-
-### 6. Report
-
-Output:
 ```
-Generated Install Scripts: $ARGUMENTS
-=====================================
+Generated Installation Config: $ARGUMENTS
+==========================================
 
-Created:
-  - components/$ARGUMENTS/install/brew.yaml
-  - components/$ARGUMENTS/install/apt.yaml
-  - components/$ARGUMENTS/install/install.sh
+Config file: internal/componentconfig/config/$ARGUMENTS/config.yaml
 
-Packages:
-  - brew: <package1>, <package2>
-  - apt: <package1>, <package2>
+Tools configured:
+  - <tool1>: <methods>
+  - <tool2>: <methods>
 
-Post-install steps:
-  - <step1>
-  - <step2>
+Prerequisites:
+  - <any requires entries>
+
+Test command:
+  acorn $ARGUMENTS install --dry-run
+
+Full install:
+  acorn $ARGUMENTS install
 ```
+
+## CLI Usage
+
+After configuration, users can install with:
+
+```bash
+# Preview what will be installed
+acorn <component> install --dry-run
+
+# Install all tools
+acorn <component> install
+
+# Verbose output
+acorn <component> install --verbose
+```
+
+The installer automatically:
+- Detects platform (darwin/linux)
+- Resolves prerequisites recursively
+- Skips already-installed tools
+- Shows post-install messages

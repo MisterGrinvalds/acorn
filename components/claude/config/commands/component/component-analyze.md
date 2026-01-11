@@ -73,10 +73,16 @@ ls components/claude/config/commands/$ARGUMENTS-*.md 2>/dev/null
 ls components/$ARGUMENTS/shell/*.sh 2>/dev/null
 ```
 
-### 5. Check Existing Install Scripts
+### 5. Check Installation Config
+
+Check if config.yaml has an `install:` section:
 
 ```bash
-ls components/$ARGUMENTS/install/*.{sh,yaml} 2>/dev/null
+# Check for install: section in config.yaml
+grep -A5 "^install:" internal/componentconfig/config/$ARGUMENTS/config.yaml 2>/dev/null
+
+# Or test with acorn CLI
+acorn $ARGUMENTS install --dry-run 2>/dev/null
 ```
 
 ### 6. Present Summary Table
@@ -123,10 +129,10 @@ Existing Files:
     - Agent         [EXISTS/MISSING/LEGACY]
     - Commands      N found [COMPONENT/LEGACY]
 
-  Install:
-    - install.sh    [EXISTS/MISSING]
-    - brew.yaml     [EXISTS/MISSING]
-    - apt.yaml      [EXISTS/MISSING]
+  Installation:
+    - install: section in config.yaml  [EXISTS/MISSING]
+    - Tools configured: N
+    - Test: acorn $ARGUMENTS install --dry-run
 
   Config:
     - <tool-specific files>
