@@ -59,9 +59,43 @@ func NewManager(dryRun bool) *Manager {
 }
 
 // ExpandPath expands environment variables in a path.
+// Supports shell-style ${VAR:-default} syntax.
 func ExpandPath(path string) string {
-	// Handle ${VAR} syntax
-	result := os.Expand(path, func(key string) string {
+	// Handle ${VAR:-default} syntax first
+	result := path
+	for {
+		start := strings.Index(result, "${")
+		if start == -1 {
+			break
+		}
+		end := strings.Index(result[start:], "}")
+		if end == -1 {
+			break
+		}
+		end += start
+
+		// Extract the variable expression
+		expr := result[start+2 : end]
+
+		// Check for :- default syntax
+		var value string
+		if idx := strings.Index(expr, ":-"); idx != -1 {
+			varName := expr[:idx]
+			defaultVal := expr[idx+2:]
+			value = os.Getenv(varName)
+			if value == "" {
+				value = defaultVal
+			}
+		} else {
+			value = os.Getenv(expr)
+		}
+
+		// Replace the variable with its value
+		result = result[:start] + value + result[end+1:]
+	}
+
+	// Handle remaining $VAR syntax
+	result = os.Expand(result, func(key string) string {
 		return os.Getenv(key)
 	})
 

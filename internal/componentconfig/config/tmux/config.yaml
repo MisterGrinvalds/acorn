@@ -14,6 +14,7 @@ env:
   SMUG_CONFIG_DIR: "${XDG_CONFIG_HOME:-$HOME/.config}/smug"
   TMUX_REPOS_DIR: "${HOME}/Repos"
   # Tmux window/status colors (Catppuccin Mocha)
+  TMUX_FG_DEFAULT: "#bac2de"
   TMUX_FG_PROCESSING: "#f9e2af"
   TMUX_FG_WAITING: "#fab387"
   TMUX_FG_DONE: "#a6e3a1"
@@ -21,6 +22,7 @@ env:
   TMUX_BG_INACTIVE: "#45475a"
   TMUX_BG_ACTIVE: "#f5c2e7"
   # Claude-specific aliases (reference base TMUX colors)
+  CLAUDE_TMUX_FG_DEFAULT: "${TMUX_FG_DEFAULT}"
   CLAUDE_TMUX_FG_PROCESSING: "${TMUX_FG_PROCESSING}"
   CLAUDE_TMUX_FG_WAITING: "${TMUX_FG_WAITING}"
   CLAUDE_TMUX_FG_DONE: "${TMUX_FG_DONE}"
@@ -393,8 +395,11 @@ files:
 
       set_ga:
         terminal-overrides: '",xterm-256color:Tc,xterm-ghostty:Tc"'
-        update-environment: TERM
-        update-environment: TERM_PROGRAM
+
+      # Append server options (list format for multiple values)
+      set_as:
+        - "update-environment TERM"
+        - "update-environment TERM_PROGRAM"
 
       terminal_features:
         - ",xterm-256color:mouse"

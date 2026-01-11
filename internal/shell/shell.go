@@ -398,9 +398,9 @@ func (m *Manager) Inject() (*InjectResult, error) {
 		return result, nil
 	}
 
-	// Create injection block
-	injection := fmt.Sprintf("\n%s\n[ -f \"%s\" ] && . \"%s\"\n%s\n",
-		InjectMarker, entrypointPath, entrypointPath, InjectMarkerEnd)
+	// Create injection block with ACORN_CONFIG_DIR variable
+	injection := fmt.Sprintf("\n%s\nexport ACORN_CONFIG_DIR=\"%s\"\n[ -f \"$ACORN_CONFIG_DIR/shell.sh\" ] && . \"$ACORN_CONFIG_DIR/shell.sh\"\n%s\n",
+		InjectMarker, m.config.AcornDir, InjectMarkerEnd)
 	result.InjectionBlock = injection
 
 	if m.config.DryRun {
