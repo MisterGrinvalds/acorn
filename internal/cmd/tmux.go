@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mistergrinvalds/acorn/internal/installer"
 	"github.com/mistergrinvalds/acorn/internal/output"
 	tmuxpkg "github.com/mistergrinvalds/acorn/internal/tmux"
 	"github.com/spf13/cobra"
@@ -254,11 +255,28 @@ Examples:
 	RunE: runTmuxSmugSync,
 }
 
+// tmuxInstallCmd installs tmux component tools
+var tmuxInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install tmux tools",
+	Long: `Install required tools for the tmux component.
+
+Installs tmux, smug (session manager), and fzf (fuzzy finder).
+Uses brew on macOS and apt on Linux.
+
+Examples:
+  acorn tmux install           # Install all tmux tools
+  acorn tmux install --dry-run # Show what would be installed
+  acorn tmux install -v        # Verbose output`,
+	RunE: runTmuxInstall,
+}
+
 func init() {
 	rootCmd.AddCommand(tmuxCmd)
 
 	// Main subcommands
 	tmuxCmd.AddCommand(tmuxInfoCmd)
+	tmuxCmd.AddCommand(tmuxInstallCmd)
 	tmuxCmd.AddCommand(tmuxSessionCmd)
 	tmuxCmd.AddCommand(tmuxTPMCmd)
 	tmuxCmd.AddCommand(tmuxConfigCmd)
@@ -611,5 +629,87 @@ func runTmuxSmugSync(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintf(os.Stdout, "\n%s Sync complete!\n", output.Success("✓"))
+	return nil
+}
+
+func runTmuxInstall(cmd *cobra.Command, args []string) error {
+	inst := installer.NewInstaller(
+		installer.WithDryRun(tmuxDryRun),
+		installer.WithVerbose(tmuxVerbose),
+	)
+
+	// Show platform info
+	platform := inst.GetPlatform()
+	if tmuxVerbose {
+		fmt.Fprintf(os.Stdout, "Platform: %s (%s)\n\n", platform.OS, platform.PackageManager)
+	}
+
+	// Get the plan first
+	plan, err := inst.Plan(cmd.Context(), "tmux")
+	if err != nil {
+		return err
+	}
+
+	// Show what will be installed
+	if tmuxDryRun {
+		fmt.Fprintf(os.Stdout, "%s\n", output.Info("Tmux Installation Plan"))
+		fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Fprintf(os.Stdout, "Platform: %s (%s)\n\n", platform.OS, platform.PackageManager)
+	}
+
+	pending := plan.PendingTools()
+	if len(pending) == 0 {
+		fmt.Fprintf(os.Stdout, "%s All tools already installed\n", output.Success("✓"))
+		return nil
+	}
+
+	// Show prerequisites
+	if len(plan.Prerequisites) > 0 {
+		fmt.Fprintln(os.Stdout, "Prerequisites:")
+		for _, t := range plan.Prerequisites {
+			status := output.Warning("○")
+			suffix := ""
+			if t.AlreadyInstalled {
+				status = output.Success("✓")
+				suffix = " (installed)"
+			}
+			fmt.Fprintf(os.Stdout, "  %s %s%s\n", status, t.Name, suffix)
+		}
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Show tools
+	fmt.Fprintln(os.Stdout, "Tools:")
+	for _, t := range plan.Tools {
+		status := output.Warning("○")
+		suffix := ""
+		if t.AlreadyInstalled {
+			status = output.Success("✓")
+			suffix = " (installed)"
+		}
+		fmt.Fprintf(os.Stdout, "  %s %s - %s%s\n", status, t.Name, t.Description, suffix)
+	}
+
+	if tmuxDryRun {
+		fmt.Fprintln(os.Stdout, "\nRun without --dry-run to install.")
+		return nil
+	}
+
+	// Execute installation
+	fmt.Fprintln(os.Stdout, "\nInstalling...")
+	result, err := inst.Install(cmd.Context(), "tmux")
+	if err != nil {
+		return err
+	}
+
+	installed, skipped, failed := result.Summary()
+	if failed == 0 {
+		fmt.Fprintf(os.Stdout, "%s Installation complete (%d installed, %d skipped)\n",
+			output.Success("✓"), installed, skipped)
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Installation failed (%d installed, %d skipped, %d failed)\n",
+			output.Error("✗"), installed, skipped, failed)
+	}
+
 	return nil
 }

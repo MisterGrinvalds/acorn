@@ -280,3 +280,47 @@ shell_functions:
         # Reset to default Catppuccin Mocha style
         tmux set-window-option -t "$window_id" window-status-style "fg=#bac2de,bg=#45475a"
     fi
+
+# Installation configuration
+install:
+  tools:
+    - name: tmux
+      description: Terminal multiplexer
+      check: "command -v tmux"
+      methods:
+        darwin:
+          type: brew
+          package: tmux
+        linux:
+          type: apt
+          package: tmux
+      post_install:
+        message: "Run 'acorn tmux tpm install' to install TPM plugin manager"
+
+    - name: smug
+      description: Tmux session manager
+      check: "command -v smug"
+      methods:
+        darwin:
+          type: go
+          package: github.com/ivaaaan/smug@latest
+        linux:
+          type: go
+          package: github.com/ivaaaan/smug@latest
+      requires:
+        - go:go
+      post_install:
+        message: "Run 'smug_start' to launch a session"
+
+    - name: fzf
+      description: Fuzzy finder for session selection
+      check: "command -v fzf"
+      methods:
+        darwin:
+          type: brew
+          package: fzf
+        linux:
+          type: apt
+          package: fzf
+      post_install:
+        message: "fzf enables tswitch, tkill, and smug_start selection"
