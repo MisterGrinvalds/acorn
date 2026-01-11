@@ -7,24 +7,40 @@ import (
 
 // RegisterAllComponents registers all known components with the manager.
 func RegisterAllComponents(m *Manager) {
+	// Core components (load first for dependencies)
+	registerComponentWithFiles(m, "theme")
+
+	// Development tools
 	registerComponentWithFiles(m, "go")
-	registerComponentWithFiles(m, "vscode")
-	registerComponentWithFiles(m, "tools")
 	registerComponentWithFiles(m, "python")
+	registerComponentWithFiles(m, "node")
+	registerComponentWithFiles(m, "vscode")
+	registerComponentWithFiles(m, "intellij")
+	registerComponentWithFiles(m, "neovim")
+
+	// Terminal and shell
 	registerComponentWithFiles(m, "tmux")
-	registerComponentWithFiles(m, "claude")
-	registerComponentWithFiles(m, "cloudflare")
-	registerComponentWithFiles(m, "secrets")
-	registerComponentWithFiles(m, "database")
 	registerComponentWithFiles(m, "fzf")
 	registerComponentWithFiles(m, "ghostty")
+	registerComponentWithFiles(m, "iterm2")
+
+	// Version control
 	registerComponentWithFiles(m, "git")
 	registerComponentWithFiles(m, "github")
-	registerComponentWithFiles(m, "huggingface")
+
+	// Cloud and infrastructure
+	registerComponentWithFiles(m, "cloudflare")
 	registerComponentWithFiles(m, "kubernetes")
-	registerComponentWithFiles(m, "neovim")
-	registerComponentWithFiles(m, "node")
+	registerComponentWithFiles(m, "database")
+
+	// AI and ML
+	registerComponentWithFiles(m, "claude")
+	registerComponentWithFiles(m, "huggingface")
 	registerComponentWithFiles(m, "ollama")
+
+	// Utilities
+	registerComponentWithFiles(m, "tools")
+	registerComponentWithFiles(m, "secrets")
 }
 
 // registerComponentWithFiles loads and registers a component with its file specs.
