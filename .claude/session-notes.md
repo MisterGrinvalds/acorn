@@ -1,94 +1,127 @@
-# Component Config File Generation System
+# Current Session Notes
 
-Last updated: 2026-01-06
+**Last Updated:** 2026-01-10
+**Branch:** feat/claude-tool-agents-commands
 
-## Current Focus
+## Recent Sessions
 
-Adding generic config file generation support to acorn components via a new `files:` array in config.yaml.
+### Session 2026-01-10-0130 ✅ COMPLETE
+**Installation System Implementation**
+- Full installer package with platform detection
+- Recursive prerequisite resolution with cycle detection
+- 40+ passing tests (installer, platform, resolver, methods)
+- End-to-end verified: `acorn cf install --dry-run` works
+- Session summary: `SESSION-2026-01-10-0130.md`
 
-## Session Summary
-
-See: `SESSION-2026-01-06-1854.md` for full details.
-
-**Accomplished:**
+### Session 2026-01-06-1854 ✅ COMPLETE
+**Component Config File Generation System**
 - Created `/component:config-files-add` Claude command
 - Designed `files:` array schema for multi-format config generation
-- Analyzed Ghostty component structure
-- Explored existing component config system
+- Implemented Ghostty, JSON, YAML, TOML, INI writers
+- Full test coverage (49 tests passing)
+- Session summary: `SESSION-2026-01-06-1854.md`
 
-**Key Decisions:**
-- No comment preservation (values only)
-- config.yaml wins on merge
-- One format at a time (start with Ghostty)
+## Active Work
 
-## Next Session Priorities
+None - session ending with cleanup
 
-### 1. Schema Extension (High Priority)
-- Add FileConfig and FieldSchema types to `internal/componentconfig/schema.go`
-- Add Files field to BaseConfig
-- Update loader MergeConfigs to handle Files
+## Unstaged Changes Ready to Commit
 
-### 2. Ghostty Format Writer (High Priority)
-- Create `internal/configfile/` package
-- Implement Writer interface
-- Create GhosttyWriter with multi-value key support
+**New Package:**
+- `internal/installer/` - Complete installation system
+  - installer.go - Main installer with Plan/Install
+  - platform.go - Platform detection (OS, distro, package manager)
+  - resolver.go - Recursive prerequisite resolution
+  - methods.go - Method executors (brew, apt, npm, go, curl)
+  - types.go - Core types (Platform, InstallPlan, InstallResult)
+  - + 4 test files (40 tests, all passing)
 
-### 3. Integration (High Priority)
-- Update `internal/shell/shell.go` to call file generation
-- Create `components/ghostty/config.yaml` with files section
-- Test end-to-end
+**Modified Files:**
+- `internal/cmd/cloudflare.go` - Added `install` subcommand
+- `internal/componentconfig/schema.go` - Added InstallConfig types
+- `internal/componentconfig/loader.go` - Added mergeInstall function
+- `internal/componentconfig/config/cloudflare/config.yaml` - Added install section
+- `internal/componentconfig/config/node/config.yaml` - Added install section
 
-## Design Specification
+**New Files:**
+- `SESSION-2026-01-10-0130.md` - Session summary
 
-### files: Array Schema
+**Archived:**
+- `.claude/archive/2026-01/install-system/plan.md`
 
-```yaml
-files:
-  - target: "${XDG_CONFIG_HOME}/ghostty/config"
-    format: ghostty
-    schema:
-      theme: { type: string, default: "Catppuccin Mocha" }
-      font-size: { type: int, default: 14 }
-      keybind: { type: list, items: string }
-    values:
-      theme: "Catppuccin Mocha"
-      font-size: 14
-      keybind:
-        - "super+d=new_split:right"
+## Installation System Feature Overview
+
+Allows components to declare installation requirements in config.yaml instead of shell scripts.
+
+**Key Features:**
+- Platform-aware method selection (auto-select brew/apt/npm based on OS)
+- Recursive prerequisite resolution (wrangler → node:npm)
+- Dry-run mode for safe testing
+- Support for: brew, apt, npm, go, curl installers
+
+**Usage:**
+```bash
+acorn <component> install           # Install component tools
+acorn <component> install --dry-run # Preview what would be installed
+acorn <component> install --verbose # Show detailed output
 ```
 
-### Supported Formats
+**Example config.yaml:**
+```yaml
+install:
+  tools:
+    - name: wrangler
+      check: "command -v wrangler"
+      methods:
+        darwin:
+          type: npm
+          package: wrangler
+          global: true
+      requires:
+        - node:npm
+      post_install:
+        message: "Run 'wrangler login' to authenticate"
+```
 
-| Format | Output Style | Implementation |
-|--------|-------------|----------------|
-| ghostty | `key = value` | Priority 1 |
-| json | `{"key": "value"}` | Future |
-| yaml | `key: value` | Future |
-| toml | `key = "value"` | Future |
-| ini | `[section]\nkey=value` | Future |
+## Potential Next Actions
 
-## Files to Create
+1. **Commit Installation System** - Feature complete and tested, ready to commit
+2. **Cleanup Old Scripts** - Delete `components/cloudflare/install/install.sh`
+3. **Expand Installation Configs** - Add install sections to other components (tmux, neovim, git)
+4. **New Feature** - Start work on something new (user's choice)
 
-**New:**
-- `internal/configfile/writer.go` - Writer interface
-- `internal/configfile/ghostty.go` - Ghostty writer
-- `internal/configfile/ghostty_reader.go` - Ghostty reader
-- `internal/configfile/manager.go` - File processing
+## TODO List Status
 
-**Modified:**
-- `internal/componentconfig/schema.go` - Add types
-- `internal/componentconfig/loader.go` - Handle Files
-- `internal/shell/shell.go` - Call generation
-- `components/ghostty/config.yaml` - Add files section
+All tasks complete - TODO list cleared after installation system finished.
 
-## Resources
+## Archive Structure
 
-- Command: `components/claude/config/commands/component/component-config-files-add.md`
-- Plan: `.claude/plans/reactive-mixing-hare.md`
-- Ghostty docs: https://ghostty.org/docs/config
+```
+.claude/archive/
+└── 2026-01/
+    └── install-system/
+        └── plan.md (archived completed feature)
+```
 
-## Notes
+## Active Plans
 
-- Use `/component:config-files-add ghostty` to start implementation
-- Ghostty will be first component to use new system
-- Framework is generic and reusable for all future components
+No active plans - previous plans archived in `.claude/archive/2026-01/`
+
+## Context for Resume
+
+Two major features implemented on this branch:
+1. ✅ **Config File Generation** - Generic file generation via config.yaml `files:` section
+2. ✅ **Installation System** - Declarative tool installation via config.yaml `install:` section
+
+Both features are complete, tested, and ready for use. Changes unstaged but ready to commit.
+
+## Git Status
+
+- Branch: `feat/claude-tool-agents-commands`
+- Ahead of origin by 1 commit
+- Unstaged changes: Installation system files
+- Ready to commit: Yes
+
+---
+
+**Session End:** All tasks complete. Feature ready for commit and use.
