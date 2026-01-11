@@ -12,6 +12,21 @@ env:
   SMUG_REPO: "https://github.com/MisterGrinvalds/fmux.git"
   SMUG_REPO_DIR: "${XDG_DATA_HOME:-$HOME/.local/share}/smug-sessions"
   SMUG_CONFIG_DIR: "${XDG_CONFIG_HOME:-$HOME/.config}/smug"
+  TMUX_REPOS_DIR: "${HOME}/Repos"
+  # Tmux window/status colors (Catppuccin Mocha)
+  TMUX_FG_PROCESSING: "#f9e2af"
+  TMUX_FG_WAITING: "#fab387"
+  TMUX_FG_DONE: "#a6e3a1"
+  TMUX_FG_ERROR: "#f38ba8"
+  TMUX_BG_INACTIVE: "#45475a"
+  TMUX_BG_ACTIVE: "#f5c2e7"
+  # Claude-specific aliases (reference base TMUX colors)
+  CLAUDE_TMUX_FG_PROCESSING: "${TMUX_FG_PROCESSING}"
+  CLAUDE_TMUX_FG_WAITING: "${TMUX_FG_WAITING}"
+  CLAUDE_TMUX_FG_DONE: "${TMUX_FG_DONE}"
+  CLAUDE_TMUX_FG_ERROR: "${TMUX_FG_ERROR}"
+  CLAUDE_TMUX_BG_INACTIVE: "${TMUX_BG_INACTIVE}"
+  CLAUDE_TMUX_BG_ACTIVE: "${TMUX_BG_ACTIVE}"
 
 # Shell aliases
 aliases:
@@ -235,7 +250,7 @@ shell_functions:
     fi
     ${EDITOR:-vim} "$config_file"
 
-  # Window alert (red)
+  # Window alert (error/high priority - red)
   tmux_alert: |
     if [ -z "$TMUX" ]; then
         echo "Error: Not in a tmux session"
@@ -243,8 +258,10 @@ shell_functions:
     fi
     local window_id
     window_id=$(tmux display-message -p '#{window_id}')
+    local fg="${TMUX_FG_ERROR:-#f38ba8}"
+    local bg="${TMUX_BG_INACTIVE:-#45475a}"
     tmux set-window-option -t "$window_id" @alert 1
-    tmux set-window-option -t "$window_id" window-status-style "fg=#f38ba8,bold,bg=#45475a"
+    tmux set-window-option -t "$window_id" window-status-style "fg=$fg,bold,bg=$bg"
     echo "Alert set for window $window_id"
 
   # Window alert with custom color
@@ -253,22 +270,36 @@ shell_functions:
         echo "Error: Not in a tmux session"
         return 1
     fi
-    local color="${1:-#f38ba8}"
+    local color="${1:-${TMUX_FG_ERROR:-#f38ba8}}"
+    local bg="${TMUX_BG_INACTIVE:-#45475a}"
     local window_id
     window_id=$(tmux display-message -p '#{window_id}')
     tmux set-window-option -t "$window_id" @alert 1
-    tmux set-window-option -t "$window_id" window-status-style "fg=$color,bold,bg=#45475a"
+    tmux set-window-option -t "$window_id" window-status-style "fg=$color,bold,bg=$bg"
     echo "Alert set with color: $color"
 
   # Priority alert shortcuts
   tmux_alert_high: |
-    tmux_alert_color "#f38ba8"
+    tmux_alert_color "${TMUX_FG_ERROR:-#f38ba8}"
 
   tmux_alert_medium: |
-    tmux_alert_color "#f9e2af"
+    tmux_alert_color "${TMUX_FG_PROCESSING:-#f9e2af}"
 
   tmux_alert_low: |
-    tmux_alert_color "#94e2d5"
+    tmux_alert_color "${TMUX_FG_DONE:-#a6e3a1}"
+
+  # Status-based alerts for Claude/processing workflows
+  tmux_alert_processing: |
+    tmux_alert_color "${TMUX_FG_PROCESSING:-#f9e2af}"
+
+  tmux_alert_waiting: |
+    tmux_alert_color "${TMUX_FG_WAITING:-#fab387}"
+
+  tmux_alert_done: |
+    tmux_alert_color "${TMUX_FG_DONE:-#a6e3a1}"
+
+  tmux_alert_error: |
+    tmux_alert_color "${TMUX_FG_ERROR:-#f38ba8}"
 
   # Clear window alert (called by tmux hook: after-select-window)
   tmux_clear_alert: |
@@ -277,9 +308,179 @@ shell_functions:
     alert_flag=$(tmux show-window-options -t "$window_id" -v @alert 2>/dev/null)
     if [ "$alert_flag" = "1" ]; then
         tmux set-window-option -t "$window_id" @alert 0
-        # Reset to default Catppuccin Mocha style
-        tmux set-window-option -t "$window_id" window-status-style "fg=#bac2de,bg=#45475a"
+        local bg="${TMUX_BG_INACTIVE:-#45475a}"
+        # Reset to default style
+        tmux set-window-option -t "$window_id" window-status-style "fg=#bac2de,bg=$bg"
     fi
+
+  # Open a new tmux window in a repo selected via fzf
+  trepo: |
+    if [ -z "$TMUX" ]; then
+        echo "Error: Not in a tmux session"
+        return 1
+    fi
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "fzf is required for trepo"
+        return 1
+    fi
+    local repos_dir="${TMUX_REPOS_DIR:-$HOME/Repos}"
+    local max_depth="${1:-4}"
+    if [ ! -d "$repos_dir" ]; then
+        echo "Repos directory not found: $repos_dir"
+        echo "Set TMUX_REPOS_DIR to your repos base directory"
+        return 1
+    fi
+    local repo
+    repo=$(find "$repos_dir" -maxdepth "$max_depth" -type d -name ".git" 2>/dev/null | \
+        sed 's|/\.git$||' | \
+        sed "s|^$repos_dir/||" | \
+        sort | \
+        fzf --prompt="Open repo: " --preview "ls -la $repos_dir/{}")
+    if [ -n "$repo" ]; then
+        local full_path="$repos_dir/$repo"
+        local window_name
+        window_name=$(basename "$repo")
+        tmux new-window -n "$window_name" -c "$full_path"
+        echo "Opened window '$window_name' in $full_path"
+    fi
+
+# Config file generation
+files:
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf"
+    format: tmux
+    values:
+      # General Settings
+      set_g:
+        default-terminal: '"tmux-256color"'
+        mouse: true
+        base-index: 1
+        pane-base-index: 1
+        renumber-windows: true
+        history-limit: 50000
+        monitor-activity: true
+        visual-activity: false
+        focus-events: true
+        allow-passthrough: true
+        mode-keys: vi
+        status: true
+        status-interval: 1
+        status-position: bottom
+        status-justify: left
+        # Catppuccin Mocha theme
+        status-style: '"bg=#1e1e2e,fg=#cdd6f4"'
+        status-left-length: 60
+        status-left: '"#{?client_prefix,#[bg=#f38ba8 fg=#1e1e2e bold] P ,#[bg=#89b4fa fg=#1e1e2e bold] #S } "'
+        status-right-length: 100
+        status-right: '"#[fg=#45475a]#[fg=#cdd6f4,bg=#45475a] %Y-%m-%d  %H:%M #[fg=#89b4fa,bg=#45475a]#[fg=#1e1e2e,bg=#89b4fa,bold] #h "'
+        window-status-format: '"#[fg=#45475a,bg=#1e1e2e]#[fg=#bac2de,bg=#45475a] #I  #W #[fg=#45475a,bg=#1e1e2e]"'
+        window-status-current-format: '"#[fg=#f5c2e7,bg=#1e1e2e]#[bold,fg=#1e1e2e,bg=#f5c2e7] #I  #W #[nobold,fg=#f5c2e7,bg=#1e1e2e]"'
+        pane-border-style: '"fg=#45475a"'
+        pane-active-border-style: '"fg=#89b4fa"'
+        message-style: '"bg=#313244,fg=#cdd6f4"'
+        message-command-style: '"bg=#313244,fg=#cdd6f4"'
+        mode-style: '"bg=#45475a,fg=#cdd6f4"'
+        clock-mode-colour: '"#89b4fa"'
+        # Prefix keys
+        prefix: C-b
+        prefix2: C-a
+
+      set_s:
+        escape-time: 2
+        extended-keys: true
+
+      set_w:
+        pane-base-index: 1
+
+      set_ga:
+        terminal-overrides: '",xterm-256color:Tc,xterm-ghostty:Tc"'
+        update-environment: TERM
+        update-environment: TERM_PROGRAM
+
+      terminal_features:
+        - ",xterm-256color:mouse"
+        - ",xterm-ghostty:mouse"
+        - "xterm*:extkeys"
+
+      unbind:
+        - '"'
+        - "%"
+
+      unbind_n:
+        - C-r
+
+      bind:
+        C-a: send-prefix
+        C-b: send-prefix -2
+        r: 'source-file ~/.config/tmux/tmux.conf \; display "Config reloaded!"'
+        "|": 'split-window -h -c "#{pane_current_path}"'
+        "-": 'split-window -v -c "#{pane_current_path}"'
+        v: 'split-window -h -c "#{pane_current_path}"'
+        s: 'split-window -v -c "#{pane_current_path}"'
+        c: 'new-window -c "#{pane_current_path}"'
+        h: select-pane -L
+        j: select-pane -D
+        k: select-pane -U
+        l: select-pane -R
+        x: kill-pane
+        X: kill-window
+        S: 'set-window-option synchronize-panes \; display "Sync #{?synchronize-panes,ON,OFF}"'
+        "[": copy-mode
+        "(": switch-client -p
+        ")": switch-client -n
+        w: choose-tree -Zs
+
+      bind_n:
+        S-Left: previous-window
+        S-Right: next-window
+
+      bind_r:
+        Tab: next-window
+        BTab: previous-window
+        H: resize-pane -L 5
+        J: resize-pane -D 5
+        K: resize-pane -U 5
+        L: resize-pane -R 5
+
+      bind_T:
+        root:
+          MouseDown1Pane: 'if-shell -F "#{mouse_any_flag}" "send-keys -M" "select-pane -t = \; send-keys -M"'
+          MouseDrag1Pane: 'if-shell -F "#{mouse_any_flag}" "send-keys -M" "select-pane -t = \; send-keys -M"'
+          DoubleClick1Pane: 'if-shell -F "#{mouse_any_flag}" "send-keys -M" "select-pane -t = \; copy-mode -H \; send-keys -X select-word"'
+          TripleClick1Pane: 'if-shell -F "#{mouse_any_flag}" "send-keys -M" "select-pane -t = \; copy-mode -H \; send-keys -X select-line"'
+        copy-mode-vi:
+          v: send-keys -X begin-selection
+          C-v: send-keys -X rectangle-toggle
+          y: send-keys -X copy-selection-and-cancel
+
+      raw:
+        - "# macOS clipboard integration"
+        - 'if-shell "uname | grep -q Darwin" {'
+        - '    bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "pbcopy"'
+        - '    bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"'
+        - "}"
+        - ""
+        - "# Linux clipboard integration (requires xclip)"
+        - 'if-shell "uname | grep -q Linux" {'
+        - '    bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "xclip -in -selection clipboard"'
+        - "}"
+
+      plugins:
+        - tmux-plugins/tpm
+        - tmux-plugins/tmux-sensible
+        - tmux-plugins/tmux-resurrect
+        - tmux-plugins/tmux-continuum
+        - 27medkamal/tmux-session-wizard
+
+      plugin_options:
+        resurrect-capture-pane-contents: "'on'"
+        continuum-restore: "'on'"
+        continuum-save-interval: "'10'"
+        session-wizard: "'T'"
+        session-wizard-height: 40
+        session-wizard-width: 80
+
+      run:
+        - "~/.config/tmux/plugins/tpm/tpm"
 
 # Installation configuration
 install:

@@ -141,3 +141,46 @@ if command -v fzf >/dev/null 2>&1; then
             ;;
     esac
 fi
+
+# =============================================================================
+# Line Editing Keybindings
+# =============================================================================
+# Word navigation (Alt+Left/Right), line navigation (Home/End)
+
+case "$CURRENT_SHELL" in
+    bash)
+        # Word navigation (Alt+Left/Right)
+        bind '"\e[1;3D": backward-word'
+        bind '"\e[1;3C": forward-word'
+        # Fallback sequences
+        bind '"\eb": backward-word'
+        bind '"\ef": forward-word'
+
+        # Line navigation (Home/End)
+        bind '"\e[H": beginning-of-line'
+        bind '"\e[F": end-of-line'
+        bind '"\e[1~": beginning-of-line'
+        bind '"\e[4~": end-of-line'
+
+        # Delete word (Alt+Backspace)
+        bind '"\e\x7f": backward-kill-word'
+        ;;
+
+    zsh)
+        # Word navigation (Alt+Left/Right)
+        bindkey '\e[1;3D' backward-word
+        bindkey '\e[1;3C' forward-word
+        # Fallback sequences
+        bindkey '\eb' backward-word
+        bindkey '\ef' forward-word
+
+        # Line navigation (Home/End)
+        bindkey '\e[H' beginning-of-line
+        bindkey '\e[F' end-of-line
+        bindkey '\e[1~' beginning-of-line
+        bindkey '\e[4~' end-of-line
+
+        # Delete word (Alt+Backspace)
+        bindkey '\e^?' backward-kill-word
+        ;;
+esac

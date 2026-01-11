@@ -1,0 +1,109 @@
+# IntelliJ IDEA component configuration
+name: intellij
+description: IntelliJ IDEA IDE configuration and helpers
+version: 1.0.0
+
+# Shell aliases
+aliases:
+  # Open current directory in IntelliJ
+  ij: "idea ."
+  # Open specific path
+  ijopen: "idea"
+  # Open with diff
+  ijdiff: "idea diff"
+  # Merge tool
+  ijmerge: "idea merge"
+
+# Wrapper functions that call acorn commands
+wrappers:
+  - name: intellij_plugins
+    command: "acorn intellij plugins"
+    usage: "intellij_plugins [list|install|export]"
+
+  - name: intellij_config
+    command: "acorn intellij config"
+    usage: "intellij_config [show|import|export]"
+
+# Shell functions (interactive)
+shell_functions:
+  # Install plugins from list
+  intellij_install_plugins: |
+    local plugin_list="${1:-$HOME/.config/dotfiles/components/intellij/config/plugins.txt}"
+
+    if [ ! -f "$plugin_list" ]; then
+        echo "Plugin list not found: $plugin_list"
+        return 1
+    fi
+
+    echo "Installing IntelliJ plugins from: $plugin_list"
+    echo "Note: IntelliJ must be closed for plugin installation"
+    echo ""
+
+    while IFS= read -r line; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^#.*$ ]] && continue
+        [[ -z "$line" ]] && continue
+
+        # Extract plugin ID (first word before spaces/comments)
+        plugin_id=$(echo "$line" | awk '{print $1}')
+
+        if [ -n "$plugin_id" ]; then
+            echo "Installing: $plugin_id"
+            idea installPlugins "$plugin_id" 2>/dev/null || echo "  Failed or already installed"
+        fi
+    done < "$plugin_list"
+
+    echo ""
+    echo "Done. Restart IntelliJ to activate plugins."
+
+  # Show config paths for current IntelliJ version
+  intellij_paths: |
+    echo "IntelliJ IDEA Configuration Paths"
+    echo "=================================="
+    echo ""
+
+    # macOS paths
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macOS Locations:"
+        echo "  Config:  ~/Library/Application Support/JetBrains/IntelliJIdea*"
+        echo "  Plugins: ~/Library/Application Support/JetBrains/IntelliJIdea*/plugins"
+        echo "  Logs:    ~/Library/Logs/JetBrains/IntelliJIdea*"
+        echo ""
+
+        # Find actual versions
+        if ls ~/Library/Application\ Support/JetBrains/IntelliJIdea* >/dev/null 2>&1; then
+            echo "Installed versions:"
+            for dir in ~/Library/Application\ Support/JetBrains/IntelliJIdea*/; do
+                echo "  $(basename "$dir")"
+            done
+        fi
+    else
+        echo "Linux Locations:"
+        echo "  Config:  ~/.config/JetBrains/IntelliJIdea*"
+        echo "  Plugins: ~/.local/share/JetBrains/IntelliJIdea*/plugins"
+        echo "  Logs:    ~/.cache/JetBrains/IntelliJIdea*/log"
+    fi
+    echo ""
+    echo "Reference configs: ~/.config/dotfiles/components/intellij/config/"
+
+# Installation configuration
+install:
+  tools:
+    - name: intellij-idea
+      description: IntelliJ IDEA IDE
+      check: "command -v idea"
+      methods:
+        darwin:
+          type: brew
+          package: intellij-idea
+          cask: true
+        linux:
+          type: manual
+          instructions: "Download from https://www.jetbrains.com/idea/download/"
+      post_install:
+        message: |
+          IntelliJ installed. To set up:
+          1. Run 'intellij_paths' to find config locations
+          2. Import keymaps from components/intellij/config/keymaps/
+          3. Import editor settings from components/intellij/config/options/
+          4. Run 'intellij_install_plugins' to install recommended plugins
