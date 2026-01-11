@@ -269,3 +269,14 @@ shell_functions:
 
   tmux_alert_low: |
     tmux_alert_color "#94e2d5"
+
+  # Clear window alert (called by tmux hook: after-select-window)
+  tmux_clear_alert: |
+    local window_id="${1:-$(tmux display-message -p '#{window_id}')}"
+    local alert_flag
+    alert_flag=$(tmux show-window-options -t "$window_id" -v @alert 2>/dev/null)
+    if [ "$alert_flag" = "1" ]; then
+        tmux set-window-option -t "$window_id" @alert 0
+        # Reset to default Catppuccin Mocha style
+        tmux set-window-option -t "$window_id" window-status-style "fg=#bac2de,bg=#45475a"
+    fi
