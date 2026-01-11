@@ -52,6 +52,13 @@
 
       "Tags": ["dotfiles", "catppuccin"],
 
+      "Keyboard Map": {
+        "0xd-0x20000": {
+          "Action": 10,
+          "Text": "[13;2u"
+        }
+      },
+
       "Background Color": {
         "Red Component": 0.11764705882352941,
         "Green Component": 0.11764705882352941,
