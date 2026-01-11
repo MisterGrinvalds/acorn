@@ -121,3 +121,61 @@ shell_functions:
     echo 'console.log("Hello, TypeScript!");' > src/index.ts
 
     echo "Node.js TypeScript project initialized!"
+
+# Installation configuration
+install:
+  tools:
+    - name: node
+      description: Node.js runtime (includes npm)
+      check: "command -v node"
+      methods:
+        darwin:
+          type: brew
+          package: node
+        linux/debian:
+          type: apt
+          package: nodejs
+        linux/ubuntu:
+          type: apt
+          package: nodejs
+        linux:
+          type: brew
+          package: node
+      post_install:
+        message: "Node.js installed. Run 'node --version' to verify."
+
+    - name: npm
+      description: Node.js package manager
+      check: "command -v npm"
+      methods:
+        darwin:
+          type: brew
+          package: node
+        linux/debian:
+          type: apt
+          package: npm
+        linux/ubuntu:
+          type: apt
+          package: npm
+        linux:
+          type: brew
+          package: node
+      requires:
+        - node
+
+    - name: pnpm
+      description: Fast, disk space efficient package manager
+      check: "command -v pnpm"
+      methods:
+        darwin:
+          type: npm
+          package: pnpm
+          global: true
+        linux:
+          type: npm
+          package: pnpm
+          global: true
+      requires:
+        - npm
+      post_install:
+        message: "pnpm installed. Run 'pnpm setup' for shell integration."

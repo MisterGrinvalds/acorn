@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/cloudflare"
+	"github.com/mistergrinvalds/acorn/internal/installer"
 	"github.com/mistergrinvalds/acorn/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -296,10 +297,30 @@ Examples:
 	RunE: runCfInitPages,
 }
 
+// cfInstallCmd installs CloudFlare CLI tools
+var cfInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install CloudFlare CLI tools",
+	Long: `Install wrangler and other CloudFlare CLI tools.
+
+Automatically detects your platform and uses the appropriate
+package manager (brew on macOS, apt on Linux, npm as fallback).
+
+If prerequisites like npm are missing, they will be installed
+automatically if possible.
+
+Examples:
+  acorn cf install           # Install all CloudFlare tools
+  acorn cf install --dry-run # Show what would be installed
+  acorn cf install -v        # Verbose output`,
+	RunE: runCfInstall,
+}
+
 func init() {
 	rootCmd.AddCommand(cfCmd)
 
 	// Add subcommands
+	cfCmd.AddCommand(cfInstallCmd)
 	cfCmd.AddCommand(cfStatusCmd)
 	cfCmd.AddCommand(cfWhoamiCmd)
 	cfCmd.AddCommand(cfWorkersCmd)
@@ -608,4 +629,99 @@ func runCfInitPages(cmd *cobra.Command, args []string) error {
 		name = args[0]
 	}
 	return helper.InitPages(name)
+}
+
+func runCfInstall(cmd *cobra.Command, args []string) error {
+	inst := installer.NewInstaller(
+		installer.WithDryRun(cfDryRun),
+		installer.WithVerbose(cfVerbose),
+	)
+
+	// Show platform info
+	platform := inst.GetPlatform()
+	if cfVerbose {
+		fmt.Fprintf(os.Stdout, "Platform: %s\n\n", platform)
+	}
+
+	// Get the plan first
+	plan, err := inst.Plan(cmd.Context(), "cloudflare")
+	if err != nil {
+		return err
+	}
+
+	// Show what will be installed
+	if cfDryRun {
+		fmt.Fprintf(os.Stdout, "%s\n", output.Info("CloudFlare Installation Plan"))
+		fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Fprintf(os.Stdout, "Platform: %s\n\n", platform)
+	}
+
+	pending := plan.PendingTools()
+	if len(pending) == 0 {
+		fmt.Fprintf(os.Stdout, "%s All tools already installed\n", output.Success("✓"))
+		return nil
+	}
+
+	// Show prerequisites
+	if len(plan.Prerequisites) > 0 {
+		fmt.Fprintln(os.Stdout, "Prerequisites:")
+		for _, t := range plan.Prerequisites {
+			status := output.Warning("○")
+			suffix := ""
+			if t.AlreadyInstalled {
+				status = output.Success("✓")
+				suffix = " (installed)"
+			}
+			fmt.Fprintf(os.Stdout, "  %s %s%s\n", status, t.Name, suffix)
+		}
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Show tools
+	fmt.Fprintln(os.Stdout, "Tools:")
+	for _, t := range plan.Tools {
+		status := output.Warning("○")
+		suffix := ""
+		if t.AlreadyInstalled {
+			status = output.Success("✓")
+			suffix = " (installed)"
+		} else if cfDryRun {
+			suffix = fmt.Sprintf(" (via %s)", t.Method.Type)
+		}
+		fmt.Fprintf(os.Stdout, "  %s %s%s\n", status, t.Name, suffix)
+	}
+
+	if cfDryRun {
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, "Run without --dry-run to install.")
+		return nil
+	}
+
+	// Execute installation
+	fmt.Fprintln(os.Stdout)
+	result, err := inst.Install(cmd.Context(), "cloudflare")
+	if err != nil {
+		return err
+	}
+
+	// Show results
+	fmt.Fprintln(os.Stdout)
+	installed, skipped, failed := result.Summary()
+
+	if result.Success {
+		fmt.Fprintf(os.Stdout, "%s Installation complete (%d installed, %d skipped)\n",
+			output.Success("✓"), installed, skipped)
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Installation failed (%d installed, %d skipped, %d failed)\n",
+			output.Error("✗"), installed, skipped, failed)
+
+		// Show errors
+		for _, t := range result.Tools {
+			if t.Error != nil {
+				fmt.Fprintf(os.Stdout, "  %s: %s\n", t.Name, t.Error)
+			}
+		}
+	}
+
+	return nil
 }

@@ -137,3 +137,23 @@ shell_functions:
     echo "Aliases:"
     echo "  wr, wrd, wrp, wrr2, wrkv, wrd1"
     echo "  wrlogin, wrlogout, wrwhoami"
+
+# Installation configuration
+install:
+  tools:
+    - name: wrangler
+      description: CloudFlare Workers CLI
+      check: "command -v wrangler"
+      methods:
+        darwin:
+          type: npm
+          package: wrangler
+          global: true
+        linux:
+          type: npm
+          package: wrangler
+          global: true
+      requires:
+        - node:npm
+      post_install:
+        message: "Run 'wrangler login' to authenticate with CloudFlare"

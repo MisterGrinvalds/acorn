@@ -141,6 +141,36 @@ func MergeConfigs(base, override *BaseConfig) *BaseConfig {
 	// Files are merged by target path - override wins for same target
 	result.Files = mergeFiles(base.Files, override.Files)
 
+	// Install tools are merged by name - override wins for same tool
+	result.Install = mergeInstall(base.Install, override.Install)
+
+	return result
+}
+
+// mergeInstall merges two InstallConfig structs.
+// Tools with the same name are replaced by the override.
+func mergeInstall(base, override InstallConfig) InstallConfig {
+	if len(base.Tools) == 0 && len(override.Tools) == 0 {
+		return InstallConfig{}
+	}
+
+	// Index by tool name
+	byName := make(map[string]ToolInstall)
+	for _, t := range base.Tools {
+		byName[t.Name] = t
+	}
+	for _, t := range override.Tools {
+		byName[t.Name] = t
+	}
+
+	// Convert back to slice
+	result := InstallConfig{
+		Tools: make([]ToolInstall, 0, len(byName)),
+	}
+	for _, t := range byName {
+		result.Tools = append(result.Tools, t)
+	}
+
 	return result
 }
 
