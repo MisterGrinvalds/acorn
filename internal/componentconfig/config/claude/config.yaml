@@ -112,3 +112,23 @@ shell_functions:
         echo "Claude directory not found: $dir"
         return 1
     fi
+
+# Installation configuration
+install:
+  tools:
+    - name: claude
+      description: Claude Code CLI
+      check: "command -v claude"
+      methods:
+        darwin:
+          type: npm
+          package: "@anthropic-ai/claude-code"
+          global: true
+        linux:
+          type: npm
+          package: "@anthropic-ai/claude-code"
+          global: true
+      requires:
+        - node:npm
+      post_install:
+        message: "Run 'claude' to start using Claude Code CLI"

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/claude"
+	"github.com/mistergrinvalds/acorn/internal/installer"
 	"github.com/mistergrinvalds/acorn/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -272,11 +273,27 @@ Examples:
 	RunE: runClaudeHelp,
 }
 
+// claudeInstallCmd installs Claude Code CLI
+var claudeInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install Claude Code CLI",
+	Long: `Install the Claude Code CLI tool.
+
+Installs claude via npm (requires Node.js).
+
+Examples:
+  acorn claude install           # Install Claude Code CLI
+  acorn claude install --dry-run # Show what would be installed
+  acorn claude install -v        # Verbose output`,
+	RunE: runClaudeInstall,
+}
+
 func init() {
 	rootCmd.AddCommand(claudeCmd)
 
 	// Add subcommands
 	claudeCmd.AddCommand(claudeInfoCmd)
+	claudeCmd.AddCommand(claudeInstallCmd)
 	claudeCmd.AddCommand(claudeStatsCmd)
 	claudeCmd.AddCommand(claudePermissionsCmd)
 	claudeCmd.AddCommand(claudeSettingsCmd)
@@ -922,5 +939,87 @@ Aggregation:
   acorn claude aggregate list  - List all agents and commands
 `
 	fmt.Print(helpText)
+	return nil
+}
+
+func runClaudeInstall(cmd *cobra.Command, args []string) error {
+	inst := installer.NewInstaller(
+		installer.WithDryRun(claudeDryRun),
+		installer.WithVerbose(claudeVerbose),
+	)
+
+	// Show platform info
+	platform := inst.GetPlatform()
+	if claudeVerbose {
+		fmt.Fprintf(os.Stdout, "Platform: %s (%s)\n\n", platform.OS, platform.PackageManager)
+	}
+
+	// Get the plan first
+	plan, err := inst.Plan(cmd.Context(), "claude")
+	if err != nil {
+		return err
+	}
+
+	// Show what will be installed
+	if claudeDryRun {
+		fmt.Fprintf(os.Stdout, "%s\n", output.Info("Claude Installation Plan"))
+		fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Fprintf(os.Stdout, "Platform: %s (%s)\n\n", platform.OS, platform.PackageManager)
+	}
+
+	pending := plan.PendingTools()
+	if len(pending) == 0 {
+		fmt.Fprintf(os.Stdout, "%s All tools already installed\n", output.Success("✓"))
+		return nil
+	}
+
+	// Show prerequisites
+	if len(plan.Prerequisites) > 0 {
+		fmt.Fprintln(os.Stdout, "Prerequisites:")
+		for _, t := range plan.Prerequisites {
+			status := output.Warning("○")
+			suffix := ""
+			if t.AlreadyInstalled {
+				status = output.Success("✓")
+				suffix = " (installed)"
+			}
+			fmt.Fprintf(os.Stdout, "  %s %s%s\n", status, t.Name, suffix)
+		}
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Show tools
+	fmt.Fprintln(os.Stdout, "Tools:")
+	for _, t := range plan.Tools {
+		status := output.Warning("○")
+		suffix := ""
+		if t.AlreadyInstalled {
+			status = output.Success("✓")
+			suffix = " (installed)"
+		}
+		fmt.Fprintf(os.Stdout, "  %s %s - %s%s\n", status, t.Name, t.Description, suffix)
+	}
+
+	if claudeDryRun {
+		fmt.Fprintln(os.Stdout, "\nRun without --dry-run to install.")
+		return nil
+	}
+
+	// Execute installation
+	fmt.Fprintln(os.Stdout, "\nInstalling...")
+	result, err := inst.Install(cmd.Context(), "claude")
+	if err != nil {
+		return err
+	}
+
+	installed, skipped, failed := result.Summary()
+	if failed == 0 {
+		fmt.Fprintf(os.Stdout, "%s Installation complete (%d installed, %d skipped)\n",
+			output.Success("✓"), installed, skipped)
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Installation failed (%d installed, %d skipped, %d failed)\n",
+			output.Error("✗"), installed, skipped, failed)
+	}
+
 	return nil
 }
