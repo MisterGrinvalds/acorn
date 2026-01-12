@@ -573,11 +573,103 @@ files:
                 name: ENSURE_NEWLINE_AT_EOF
                 value: "true"
 
-# Keep plugins.txt as reference file
-sync_files:
-  - source: config/intellij/plugins.txt
-    target: "~/.local/share/dotfiles/intellij/plugins.txt"
-    description: "Reference list of recommended plugins"
+  # Plugin list (reference for manual installation)
+  - target: "~/.local/share/dotfiles/intellij/plugins.txt"
+    format: textlist
+    values:
+      header: |
+        # IntelliJ IDEA Plugin List
+        # Reference list for manual installation
+        #
+        # Install via: Settings > Plugins > Marketplace
+        # Or via command line: idea installPlugins <plugin-id>
+      sections:
+        - name: Theme
+          items:
+            - id: catppuccin-theme
+              comment: Catppuccin color scheme
+        - name: Language Support
+          items:
+            - id: org.rust.lang
+              comment: Rust
+            - id: org.jetbrains.plugins.go
+              comment: Go
+            - id: Pythonid
+              comment: Python (bundled in PyCharm)
+            - id: com.jetbrains.php
+              comment: PHP (bundled in PhpStorm)
+            - id: org.intellij.scala
+              comment: Scala
+            - id: org.toml.lang
+              comment: TOML
+            - id: org.jetbrains.plugins.yaml
+              comment: YAML (bundled)
+        - name: Framework Support
+          items:
+            - id: com.jetbrains.plugins.webDeployment
+              comment: Remote Hosts Access
+            - id: org.jetbrains.kotlin
+              comment: Kotlin (bundled)
+            - id: com.dmarcotte.handlebars
+              comment: Handlebars/Mustache
+            - id: org.jetbrains.plugins.vue
+              comment: Vue.js
+        - name: Database
+          items:
+            - id: com.intellij.database
+              comment: Database Tools (bundled in Ultimate)
+        - name: Version Control
+          items:
+            - id: Git4Idea
+              comment: Git Integration (bundled)
+            - id: org.jetbrains.plugins.github
+              comment: GitHub Integration (bundled)
+            - id: com.github.copilot
+              comment: GitHub Copilot
+        - name: Code Quality
+          items:
+            - id: CheckStyle-IDEA
+              comment: CheckStyle integration
+            - id: org.sonarlint.idea
+              comment: SonarLint
+            - id: com.intellij.plugins.watcher
+              comment: File Watchers
+        - name: Productivity
+          items:
+            - id: com.intellij.ideaVim
+              comment: Vim emulation
+            - id: Key Promoter X
+              comment: Learn keyboard shortcuts
+            - id: String Manipulation
+              comment: String transformations
+            - id: AceJump
+              comment: Quick navigation
+            - id: Grazie Pro
+              comment: Grammar and spell checking
+        - name: DevOps
+          items:
+            - id: Docker
+              comment: Docker integration (bundled in Ultimate)
+            - id: org.jetbrains.plugins.terraform
+              comment: Terraform/HCL support
+            - id: Kubernetes
+              comment: Kubernetes support
+        - name: AI
+          items:
+            - id: com.tabnine.TabNine
+              comment: Tabnine AI completion
+        - name: Misc
+          items:
+            - id: .ignore
+              comment: .gitignore support
+            - id: idea.plugin.protoeditor
+              comment: Protocol Buffers
+            - id: Rainbow Brackets
+              comment: Colored bracket pairs
+            - id: Indent Rainbow
+              comment: Colored indentation
+            - id: CSV
+              comment: CSV file support
 
 # Shell aliases
 aliases:
@@ -604,7 +696,7 @@ wrappers:
 shell_functions:
   # Install plugins from list
   intellij_install_plugins: |
-    local plugin_list="${1:-$DOTFILES_ROOT/config/intellij/plugins.txt}"
+    local plugin_list="${1:-$DOTFILES_ROOT/generated/intellij/plugins.txt}"
 
     if [ ! -f "$plugin_list" ]; then
         echo "Plugin list not found: $plugin_list"
