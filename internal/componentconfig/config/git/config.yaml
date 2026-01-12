@@ -99,12 +99,6 @@ files:
         "gitdir:~/Repos/work/":
           path: "~/.config/git/config.work"
 
-# Sync work identity file (sensitive - not generated)
-sync_files:
-  - source: "config/git/config.work"
-    target: "${HOME}/.config/git/config.work"
-    mode: "symlink"
-
 # Environment variables
 env:
   DEFAULT_REPOS_DIR: "${DEFAULT_REPOS_DIR:-$HOME/Repos}"
