@@ -1,0 +1,24 @@
+# R component configuration
+name: r
+description: R statistical programming configuration
+version: 1.0.0
+
+# File sync configuration
+sync_files:
+  - source: "config/r/Rprofile"
+    target: "${HOME}/.Rprofile"
+    mode: "symlink"
+
+# Installation configuration
+install:
+  tools:
+    - name: r
+      description: R statistical programming language
+      check: "command -v R"
+      methods:
+        darwin:
+          type: brew
+          package: r
+        linux:
+          type: apt
+          package: r-base
