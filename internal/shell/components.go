@@ -5,42 +5,63 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/componentconfig"
 )
 
-// RegisterAllComponents registers all known components with the manager.
-func RegisterAllComponents(m *Manager) {
-	// Core components (load first for dependencies)
-	registerComponentWithFiles(m, "theme")
+// componentOrder defines the order components should be loaded.
+// This is critical - bootstrap and xdg must be first as other components depend on them.
+var componentOrder = []string{
+	// Bootstrap/core (MUST be first - sets up environment)
+	"bootstrap", // Shell detection, platform detection, XDG vars, Homebrew
+	"xdg",       // XDG helper functions, shell history setup
+	"theme",     // Colors (depends on CURRENT_PLATFORM from bootstrap)
+	"core",      // Shell options, prompt, keybindings (depends on theme)
+
+	// Infrastructure
+	"sync", // Dotfiles sync aliases and functions
 
 	// Development tools
-	registerComponentWithFiles(m, "go")
-	registerComponentWithFiles(m, "python")
-	registerComponentWithFiles(m, "node")
-	registerComponentWithFiles(m, "vscode")
-	registerComponentWithFiles(m, "intellij")
-	registerComponentWithFiles(m, "neovim")
+	"go",
+	"python",
+	"node",
+	"vscode",
+	"intellij",
+	"neovim",
 
 	// Terminal and shell
-	registerComponentWithFiles(m, "tmux")
-	registerComponentWithFiles(m, "fzf")
-	registerComponentWithFiles(m, "ghostty")
-	registerComponentWithFiles(m, "iterm2")
+	"tmux",
+	"fzf",
+	"ghostty",
+	"iterm2",
 
 	// Version control
-	registerComponentWithFiles(m, "git")
-	registerComponentWithFiles(m, "github")
+	"git",
+	"github",
 
 	// Cloud and infrastructure
-	registerComponentWithFiles(m, "cloudflare")
-	registerComponentWithFiles(m, "kubernetes")
-	registerComponentWithFiles(m, "database")
+	"cloudflare",
+	"kubernetes",
+	"database",
 
 	// AI and ML
-	registerComponentWithFiles(m, "claude")
-	registerComponentWithFiles(m, "huggingface")
-	registerComponentWithFiles(m, "ollama")
+	"claude",
+	"huggingface",
+	"ollama",
 
 	// Utilities
-	registerComponentWithFiles(m, "tools")
-	registerComponentWithFiles(m, "secrets")
+	"tools",
+	"secrets",
+}
+
+// RegisterAllComponents registers all known components with the manager.
+// Components are registered in a specific order to ensure dependencies are met.
+func RegisterAllComponents(m *Manager) {
+	for _, name := range componentOrder {
+		registerComponentWithFiles(m, name)
+	}
+}
+
+// GetComponentOrder returns the ordered list of component names.
+// Used by shell.go to generate the entrypoint with correct sourcing order.
+func GetComponentOrder() []string {
+	return componentOrder
 }
 
 // registerComponentWithFiles loads and registers a component with its file specs.
@@ -138,6 +159,12 @@ func CloudFlareComponent() *Component {
 // SecretsComponent returns the secrets shell integration component.
 func SecretsComponent() *Component {
 	return loadComponentFromConfig("secrets")
+}
+
+// CoreComponent returns the core shell integration component.
+// Includes shell options, prompt, keybindings, and utility functions.
+func CoreComponent() *Component {
+	return loadComponentFromConfig("core")
 }
 
 // DatabaseComponent returns the database shell integration component.
