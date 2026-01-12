@@ -8,59 +8,61 @@ Validate component: $ARGUMENTS
 
 Thoroughly validate the specified component against all standards.
 
-### 1. Check Directory Structure
+### 1. Check Component Location
 
-Verify `components/$ARGUMENTS/` exists and contains:
-- [ ] `component.yaml` (REQUIRED)
-- [ ] At least one of: `env.sh`, `aliases.sh`, `functions.sh`
-- [ ] Files use correct naming
+Verify component exists at:
+- `internal/componentconfig/config/$ARGUMENTS/config.yaml`
 
-### 2. Validate component.yaml
+### 2. Validate config.yaml Structure
 
 **Required fields:**
 - [ ] `name` - matches directory name
 - [ ] `version` - valid semver (X.Y.Z)
 - [ ] `description` - non-empty string
-- [ ] `category` - one of: core, dev, cloud, ai, database
 
-**Optional fields (validate if present):**
-- [ ] `requires.tools` - list of strings
-- [ ] `requires.components` - list of existing components
-- [ ] `provides.aliases` - list of strings
-- [ ] `provides.functions` - list of strings
-- [ ] `platforms` - subset of [darwin, linux]
-- [ ] `shells` - subset of [bash, zsh]
+**Shell integration (at least one):**
+- [ ] `env` - environment variables
+- [ ] `aliases` - shell aliases
+- [ ] `shell_functions` - functions requiring shell state
 
-### 3. Validate Shell Scripts
+### 3. Validate files: Section (Config Generation)
 
-For each .sh file:
+If `files:` section exists:
+- [ ] Each entry has `target` path (with valid env vars)
+- [ ] Each entry has `format` (json, yaml, toml, ghostty, tmux, iterm2)
+- [ ] Each entry has `values` object
+- [ ] Format writer exists in `internal/configfile/`
+
+**Test generation:**
 ```bash
-bash -n components/$ARGUMENTS/<file>.sh
+acorn shell generate
+ls generated/$ARGUMENTS/
 ```
 
-Check for:
-- [ ] Syntax errors (bash -n)
-- [ ] Proper shebang (#!/bin/sh or #!/bin/bash)
-- [ ] Local variables in functions
-- [ ] Consistent indentation
+### 4. Validate sync_files: Section (Static Files)
 
-### 4. Check Dependencies
+If `sync_files:` section exists:
+- [ ] Each entry has `source` path (relative to $DOTFILES_ROOT)
+- [ ] Each entry has `target` path
+- [ ] Each entry has `mode` (symlink, copy, merge)
+- [ ] Source files exist in `config/$ARGUMENTS/`
+- [ ] Appropriate use case (credentials, SSH, permissions)
 
-Verify all declared dependencies:
-- [ ] Required tools exist (`command -v <tool>`)
-- [ ] Required components exist in `components/`
+### 5. Validate install: Section
 
-### 5. Cross-Reference Provides
+If `install:` section exists:
+- [ ] Each tool has `name`
+- [ ] Each tool has `check` command
+- [ ] Each tool has `methods` for darwin/linux
+- [ ] Method types are valid (brew, apt, npm, pip, go, curl)
 
-Verify that declared provides match actual content:
-- [ ] All listed aliases exist in aliases.sh
-- [ ] All listed functions exist in functions.sh
+### 6. Build Check
 
-### 6. Check Documentation
+```bash
+go build ./...
+```
 
-- [ ] README.md exists
-- [ ] README documents all public functions
-- [ ] README includes usage examples
+Component should not cause build failures.
 
 ## Output Format
 
@@ -68,31 +70,35 @@ Verify that declared provides match actual content:
 Component Validation: $ARGUMENTS
 ================================
 
-Structure:           [PASS/FAIL]
-  - component.yaml   [OK/MISSING]
-  - env.sh           [OK/MISSING/N/A]
-  - aliases.sh       [OK/MISSING/N/A]
-  - functions.sh     [OK/MISSING/N/A]
-  - README.md        [OK/MISSING]
+Location:            [PASS/FAIL]
+  - config.yaml      [OK/MISSING]
 
 Metadata:            [PASS/FAIL]
   - name             [OK/ERROR: <reason>]
   - version          [OK/ERROR: <reason>]
   - description      [OK/ERROR: <reason>]
-  - category         [OK/ERROR: <reason>]
 
-Syntax Check:        [PASS/FAIL]
-  - env.sh           [OK/ERROR at line N]
-  - aliases.sh       [OK/ERROR at line N]
-  - functions.sh     [OK/ERROR at line N]
+Shell Integration:   [PASS/FAIL]
+  - env              [N vars defined]
+  - aliases          [N aliases defined]
+  - shell_functions  [N functions defined]
 
-Dependencies:        [PASS/WARN/FAIL]
-  - <tool>           [INSTALLED/MISSING]
-  - <component>      [EXISTS/MISSING]
+Config Generation:   [PASS/SKIP]
+  - files section    [N files configured]
+  - format writers   [OK/ERROR: missing <format>]
+  - generation test  [OK/ERROR: <reason>]
 
-Provides Match:      [PASS/FAIL]
-  - aliases          [N declared, N found]
-  - functions        [N declared, N found]
+Static Files:        [PASS/SKIP]
+  - sync_files       [N files configured]
+  - source files     [OK/MISSING: <file>]
+
+Installation:        [PASS/SKIP]
+  - tools defined    [N tools]
+  - check commands   [OK/ERROR]
+  - methods          [OK/ERROR]
+
+Build Check:         [PASS/FAIL]
+  - go build         [OK/ERROR]
 
 Overall:             [VALID/INVALID]
 
@@ -101,5 +107,18 @@ Issues Found:
   2. <issue description>
 
 Recommendations:
-  - <suggestion>
+  - Consider using files: section instead of sync_files: for tool configs
+  - <other suggestions>
 ```
+
+## Config Strategy Recommendations
+
+After validation, suggest improvements:
+
+| Current | Recommendation |
+|---------|---------------|
+| `sync_files:` with JSON | Migrate to `files:` with `format: json` |
+| `sync_files:` with YAML | Migrate to `files:` with `format: yaml` |
+| Static tool configs | Use `files:` for declarative generation |
+| `sync_files:` for SSH | Keep as-is (needs 600 permissions) |
+| `sync_files:` for credentials | Keep as-is (sensitive data) |

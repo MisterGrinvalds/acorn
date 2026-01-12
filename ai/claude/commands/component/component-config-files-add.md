@@ -3,159 +3,195 @@ description: Add config file generation support to a component
 argument_hints:
   - ghostty
   - tmux
+  - iterm2
   - neovim
-  - git
 ---
 
 Add config file support to component: $ARGUMENTS
 
 ## Overview
 
-This command adds the `files:` section to a component's config.yaml, enabling acorn to generate config files in various formats (JSON, YAML, TOML, INI, Ghostty, etc.).
+This command adds the `files:` section to a component's config.yaml. This is the **PRIMARY** way to manage tool config files - configs are generated from declarative values and symlinked to target locations.
 
-## Schema Reference
+**Prefer `files:` over `sync_files:`** for all tool configs except credentials/SSH.
 
-### files: Array Structure
+## Quick Reference
+
+### files: Section Structure
 
 ```yaml
 files:
-  - target: "${XDG_CONFIG_HOME}/ghostty/config"  # Output path (supports env vars)
-    format: ghostty                               # Format identifier
-    schema:                                       # Field definitions with types
-      theme:
-        type: string
-        default: "Catppuccin Mocha"
-      font-size:
-        type: int
-        default: 14
-      keybind:
-        type: list
-        items: string
-    values:                                       # Actual values to write
-      theme: "Catppuccin Mocha"
-      font-size: 14
-      keybind:
-        - "super+d=new_split:right"
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/tool/config"
+    format: json  # json, yaml, toml, ghostty, tmux, iterm2
+    values:
+      key1: "value"
+      key2: true
+      nested:
+        key: "value"
 ```
 
-### Supported Formats
+### Available Formats
 
-| Format | Output Style | Use Cases |
-|--------|-------------|-----------|
-| `json` | `{"key": "value"}` | VS Code, package.json |
-| `yaml` | `key: value` | k8s, docker-compose |
+| Format | Output | Example Use |
+|--------|--------|-------------|
+| `json` | `{"key": "value"}` | VS Code settings, package.json |
+| `yaml` | `key: value` | k8s configs, docker-compose |
 | `toml` | `key = "value"` | Cargo.toml, pyproject.toml |
-| `ini` | `[section]\nkey=value` | git config, editorconfig |
-| `ghostty` | `key = value` (no sections) | Ghostty terminal |
-| `keyvalue` | `key=value` | Simple configs |
-
-### Field Types
-
-| Type | YAML Example | Output |
-|------|--------------|--------|
-| `string` | `"value"` | Quoted if spaces |
-| `int` | `14` | Unquoted number |
-| `bool` | `true` | `true`/`false` |
-| `float` | `1.5` | Decimal number |
-| `list` | `[a, b, c]` | Multiple lines (format-specific) |
-| `map` | `{k: v}` | Nested structure |
+| `ghostty` | `key = value` | Ghostty terminal |
+| `tmux` | `set -g key value` | tmux.conf |
+| `iterm2` | Dynamic Profile JSON | iTerm2 profiles |
 
 ## Instructions
 
 ### 1. Read Existing Config
 
 ```bash
-cat components/$ARGUMENTS/config.yaml 2>/dev/null
-cat components/$ARGUMENTS/config/* 2>/dev/null
+cat internal/componentconfig/config/$ARGUMENTS/config.yaml
 ```
 
-### 2. Identify Config Files
+### 2. Identify Config Files to Generate
 
-List all config files the component manages:
-- What format is each file?
-- Where is the target location?
-- What settings does it contain?
+- What config file does the tool use?
+- Where is the target location (XDG path)?
+- What format is it? (Check if format writer exists)
 
-### 3. Define Schema
-
-For each config file:
-1. List all keys/settings
-2. Determine the type for each
-3. Set sensible defaults
-4. Document any special handling (lists, etc.)
-
-### 4. Add files: Section
+### 3. Add files: Section
 
 Add to the component's config.yaml:
 
 ```yaml
 files:
-  - target: "<XDG path to config>"
-    format: "<format identifier>"
-    schema:
-      <key>:
-        type: <string|int|bool|float|list|map>
-        default: <default value>
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/$ARGUMENTS/config"
+    format: json
     values:
-      <key>: <actual value>
+      setting1: "value1"
+      setting2: true
 ```
 
-### 5. Implement Format Writer (if new)
-
-If the format doesn't exist yet, create:
-- `internal/configfile/<format>.go` - Writer implementation
-- Add to format registry in `internal/configfile/writer.go`
-
-### 6. Test Generation
+### 4. Test Generation
 
 ```bash
-acorn $ARGUMENTS config show    # Show what would be written
-acorn $ARGUMENTS config write   # Write the config file
+acorn shell generate        # Generate all config files
+ls generated/$ARGUMENTS/    # Check output
+acorn sync link             # Create symlinks
 ```
 
-## Design Decisions
+## Examples
 
-- **No comment preservation**: Values only, comments lost on regeneration
-- **config.yaml wins**: Direct edits to target file are overwritten
-- **One format at a time**: Implement formats as needed per component
-
-## Example: Ghostty
+### JSON Config (VS Code style)
 
 ```yaml
-name: ghostty
-description: Ghostty terminal emulator
-
 files:
-  - target: "${XDG_CONFIG_HOME}/ghostty/config"
+  - target: "${HOME}/Library/Application Support/Code/User/settings.json"
+    format: json
+    values:
+      "editor.fontSize": 14
+      "editor.fontFamily": "JetBrainsMono Nerd Font"
+      "workbench.colorTheme": "Catppuccin Mocha"
+```
+
+### Ghostty Config
+
+```yaml
+files:
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
     format: ghostty
-    schema:
-      theme: { type: string, default: "Catppuccin Mocha" }
-      font-family: { type: string, default: "JetBrainsMono Nerd Font" }
-      font-size: { type: int, default: 14 }
-      font-thicken: { type: bool, default: true }
-      keybind: { type: list, items: string }
     values:
       theme: "Catppuccin Mocha"
       font-family: "JetBrainsMono Nerd Font"
       font-size: 14
-      font-thicken: true
       keybind:
         - "super+d=new_split:right"
         - "super+shift+d=new_split:down"
 ```
 
-## Files to Modify
+### iTerm2 Dynamic Profile
 
-### Schema Extension
-- `internal/componentconfig/schema.go` - Add FileConfig types
+```yaml
+files:
+  - target: "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/profile.json"
+    format: iterm2
+    values:
+      profile:
+        name: "shell-profile"
+        guid: "shell-profile-001"
+        parent: "Default"
+      font:
+        family: "JetBrainsMonoNF-Regular"
+        size: 14
+      colors:
+        scheme: "catppuccin-mocha"
+```
 
-### Format Writers
-- `internal/configfile/writer.go` - Writer interface
-- `internal/configfile/<format>.go` - Format implementation
+### tmux Config
 
-### Integration
-- `internal/componentconfig/loader.go` - Handle Files field
-- `internal/shell/shell.go` - Call file generation
+```yaml
+files:
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf"
+    format: tmux
+    values:
+      set_g:
+        mouse: true
+        base-index: 1
+        prefix: "C-a"
+      bind:
+        r: 'source-file ~/.config/tmux/tmux.conf'
+        v: 'split-window -h'
+```
 
-### Component
-- `components/$ARGUMENTS/config.yaml` - Add files section
+## Migrating from Static Files
+
+If the component currently uses `sync_files:` with static files:
+
+### Before (Static)
+```yaml
+sync_files:
+  - source: "config/tool/settings.json"
+    target: "${HOME}/.config/tool/settings.json"
+    mode: "symlink"
+```
+
+### After (Generated)
+```yaml
+files:
+  - target: "${HOME}/.config/tool/settings.json"
+    format: json
+    values:
+      # Move content from static file here
+      setting1: "value1"
+```
+
+Then delete the static file in `config/tool/settings.json`.
+
+## When NOT to Use files:
+
+Use `sync_files:` instead for:
+- SSH configs (need 600 permissions, use `mode: copy`)
+- Credentials and secrets
+- Git config with user-specific includes
+- Files needing user customization overlay (`mode: merge`)
+
+## Creating New Format Writers
+
+If format doesn't exist, create `internal/configfile/<format>.go`:
+
+```go
+type MyFormatWriter struct{}
+
+func init() {
+    Register(&MyFormatWriter{})
+}
+
+func (w *MyFormatWriter) Format() string {
+    return "myformat"
+}
+
+func (w *MyFormatWriter) Write(values map[string]interface{}) ([]byte, error) {
+    // Generate output bytes from values
+}
+```
+
+## Files Modified
+
+- `internal/componentconfig/config/$ARGUMENTS/config.yaml` - Add files: section
+- `generated/$ARGUMENTS/` - Output location after `acorn shell generate`

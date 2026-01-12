@@ -12,139 +12,126 @@ Generate template structure for: $ARGUMENTS
 
 ## Instructions
 
-Generate the standardized component structure directly in `components/$ARGUMENTS/`.
+Generate the standardized component structure in `internal/componentconfig/config/$ARGUMENTS/`.
 
-### 1. Create Directory Structure
+### 1. Create Component Directory
 
-Create the following directories:
-
-```
-components/$ARGUMENTS/
-├── shell/
-└── config/
+```bash
+mkdir -p internal/componentconfig/config/$ARGUMENTS
 ```
 
-Note:
-- Installation is configured via `install:` section in config.yaml (not shell scripts)
-- Claude agents/commands are centralized in `ai/`, not per-component
+### 2. Generate config.yaml
 
-### 2. Read Existing Config (if any)
-
-Check for existing configuration:
-- `components/$ARGUMENTS/config.yaml` - current location
-- `internal/componentconfig/config/$ARGUMENTS/config.yaml` - legacy Go location
-
-### 3. Generate config.yaml
-
-Create the component's config.yaml with this schema:
+Create `internal/componentconfig/config/$ARGUMENTS/config.yaml`:
 
 ```yaml
 name: $ARGUMENTS
-description: <from source config or provide>
+description: <description>
 version: 1.0.0
-category: <core|dev|cloud|ai|database>
 platforms: [darwin, linux]
-shells: [bash, zsh]
 
-requires:
-  tools: <from source>
-  components: <from source>
+# Environment variables
+env:
+  # Example: TOOL_HOME: "${XDG_CONFIG_HOME:-$HOME/.config}/$ARGUMENTS"
 
-xdg:
-  config: $ARGUMENTS
-  data: ""
-  cache: ""
-  state: ""
+# Shell aliases
+aliases:
+  # Example: alias: "command"
 
-env: <from source env section>
-paths: <from source paths section>
-aliases: <from source aliases section>
+# Shell functions (ONLY for operations requiring shell state)
+# Use these sparingly - prefer acorn commands instead
+shell_functions:
+  # Example functions that MUST stay in shell:
+  # - cd wrappers (change directory)
+  # - source/activation (modify shell environment)
+  # - fzf integration (interactive selection)
+  # - tmux attach (session attachment)
 
-# Shell functions that must stay in shell (cd, source, fzf, attach)
-shell_functions: <approved functions only>
+# GENERATED CONFIG FILES (primary pattern for tool configs)
+# Configs are generated to generated/$ARGUMENTS/ and symlinked
+files:
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/$ARGUMENTS/config"
+    format: json  # Options: json, yaml, toml, ghostty, tmux, iterm2
+    values:
+      # Tool-specific settings
+      setting1: "value1"
+      setting2: true
 
-# Tool-specific configuration for Go to generate config files
-# Uncomment and customize for your tool:
-# tool_config:
-#   setting1: value1
-#   setting2: value2
+# STATIC FILE SYNC (use sparingly)
+# Only for: SSH configs, credentials, files needing 600 permissions
+# sync_files:
+#   - source: "config/$ARGUMENTS/file"
+#     target: "${HOME}/.file"
+#     mode: symlink  # or copy, merge
+
+# Installation configuration
+install:
+  tools:
+    - name: $ARGUMENTS
+      description: <what it does>
+      check: "command -v $ARGUMENTS"
+      methods:
+        darwin:
+          type: brew
+          package: $ARGUMENTS
+        linux:
+          type: apt
+          package: $ARGUMENTS
 ```
 
-### 4. Generate Shell Scripts
+### 3. Create Claude Integration (Optional)
 
-**shell/env.sh:**
 ```bash
-#!/bin/sh
-# $ARGUMENTS environment variables
+# Create command directory
+mkdir -p ai/claude/commands/$ARGUMENTS
 
-<generate from config.env>
-<generate PATH additions from config.paths>
+# Create agent (optional)
+# ai/claude/agents/$ARGUMENTS-expert.md
 ```
 
-**shell/aliases.sh:**
-```bash
-#!/bin/sh
-# $ARGUMENTS aliases
-
-<generate from config.aliases>
-```
-
-**shell/functions.sh:**
-```bash
-#!/bin/sh
-# $ARGUMENTS functions
-# Only functions that modify shell state (cd, source, fzf, attach)
-
-<include approved shell_functions>
-```
-
-**shell/completions.sh:**
-```bash
-#!/bin/sh
-# $ARGUMENTS completions
-
-# Placeholder for completion setup
-# Will be filled by /component-gen-completions
-```
-
-### 5. Create Placeholder Files
-
-**config/.gitkeep** - placeholder for tool-specific config files
-
-### 6. Create Claude Integration (Centralized)
-
-Create the command subdirectory (agents and commands are centralized):
-```bash
-mkdir -p ai/commands/$ARGUMENTS
-```
-
-Note: Agent and commands will be created by:
-- `/component-gen-agent $ARGUMENTS`
-- `/component-gen-commands $ARGUMENTS`
-
-### 7. Report Created Files
+### 4. Report Created Files
 
 Output:
 ```
 Generated Template: $ARGUMENTS
 ==============================
 
-Created directories:
-  - components/$ARGUMENTS/shell/
-  - components/$ARGUMENTS/config/
-  - ai/commands/$ARGUMENTS/
+Created:
+  - internal/componentconfig/config/$ARGUMENTS/config.yaml
 
-Created files:
-  - components/$ARGUMENTS/config.yaml
-  - components/$ARGUMENTS/shell/env.sh
-  - components/$ARGUMENTS/shell/aliases.sh
-  - components/$ARGUMENTS/shell/functions.sh
-  - components/$ARGUMENTS/shell/completions.sh
+Config Strategy:
+  - files: section for GENERATED configs (preferred)
+  - sync_files: section only for credentials/SSH
 
 Next steps:
-  1. Run /component:gen-agent $ARGUMENTS
-  2. Run /component:gen-commands $ARGUMENTS
-  3. Run /component:gen-install $ARGUMENTS  (adds install: section to config.yaml)
-  4. Run /component:gen-completions $ARGUMENTS
-  5. Run /component:gen-validate $ARGUMENTS
+  1. Edit config.yaml to add component-specific values
+  2. Run: acorn shell generate
+  3. Check: generated/$ARGUMENTS/ for output
+  4. Run: acorn sync link to create symlinks
+  5. Optionally run:
+     - /component-gen-agent $ARGUMENTS
+     - /component-gen-commands $ARGUMENTS
 ```
+
+## Config Strategy Decision Tree
+
+```
+Does the tool need a config file?
+├── Yes → Is it a standard format (JSON, YAML, TOML)?
+│   ├── Yes → Use files: section with appropriate format
+│   └── No → Is there a format writer? (ghostty, tmux, iterm2)
+│       ├── Yes → Use files: section with that format
+│       └── No → Create new format writer in internal/configfile/
+└── No → Only use env:, aliases:, shell_functions:
+```
+
+## Available Format Writers
+
+| Format | File | Use For |
+|--------|------|---------|
+| `json` | writer.go | Generic JSON |
+| `yaml` | writer.go | Generic YAML |
+| `toml` | writer.go | Generic TOML |
+| `ghostty` | ghostty.go | Ghostty terminal |
+| `tmux` | tmux.go | tmux.conf |
+| `iterm2` | iterm2.go | iTerm2 profiles |
