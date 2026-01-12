@@ -28,7 +28,7 @@ wrappers:
 shell_functions:
   # Install plugins from list
   intellij_install_plugins: |
-    local plugin_list="${1:-$HOME/.config/dotfiles/components/intellij/config/plugins.txt}"
+    local plugin_list="${1:-$DOTFILES_ROOT/config/intellij/plugins.txt}"
 
     if [ ! -f "$plugin_list" ]; then
         echo "Plugin list not found: $plugin_list"
@@ -84,7 +84,7 @@ shell_functions:
         echo "  Logs:    ~/.cache/JetBrains/IntelliJIdea*/log"
     fi
     echo ""
-    echo "Reference configs: ~/.config/dotfiles/components/intellij/config/"
+    echo "Reference configs: \$DOTFILES_ROOT/config/intellij/"
 
 # Installation configuration
 install:
@@ -104,6 +104,6 @@ install:
         message: |
           IntelliJ installed. To set up:
           1. Run 'intellij_paths' to find config locations
-          2. Import keymaps from components/intellij/config/keymaps/
-          3. Import editor settings from components/intellij/config/options/
+          2. Import keymaps from config/intellij/keymaps/
+          3. Import editor settings from config/intellij/options/
           4. Run 'intellij_install_plugins' to install recommended plugins
