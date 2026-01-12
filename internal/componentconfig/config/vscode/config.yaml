@@ -587,6 +587,157 @@ files:
         - key: "ctrl+k ctrl+f"
           command: "workbench.action.toggleFullScreen"
 
+  # Extensions list (reference for manual installation)
+  - target: "~/.local/share/dotfiles/vscode/extensions.txt"
+    format: textlist
+    values:
+      header: |
+        # VS Code Extensions
+        # Install all: cat extensions.txt | xargs -L 1 code --install-extension
+        #
+        # Or install via VS Code:
+        #   1. Cmd+Shift+X to open Extensions
+        #   2. Search and install each extension
+      sections:
+        - name: Theme & Appearance
+          items:
+            - id: catppuccin.catppuccin-vsc
+              comment: Catppuccin theme
+            - id: catppuccin.catppuccin-vsc-icons
+              comment: Catppuccin file icons
+            - id: pkief.material-icon-theme
+              comment: Material icons (alternative)
+        - name: "Language Support - Python"
+          items:
+            - id: ms-python.python
+              comment: Python language support
+            - id: ms-python.vscode-pylance
+              comment: Python language server
+            - id: charliermarsh.ruff
+              comment: Ruff linter/formatter
+            - id: ms-python.debugpy
+              comment: Python debugger
+        - name: "Language Support - JavaScript/TypeScript"
+          items:
+            - id: esbenp.prettier-vscode
+              comment: Prettier formatter
+            - id: dbaeumer.vscode-eslint
+              comment: ESLint integration
+        - name: "Language Support - Go"
+          items:
+            - id: golang.go
+              comment: Go language support
+        - name: "Language Support - Rust"
+          items:
+            - id: rust-lang.rust-analyzer
+              comment: Rust analyzer
+        - name: "Language Support - Shell"
+          items:
+            - id: foxundermoon.shell-format
+              comment: Shell script formatter
+            - id: timonwong.shellcheck
+              comment: Shell script linter
+        - name: "Language Support - YAML/TOML"
+          items:
+            - id: redhat.vscode-yaml
+              comment: YAML support
+            - id: tamasfe.even-better-toml
+              comment: TOML support
+        - name: "Language Support - Markdown"
+          items:
+            - id: yzhang.markdown-all-in-one
+              comment: Markdown tools
+            - id: davidanson.vscode-markdownlint
+              comment: Markdown linter
+        - name: "Language Support - Docker"
+          items:
+            - id: ms-azuretools.vscode-docker
+              comment: Docker support
+        - name: "Language Support - Terraform/HCL"
+          items:
+            - id: hashicorp.terraform
+              comment: Terraform/HCL support
+        - name: "Language Support - Protocol Buffers"
+          items:
+            - id: zxh404.vscode-proto3
+              comment: Protobuf support
+        - name: "Language Support - GraphQL"
+          items:
+            - id: graphql.vscode-graphql
+              comment: GraphQL support
+            - id: graphql.vscode-graphql-syntax
+              comment: GraphQL syntax
+        - name: Git & Version Control
+          items:
+            - id: eamodio.gitlens
+              comment: Git supercharged
+            - id: mhutchie.git-graph
+              comment: Git graph visualization
+            - id: github.vscode-pull-request-github
+              comment: GitHub Pull Requests
+        - name: Remote Development
+          items:
+            - id: ms-vscode-remote.remote-ssh
+              comment: Remote - SSH
+            - id: ms-vscode-remote.remote-containers
+              comment: Dev Containers
+            - id: ms-vscode.remote-server
+              comment: Remote development
+        - name: AI & Productivity
+          items:
+            - id: github.copilot
+              comment: GitHub Copilot
+            - id: github.copilot-chat
+              comment: GitHub Copilot Chat
+            - id: tabnine.tabnine-vscode
+              comment: Tabnine AI (alternative)
+        - name: Code Quality
+          items:
+            - id: streetsidesoftware.code-spell-checker
+              comment: Spell checker
+            - id: usernamehw.errorlens
+              comment: Inline error display
+            - id: sonarsource.sonarlint-vscode
+              comment: SonarLint
+        - name: Editing Helpers
+          items:
+            - id: christian-kohler.path-intellisense
+              comment: Path autocomplete
+            - id: formulahendry.auto-rename-tag
+              comment: Auto rename HTML tags
+            - id: naumovs.color-highlight
+              comment: Color preview
+            - id: mechatroner.rainbow-csv
+              comment: CSV highlighting
+            - id: editorconfig.editorconfig
+              comment: EditorConfig support
+            - id: wayou.vscode-todo-highlight
+              comment: TODO highlighting
+        - name: Testing
+          items:
+            - id: hbenl.vscode-test-explorer
+              comment: Test Explorer UI
+        - name: Debugging
+          items:
+            - id: ms-vscode.cpptools
+              comment: C/C++ debugger
+            - id: vadimcn.vscode-lldb
+              comment: LLDB debugger
+        - name: Database
+          items:
+            - id: mtxr.sqltools
+              comment: SQL Tools
+            - id: mtxr.sqltools-driver-pg
+              comment: PostgreSQL driver
+            - id: mtxr.sqltools-driver-sqlite
+              comment: SQLite driver
+        - name: REST/API
+          items:
+            - id: humao.rest-client
+              comment: REST Client
+            - id: rangav.vscode-thunder-client
+              comment: Thunder Client (Postman alternative)
+
 # Shell aliases
 aliases:
   c: "code ."
