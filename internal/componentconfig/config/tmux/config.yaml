@@ -3,21 +3,6 @@ name: tmux
 description: Tmux session management with TPM and smug
 version: 1.0.0
 
-# File sync configuration
-sync_files:
-  # Smug session configs
-  - source: "config/tmux/smug/dev.yml"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/dev.yml"
-    mode: "symlink"
-
-  - source: "config/tmux/smug/k8s.yml"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/k8s.yml"
-    mode: "symlink"
-
-  - source: "config/tmux/smug/project.yml"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/project.yml"
-    mode: "symlink"
-
 # Environment variables
 env:
   TMUX_CONFIG_DIR: "${XDG_CONFIG_HOME:-$HOME/.config}/tmux"
@@ -501,6 +486,115 @@ files:
 
       run:
         - "~/.config/tmux/plugins/tpm/tpm"
+
+  # Smug session: dev - General development workspace
+  - target: "~/.config/smug/dev.yml"
+    format: raw
+    values:
+      content: |
+        # smug session: dev
+        # General development workspace
+        # Usage: smug start dev
+
+        session: dev
+        root: ~/
+        attach: true
+
+        windows:
+          - name: editor
+            root: ~/Repos
+            commands:
+              - nvim
+
+          - name: terminal
+            root: ~/Repos
+            panes:
+              - type: horizontal
+                root: ~/Repos
+                commands:
+                  - echo "Main terminal"
+              - type: horizontal
+                root: ~/Repos
+                commands:
+                  - echo "Secondary terminal"
+
+          - name: logs
+            commands:
+              - echo "Logs/monitoring pane"
+
+  # Smug session: k8s - Kubernetes development workspace
+  - target: "~/.config/smug/k8s.yml"
+    format: raw
+    values:
+      content: |
+        # smug session: k8s
+        # Kubernetes development workspace
+        # Usage: smug start k8s
+
+        session: k8s
+        root: ~/
+        attach: true
+
+        windows:
+          - name: kubectl
+            commands:
+              - kubectl get pods
+
+          - name: logs
+            panes:
+              - type: horizontal
+                commands:
+                  - echo "App logs - use: kubectl logs -f <pod>"
+              - type: horizontal
+                commands:
+                  - echo "System logs"
+
+          - name: k9s
+            commands:
+              - k9s
+
+          - name: helm
+            commands:
+              - echo "Helm commands"
+
+  # Smug session: project - Project-specific workspace template
+  - target: "~/.config/smug/project.yml"
+    format: raw
+    values:
+      content: |
+        # smug session: project
+        # Project-specific workspace template
+        # Usage: smug start project root=/path/to/project name=myproject
+        # Variables: root (project path), name (session name)
+
+        session: ${name:-project}
+        root: ${root:-.}
+        attach: true
+
+        before_start:
+          - echo "Starting project session..."
+
+        windows:
+          - name: code
+            commands:
+              - nvim .
+
+          - name: shell
+            panes:
+              - type: horizontal
+                commands:
+                  - git status
+              - type: horizontal
+                commands:
+                  - echo "Ready for commands"
+
+          - name: server
+            commands:
+              - echo "Server/runner pane - start your dev server here"
+
+          - name: tests
+            commands:
+              - echo "Test runner pane"
 
 # Installation configuration
 install:
