@@ -143,42 +143,62 @@ shell_functions:
     fi
 
   # Initialize line editing keybindings (word navigation, home/end)
+  # Vim-style: Alt+h/l for word nav, Alt+0/$ for line nav
+  # Arrow-style: Alt+Left/Right for word nav, Home/End for line nav
   __shell_keybindings: |
     case "$CURRENT_SHELL" in
         bash)
-            # Word navigation (Alt+Left/Right)
+            # Vim-style word navigation (Alt+h/l)
+            bind '"\eh": backward-word'
+            bind '"\el": forward-word'
+
+            # Arrow-style word navigation (Alt+Left/Right)
             bind '"\e[1;3D": backward-word'
             bind '"\e[1;3C": forward-word'
-            # Fallback sequences
+            # Fallback sequences (Alt+b/f - Emacs style)
             bind '"\eb": backward-word'
             bind '"\ef": forward-word'
 
-            # Line navigation (Home/End)
+            # Vim-style line navigation (Alt+0 = home, Alt+4 = end like $)
+            bind '"\e0": beginning-of-line'
+            bind '"\e4": end-of-line'
+
+            # Arrow-style line navigation (Home/End keys)
             bind '"\e[H": beginning-of-line'
             bind '"\e[F": end-of-line'
             bind '"\e[1~": beginning-of-line'
             bind '"\e[4~": end-of-line'
 
-            # Delete word (Alt+Backspace)
+            # Delete word (Alt+Backspace, Alt+x)
             bind '"\e\x7f": backward-kill-word'
+            bind '"\ex": backward-kill-word'
             ;;
 
         zsh)
-            # Word navigation (Alt+Left/Right)
+            # Vim-style word navigation (Alt+h/l)
+            bindkey '\eh' backward-word
+            bindkey '\el' forward-word
+
+            # Arrow-style word navigation (Alt+Left/Right)
             bindkey '\e[1;3D' backward-word
             bindkey '\e[1;3C' forward-word
-            # Fallback sequences
+            # Fallback sequences (Alt+b/f - Emacs style)
             bindkey '\eb' backward-word
             bindkey '\ef' forward-word
 
-            # Line navigation (Home/End)
+            # Vim-style line navigation (Alt+0 = home, Alt+4 = end like $)
+            bindkey '\e0' beginning-of-line
+            bindkey '\e4' end-of-line
+
+            # Arrow-style line navigation (Home/End keys)
             bindkey '\e[H' beginning-of-line
             bindkey '\e[F' end-of-line
             bindkey '\e[1~' beginning-of-line
             bindkey '\e[4~' end-of-line
 
-            # Delete word (Alt+Backspace)
+            # Delete word (Alt+Backspace, Alt+x)
             bindkey '\e^?' backward-kill-word
+            bindkey '\ex' backward-kill-word
             ;;
     esac
 
