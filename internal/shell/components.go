@@ -30,6 +30,7 @@ var componentOrder = []string{
 	"fzf",
 	"ghostty",
 	"iterm2",
+	"karabiner",
 
 	// Version control
 	"git",
