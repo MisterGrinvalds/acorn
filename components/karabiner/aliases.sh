@@ -1,2 +1,0 @@
-# Karabiner aliases
-# This component primarily provides config files

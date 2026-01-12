@@ -1,0 +1,27 @@
+# Karabiner-Elements component configuration
+name: karabiner
+description: Karabiner-Elements keyboard customization (macOS)
+version: 1.0.0
+
+# Platform restriction
+platforms: [darwin]
+
+# File sync configuration
+sync_files:
+  - source: "config/karabiner/karabiner.json"
+    target: "${HOME}/.config/karabiner/karabiner.json"
+    mode: "symlink"
+
+# Installation configuration
+install:
+  tools:
+    - name: karabiner-elements
+      description: Keyboard customizer for macOS
+      check: "test -d '/Applications/Karabiner-Elements.app'"
+      methods:
+        darwin:
+          type: brew
+          package: karabiner-elements
+          cask: true
+      post_install:
+        message: "Karabiner-Elements installed. Grant accessibility permissions in System Preferences."
