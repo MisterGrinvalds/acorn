@@ -6,6 +6,12 @@ version: 1.0.0
 # Platform restriction
 platforms: [darwin]
 
+# File sync configuration
+sync_files:
+  - source: "config/iterm2/DynamicProfiles/dotfiles-profile.json"
+    target: "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/dotfiles-profile.json"
+    mode: "symlink"
+
 # Environment variables
 env:
   ITERM2_SHELL_INTEGRATION: "${HOME}/.iterm2_shell_integration.${CURRENT_SHELL:-bash}"
