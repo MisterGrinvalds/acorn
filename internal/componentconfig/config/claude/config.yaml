@@ -113,6 +113,35 @@ shell_functions:
         return 1
     fi
 
+# File sync configuration
+# Syncs Claude Code config from dotfiles to user's ~/.claude directory
+sync_files:
+  # Settings - merge dotfiles base with user's local customizations
+  - source: "ai/claude/settings.json"
+    target: "${HOME}/.claude/settings.json"
+    mode: "merge"
+    merge:
+      strategy: "deep"
+      user_file: "${HOME}/.claude/settings.local.json"
+      preserve_user_keys:
+        - "apiKey"
+        - "organizationId"
+
+  # Subagents directory - symlink entire directory
+  - source: "ai/claude/subagents"
+    target: "${HOME}/.claude/subagents"
+    mode: "symlink"
+
+  # Agents directory - symlink entire directory
+  - source: "ai/claude/agents"
+    target: "${HOME}/.claude/agents"
+    mode: "symlink"
+
+  # Commands directory - symlink entire directory
+  - source: "ai/claude/commands"
+    target: "${HOME}/.claude/commands"
+    mode: "symlink"
+
 # Installation configuration
 install:
   tools:

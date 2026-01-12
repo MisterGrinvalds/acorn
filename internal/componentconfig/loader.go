@@ -141,6 +141,9 @@ func MergeConfigs(base, override *BaseConfig) *BaseConfig {
 	// Files are merged by target path - override wins for same target
 	result.Files = mergeFiles(base.Files, override.Files)
 
+	// SyncFiles are merged by source path - override wins for same source
+	result.SyncFiles = mergeSyncFiles(base.SyncFiles, override.SyncFiles)
+
 	// Install tools are merged by name - override wins for same tool
 	result.Install = mergeInstall(base.Install, override.Install)
 
@@ -169,6 +172,31 @@ func mergeInstall(base, override InstallConfig) InstallConfig {
 	}
 	for _, t := range byName {
 		result.Tools = append(result.Tools, t)
+	}
+
+	return result
+}
+
+// mergeSyncFiles merges two SyncFileConfig slices.
+// Files with the same source path are replaced by the override.
+func mergeSyncFiles(base, override []SyncFileConfig) []SyncFileConfig {
+	if len(base) == 0 && len(override) == 0 {
+		return nil
+	}
+
+	// Index by source path
+	bySource := make(map[string]SyncFileConfig)
+	for _, f := range base {
+		bySource[f.Source] = f
+	}
+	for _, f := range override {
+		bySource[f.Source] = f
+	}
+
+	// Convert back to slice
+	result := make([]SyncFileConfig, 0, len(bySource))
+	for _, f := range bySource {
+		result = append(result, f)
 	}
 
 	return result

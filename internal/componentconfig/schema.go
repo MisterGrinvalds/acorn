@@ -27,6 +27,9 @@ type BaseConfig struct {
 	// Config files to generate for this component
 	Files []FileConfig `yaml:"files,omitempty"`
 
+	// SyncFiles defines files to sync from dotfiles repo to user locations
+	SyncFiles []SyncFileConfig `yaml:"sync_files,omitempty"`
+
 	// Installation configuration for this component
 	Install InstallConfig `yaml:"install,omitempty"`
 }
@@ -44,6 +47,37 @@ type FileConfig struct {
 
 	// Values are the actual values to write to the file
 	Values map[string]interface{} `yaml:"values"`
+}
+
+// SyncFileConfig defines a file to sync from the dotfiles repo to a user location.
+type SyncFileConfig struct {
+	// Source is the path relative to $DOTFILES_ROOT (e.g., "ai/claude/settings.json")
+	Source string `yaml:"source"`
+
+	// Target is the destination path (supports env vars like ${HOME}/.claude/settings.json)
+	Target string `yaml:"target"`
+
+	// Mode defines how to handle the file: "copy", "symlink", or "merge"
+	// - copy: Copy the file (user can modify freely)
+	// - symlink: Create a symlink to the dotfiles version
+	// - merge: Merge dotfiles version with user's local version (JSON only)
+	Mode string `yaml:"mode"`
+
+	// MergeConfig defines merge behavior (only used when Mode is "merge")
+	MergeConfig *MergeConfig `yaml:"merge,omitempty"`
+}
+
+// MergeConfig defines how to merge config files.
+type MergeConfig struct {
+	// Strategy defines merge strategy: "deep" (recursive merge) or "shallow" (top-level only)
+	Strategy string `yaml:"strategy"`
+
+	// UserFile is the path to user's local additions (merged on top of source)
+	// If empty, uses Target + ".local" suffix
+	UserFile string `yaml:"user_file,omitempty"`
+
+	// PreserveUserKeys lists keys that should always be preserved from user file
+	PreserveUserKeys []string `yaml:"preserve_user_keys,omitempty"`
 }
 
 // FieldSchema defines the schema for a config field.
@@ -149,6 +183,19 @@ type PostInstallConfig struct {
 // HasInstall returns true if the component has installation configuration.
 func (c *BaseConfig) HasInstall() bool {
 	return len(c.Install.Tools) > 0
+}
+
+// HasSyncFiles returns true if the component has sync file configuration.
+func (c *BaseConfig) HasSyncFiles() bool {
+	return len(c.SyncFiles) > 0
+}
+
+// GetSyncFiles returns sync files configuration, never nil.
+func (c *BaseConfig) GetSyncFiles() []SyncFileConfig {
+	if c.SyncFiles == nil {
+		return []SyncFileConfig{}
+	}
+	return c.SyncFiles
 }
 
 // GetEnv returns environment variables as a map, never nil.

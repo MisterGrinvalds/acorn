@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/claude"
+	"github.com/mistergrinvalds/acorn/internal/componentconfig"
+	"github.com/mistergrinvalds/acorn/internal/filesync"
 	"github.com/mistergrinvalds/acorn/internal/installer"
 	"github.com/mistergrinvalds/acorn/internal/output"
 	"github.com/spf13/cobra"
@@ -288,12 +290,47 @@ Examples:
 	RunE: runClaudeInstall,
 }
 
+// claudeSyncCmd syncs claude config files
+var claudeSyncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync Claude Code configuration files",
+	Long: `Synchronize Claude Code configuration from dotfiles to ~/.claude.
+
+Syncs settings.json (merging with local customizations), agents, commands,
+and subagents directories.
+
+Modes:
+  - symlink: Create symlinks for directories (agents, commands, subagents)
+  - merge:   Merge dotfiles settings with user's local settings
+
+Examples:
+  acorn claude sync              # Sync all config files
+  acorn claude sync --dry-run    # Show what would be synced
+  acorn claude sync status       # Check sync status`,
+	RunE: runClaudeSync,
+}
+
+// claudeSyncStatusCmd shows sync status
+var claudeSyncStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check sync status of Claude config files",
+	Long: `Display the synchronization status of Claude Code configuration files.
+
+Shows which files are synced, missing, or out of date.
+
+Examples:
+  acorn claude sync status
+  acorn claude sync status -o json`,
+	RunE: runClaudeSyncStatus,
+}
+
 func init() {
 	rootCmd.AddCommand(claudeCmd)
 
 	// Add subcommands
 	claudeCmd.AddCommand(claudeInfoCmd)
 	claudeCmd.AddCommand(claudeInstallCmd)
+	claudeCmd.AddCommand(claudeSyncCmd)
 	claudeCmd.AddCommand(claudeStatsCmd)
 	claudeCmd.AddCommand(claudePermissionsCmd)
 	claudeCmd.AddCommand(claudeSettingsCmd)
@@ -303,6 +340,9 @@ func init() {
 	claudeCmd.AddCommand(claudeAggregateCmd)
 	claudeCmd.AddCommand(claudeClearCmd)
 	claudeCmd.AddCommand(claudeHelpCmd)
+
+	// Sync subcommands
+	claudeSyncCmd.AddCommand(claudeSyncStatusCmd)
 
 	// Stats subcommands
 	claudeStatsCmd.AddCommand(claudeStatsTokensCmd)
@@ -939,6 +979,142 @@ Aggregation:
   acorn claude aggregate list  - List all agents and commands
 `
 	fmt.Print(helpText)
+	return nil
+}
+
+func runClaudeSync(cmd *cobra.Command, args []string) error {
+	// Get dotfiles root
+	dotfilesRoot, err := getDotfilesRoot()
+	if err != nil {
+		return fmt.Errorf("failed to get dotfiles root: %w", err)
+	}
+
+	// Load claude component config
+	loader := componentconfig.NewLoader()
+	cfg, err := loader.LoadBase("claude")
+	if err != nil {
+		return fmt.Errorf("failed to load claude config: %w", err)
+	}
+
+	if !cfg.HasSyncFiles() {
+		fmt.Fprintf(os.Stdout, "%s No sync files configured\n", output.Info("ℹ"))
+		return nil
+	}
+
+	// Create syncer and sync files
+	syncer := filesync.NewSyncer(dotfilesRoot, claudeDryRun, claudeVerbose)
+	result, err := syncer.Sync(cfg.GetSyncFiles())
+	if err != nil {
+		return fmt.Errorf("sync failed: %w", err)
+	}
+
+	// Output results
+	format, err := output.ParseFormat(claudeOutputFormat)
+	if err != nil {
+		return err
+	}
+
+	if format != output.FormatTable {
+		printer := output.NewPrinter(os.Stdout, format)
+		return printer.Print(result)
+	}
+
+	// Table format
+	if result.DryRun {
+		fmt.Fprintf(os.Stdout, "%s Sync Preview (dry-run)\n", output.Info("ℹ"))
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Claude Config Sync\n", output.Info("ℹ"))
+	}
+	fmt.Fprintln(os.Stdout)
+
+	if len(result.Synced) > 0 {
+		for _, f := range result.Synced {
+			fmt.Fprintf(os.Stdout, "  %s %s → %s (%s)\n",
+				output.Success("✓"), f.Source, f.Target, f.Mode)
+		}
+	}
+
+	if len(result.Skipped) > 0 && claudeVerbose {
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, "Unchanged:")
+		for _, f := range result.Skipped {
+			fmt.Fprintf(os.Stdout, "  %s %s\n", output.Info("○"), f.Target)
+		}
+	}
+
+	if len(result.Errors) > 0 {
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, "Errors:")
+		for _, e := range result.Errors {
+			fmt.Fprintf(os.Stdout, "  %s %s: %s\n", output.Error("✗"), e.Source, e.Error)
+		}
+	}
+
+	if len(result.Synced) > 0 || len(result.Skipped) > 0 {
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintf(os.Stdout, "Summary: %d synced, %d unchanged, %d errors\n",
+			len(result.Synced), len(result.Skipped), len(result.Errors))
+	}
+
+	return nil
+}
+
+func runClaudeSyncStatus(cmd *cobra.Command, args []string) error {
+	// Get dotfiles root
+	dotfilesRoot, err := getDotfilesRoot()
+	if err != nil {
+		return fmt.Errorf("failed to get dotfiles root: %w", err)
+	}
+
+	// Load claude component config
+	loader := componentconfig.NewLoader()
+	cfg, err := loader.LoadBase("claude")
+	if err != nil {
+		return fmt.Errorf("failed to load claude config: %w", err)
+	}
+
+	if !cfg.HasSyncFiles() {
+		fmt.Fprintf(os.Stdout, "%s No sync files configured\n", output.Info("ℹ"))
+		return nil
+	}
+
+	// Create syncer and check status
+	syncer := filesync.NewSyncer(dotfilesRoot, false, claudeVerbose)
+	result, err := syncer.Status(cfg.GetSyncFiles())
+	if err != nil {
+		return fmt.Errorf("status check failed: %w", err)
+	}
+
+	// Output results
+	format, err := output.ParseFormat(claudeOutputFormat)
+	if err != nil {
+		return err
+	}
+
+	if format != output.FormatTable {
+		printer := output.NewPrinter(os.Stdout, format)
+		return printer.Print(result)
+	}
+
+	// Table format
+	fmt.Fprintf(os.Stdout, "%s Claude Config Sync Status\n\n", output.Info("ℹ"))
+
+	for _, f := range result.Synced {
+		fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", output.Success("✓"), f.Target, f.Mode)
+	}
+
+	for _, f := range result.Skipped {
+		icon := output.Warning("○")
+		if f.Action == "missing" {
+			icon = output.Error("✗")
+		}
+		fmt.Fprintf(os.Stdout, "  %s %s - %s\n", icon, f.Target, f.Action)
+	}
+
+	fmt.Fprintln(os.Stdout)
+	fmt.Fprintf(os.Stdout, "Summary: %d synced, %d need attention\n",
+		len(result.Synced), len(result.Skipped))
+
 	return nil
 }
 
