@@ -3,6 +3,25 @@ name: git
 description: Git version control aliases and functions
 version: 1.0.0
 
+# File sync configuration
+# Syncs git config files from dotfiles to user's home directory
+sync_files:
+  - source: "config/git/config"
+    target: "${HOME}/.gitconfig"
+    mode: "symlink"
+
+  - source: "config/git/config.alias"
+    target: "${HOME}/.config/git/config.alias"
+    mode: "symlink"
+
+  - source: "config/git/config.color"
+    target: "${HOME}/.config/git/config.color"
+    mode: "symlink"
+
+  - source: "config/git/config.work"
+    target: "${HOME}/.config/git/config.work"
+    mode: "symlink"
+
 # Environment variables
 env:
   DEFAULT_REPOS_DIR: "${DEFAULT_REPOS_DIR:-$HOME/Repos}"

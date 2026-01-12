@@ -1,13 +1,13 @@
 [core]
   editor = nvim
 [include]
-  path = config.color
-  path = config.alias
+  path = ~/.config/git/config.color
+  path = ~/.config/git/config.alias
 [user]
     name = MisterGrinvalds
     email = 8541275+MisterGrinvalds@users.noreply.github.com
 [includeIf "gitdir:~/Repos/work/"]
-    path = config.work
+    path = ~/.config/git/config.work
 [credential "https://github.com"]
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential

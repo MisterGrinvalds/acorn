@@ -21,3 +21,4 @@ tmp-dotfiles/
 build/
 dist/
 bin/
+generated/
