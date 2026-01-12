@@ -20,3 +20,4 @@ tmp-dotfiles/
 # Go build artifacts
 build/
 dist/
+bin/

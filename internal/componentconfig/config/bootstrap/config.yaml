@@ -118,6 +118,12 @@ shell_functions:
         fi
     fi
 
+    # Add dotfiles bin to PATH (for acorn and other tools)
+    case ":$PATH:" in
+        *":$DOTFILES_ROOT/bin:"*) ;;
+        *) export PATH="$DOTFILES_ROOT/bin:$PATH" ;;
+    esac
+
     # XDG Base Directory
     export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
     export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
