@@ -50,6 +50,7 @@ var componentOrder = []string{
 	// Utilities
 	"tools",
 	"secrets",
+	"wget",
 }
 
 // RegisterAllComponents registers all known components with the manager.

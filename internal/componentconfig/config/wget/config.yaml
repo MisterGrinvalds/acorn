@@ -3,11 +3,13 @@ name: wget
 description: Wget download utility configuration
 version: 1.0.0
 
-# File sync configuration
-sync_files:
-  - source: "config/wget/wgetrc"
-    target: "${HOME}/.wgetrc"
-    mode: "symlink"
+# Generated configuration files
+files:
+  - target: "~/.wgetrc"
+    format: raw
+    values:
+      content: |
+        hsts-file=~/.local/state/wget-hsts
 
 # Installation configuration
 install:
