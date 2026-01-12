@@ -9,7 +9,7 @@ Perfect for setting up new or foreign environments directly from Neovim.
 
 ```lua
 {
-  dir = vim.env.DOTFILES_ROOT and (vim.env.DOTFILES_ROOT .. "/components/neovim/plugin") or nil,
+  dir = vim.env.DOTFILES_ROOT and (vim.env.DOTFILES_ROOT .. "/config/neovim/plugin") or nil,
   name = "dotfiles",
   config = function()
     require("dotfiles").setup({
@@ -28,7 +28,7 @@ Perfect for setting up new or foreign environments directly from Neovim.
 
 ```lua
 use {
-  "~/Repos/personal/bash-profile/components/neovim/plugin",
+  "~/Repos/personal/bash-profile/config/neovim/plugin",
   as = "dotfiles",
   config = function()
     require("dotfiles").setup()
@@ -41,7 +41,7 @@ use {
 Add to your runtimepath in `init.lua`:
 
 ```lua
-vim.opt.runtimepath:append(vim.env.DOTFILES_ROOT .. "/components/neovim/plugin")
+vim.opt.runtimepath:append(vim.env.DOTFILES_ROOT .. "/config/neovim/plugin")
 require("dotfiles").setup()
 ```
 

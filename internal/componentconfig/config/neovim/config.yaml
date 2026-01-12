@@ -27,7 +27,7 @@ shell_functions:
   # Variables used by functions
   _nvim_init: |
     NVIM_REPOS_DIR="${HOME}/Repos/personal"
-    NVIM_DOTFILES_PLUGIN="${DOTFILES_ROOT}/components/neovim/plugin"
+    NVIM_DOTFILES_PLUGIN="${DOTFILES_ROOT}/config/neovim/plugin"
 
   # Clean cache/data with confirmation
   nvim_clean: |
