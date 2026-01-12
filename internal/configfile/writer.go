@@ -42,20 +42,41 @@ func GetWriter(format string) (Writer, error) {
 
 // GeneratedFile represents a generated config file with metadata.
 type GeneratedFile struct {
-	Target  string `json:"target" yaml:"target"`
-	Format  string `json:"format" yaml:"format"`
-	Content string `json:"content" yaml:"content"`
-	Written bool   `json:"written" yaml:"written"`
+	// GeneratedPath is where the file was written (in the repo's generated/ directory)
+	GeneratedPath string `json:"generated_path" yaml:"generated_path"`
+	// SymlinkTarget is the XDG path where a symlink should point to this file
+	SymlinkTarget string `json:"symlink_target" yaml:"symlink_target"`
+	Format        string `json:"format" yaml:"format"`
+	Content       string `json:"content" yaml:"content"`
+	Written       bool   `json:"written" yaml:"written"`
+	// Component is the name of the component this file belongs to
+	Component string `json:"component" yaml:"component"`
 }
 
 // Manager handles config file generation for components.
 type Manager struct {
-	dryRun bool
+	dryRun       bool
+	generatedDir string // Directory where generated files are written (e.g., $DOTFILES_ROOT/generated)
 }
 
 // NewManager creates a new config file manager.
+// If generatedDir is empty, files are written directly to their target paths (legacy behavior).
 func NewManager(dryRun bool) *Manager {
 	return &Manager{dryRun: dryRun}
+}
+
+// NewManagerWithGeneratedDir creates a config file manager that writes to a generated directory.
+// Files are written to generatedDir/{component}/{filename} and symlink targets are tracked.
+func NewManagerWithGeneratedDir(generatedDir string, dryRun bool) *Manager {
+	return &Manager{
+		dryRun:       dryRun,
+		generatedDir: generatedDir,
+	}
+}
+
+// SetGeneratedDir sets the directory where generated files should be written.
+func (m *Manager) SetGeneratedDir(dir string) {
+	m.generatedDir = dir
 }
 
 // ExpandPath expands environment variables in a path.
@@ -109,7 +130,15 @@ func ExpandPath(path string) string {
 }
 
 // GenerateFile generates a single config file.
+// Deprecated: Use GenerateFileForComponent which tracks symlink targets properly.
 func (m *Manager) GenerateFile(fc componentconfig.FileConfig) (*GeneratedFile, error) {
+	return m.GenerateFileForComponent("unknown", fc)
+}
+
+// GenerateFileForComponent generates a config file for a specific component.
+// If generatedDir is set, writes to generatedDir/{component}/{filename} and tracks symlink target.
+// Otherwise, writes directly to the target path (legacy behavior).
+func (m *Manager) GenerateFileForComponent(component string, fc componentconfig.FileConfig) (*GeneratedFile, error) {
 	writer, err := GetWriter(fc.Format)
 	if err != nil {
 		return nil, err
@@ -120,23 +149,36 @@ func (m *Manager) GenerateFile(fc componentconfig.FileConfig) (*GeneratedFile, e
 		return nil, fmt.Errorf("failed to generate %s: %w", fc.Target, err)
 	}
 
-	target := ExpandPath(fc.Target)
+	symlinkTarget := ExpandPath(fc.Target)
+
+	// Determine where to write the file
+	var writePath string
+	if m.generatedDir != "" {
+		// Write to generated/{component}/{filename}
+		filename := filepath.Base(symlinkTarget)
+		writePath = filepath.Join(m.generatedDir, component, filename)
+	} else {
+		// Legacy: write directly to target
+		writePath = symlinkTarget
+	}
 
 	result := &GeneratedFile{
-		Target:  target,
-		Format:  fc.Format,
-		Content: string(content),
-		Written: false,
+		GeneratedPath: writePath,
+		SymlinkTarget: symlinkTarget,
+		Format:        fc.Format,
+		Content:       string(content),
+		Written:       false,
+		Component:     component,
 	}
 
 	if !m.dryRun {
 		// Ensure parent directory exists
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			return nil, fmt.Errorf("failed to create directory for %s: %w", target, err)
+		if err := os.MkdirAll(filepath.Dir(writePath), 0o755); err != nil {
+			return nil, fmt.Errorf("failed to create directory for %s: %w", writePath, err)
 		}
 
-		if err := os.WriteFile(target, content, 0o644); err != nil {
-			return nil, fmt.Errorf("failed to write %s: %w", target, err)
+		if err := os.WriteFile(writePath, content, 0o644); err != nil {
+			return nil, fmt.Errorf("failed to write %s: %w", writePath, err)
 		}
 		result.Written = true
 	}

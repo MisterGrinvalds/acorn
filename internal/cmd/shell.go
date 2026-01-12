@@ -283,7 +283,8 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 		if shellDryRun {
 			status = output.Warning("○")
 		}
-		fmt.Fprintf(os.Stdout, "  %s %s\n", status, script.TargetPath)
+		fmt.Fprintf(os.Stdout, "  %s %s\n", status, script.GeneratedPath)
+		fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", script.SymlinkPath)
 		if shellVerbose {
 			fmt.Fprintf(os.Stdout, "    Description: %s\n", script.Description)
 		}
@@ -294,7 +295,8 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 		if shellDryRun {
 			status = output.Warning("○")
 		}
-		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, result.Entrypoint.TargetPath)
+		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, result.Entrypoint.GeneratedPath)
+		fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", result.Entrypoint.SymlinkPath)
 	}
 
 	// Show config files
@@ -310,7 +312,8 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 			if shellDryRun {
 				status = output.Warning("○")
 			}
-			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.Target, cf.Format)
+			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.GeneratedPath, cf.Format)
+			fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", cf.SymlinkTarget)
 		}
 	}
 
@@ -441,14 +444,16 @@ func runShellInstall(cmd *cobra.Command, args []string) error {
 		if shellDryRun {
 			status = output.Warning("○")
 		}
-		fmt.Fprintf(os.Stdout, "  %s %s\n", status, script.TargetPath)
+		fmt.Fprintf(os.Stdout, "  %s %s\n", status, script.GeneratedPath)
+		fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", script.SymlinkPath)
 	}
 	if genResult.Entrypoint != nil {
 		status := output.Success("✓")
 		if shellDryRun {
 			status = output.Warning("○")
 		}
-		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, genResult.Entrypoint.TargetPath)
+		fmt.Fprintf(os.Stdout, "  %s %s (entrypoint)\n", status, genResult.Entrypoint.GeneratedPath)
+		fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", genResult.Entrypoint.SymlinkPath)
 	}
 
 	// Show config files
@@ -460,7 +465,8 @@ func runShellInstall(cmd *cobra.Command, args []string) error {
 			if shellDryRun {
 				status = output.Warning("○")
 			}
-			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.Target, cf.Format)
+			fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", status, cf.GeneratedPath, cf.Format)
+			fmt.Fprintf(os.Stdout, "    → symlink to: %s\n", cf.SymlinkTarget)
 		}
 	}
 

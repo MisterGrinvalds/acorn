@@ -7,9 +7,10 @@ version: 1.0.0
 shell_functions:
   __theme_init: |
     # RGB escape sequence helpers
-    _rgb() { printf '\033[38;2;%d;%d;%dm' "$1" "$2" "$3"; }
-    _rgb_bg() { printf '\033[48;2;%d;%d;%dm' "$1" "$2" "$3"; }
-    _c256() { printf '\033[38;5;%dm' "$1"; }
+    # Use %b format specifier for bash 3.2 compatibility (macOS default)
+    _rgb() { printf '%b' "\033[38;2;$1;$2;${3}m"; }
+    _rgb_bg() { printf '%b' "\033[48;2;$1;$2;${3}m"; }
+    _c256() { printf '%b' "\033[38;5;${1}m"; }
 
     # Truecolor detection
     _has_truecolor() {
@@ -111,6 +112,3 @@ shell_functions:
 
     # Clean up helper functions
     unset -f _rgb _rgb_bg _c256 _has_truecolor
-
-# Initialize theme on load
-__theme_init

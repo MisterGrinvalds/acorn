@@ -66,11 +66,12 @@ type Component struct {
 
 // GeneratedScript represents a generated shell script with metadata.
 type GeneratedScript struct {
-	Component   string `json:"component" yaml:"component"`
-	Description string `json:"description" yaml:"description"`
-	TargetPath  string `json:"target_path" yaml:"target_path"`
-	Content     string `json:"content" yaml:"content"`
-	Written     bool   `json:"written" yaml:"written"`
+	Component    string `json:"component" yaml:"component"`
+	Description  string `json:"description" yaml:"description"`
+	GeneratedPath string `json:"generated_path" yaml:"generated_path"` // Where file was written (generated/shell/)
+	SymlinkPath  string `json:"symlink_path" yaml:"symlink_path"`       // Where symlink should point (XDG)
+	Content      string `json:"content" yaml:"content"`
+	Written      bool   `json:"written" yaml:"written"`
 }
 
 // GenerateResult contains the result of a generate operation.
@@ -152,6 +153,17 @@ func (m *Manager) GetComponent(name string) (*Component, bool) {
 	return c, ok
 }
 
+// getGeneratedShellDir returns the directory for generated shell scripts.
+// Scripts are written to $DOTFILES_ROOT/generated/shell/
+func (m *Manager) getGeneratedShellDir() string {
+	if dotfilesRoot := os.Getenv("DOTFILES_ROOT"); dotfilesRoot != "" {
+		return filepath.Join(dotfilesRoot, "generated", "shell")
+	}
+	// Fallback: derive from home directory
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, "Repos", "personal", "tools", "generated", "shell")
+}
+
 // GenerateComponent generates a shell script for a single component.
 // Returns structured result with script content and metadata.
 func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
@@ -160,25 +172,28 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 		return nil, fmt.Errorf("component not found: %s (available: %v)", name, m.ListComponents())
 	}
 
-	if err := m.EnsureDir(); err != nil {
-		return nil, fmt.Errorf("failed to create acorn directory: %w", err)
+	generatedDir := m.getGeneratedShellDir()
+	if err := os.MkdirAll(generatedDir, 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create generated directory: %w", err)
 	}
 
 	script := m.generateComponentScript(c)
-	scriptPath := filepath.Join(m.config.AcornDir, name+".sh")
+	generatedPath := filepath.Join(generatedDir, name+".sh")
+	symlinkPath := filepath.Join(m.config.AcornDir, name+".sh")
 
 	genScript := &GeneratedScript{
-		Component:   name,
-		Description: c.Description,
-		TargetPath:  scriptPath,
-		Content:     script,
-		Written:     false,
+		Component:     name,
+		Description:   c.Description,
+		GeneratedPath: generatedPath,
+		SymlinkPath:   symlinkPath,
+		Content:       script,
+		Written:       false,
 	}
 
 	// Write file if not dry-run
 	if !m.config.DryRun {
-		if err := os.WriteFile(scriptPath, []byte(script), 0o644); err != nil {
-			return nil, fmt.Errorf("failed to write %s: %w", scriptPath, err)
+		if err := os.WriteFile(generatedPath, []byte(script), 0o644); err != nil {
+			return nil, fmt.Errorf("failed to write %s: %w", generatedPath, err)
 		}
 		genScript.Written = true
 	}
@@ -194,9 +209,13 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 
 // GenerateComponents generates shell scripts for specific components.
 // If names is empty, generates for all components.
+// Shell scripts are written to $DOTFILES_ROOT/generated/shell/ and should be
+// symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
-	if err := m.EnsureDir(); err != nil {
-		return nil, fmt.Errorf("failed to create acorn directory: %w", err)
+	// Ensure generated shell directory exists
+	generatedShellDir := m.getGeneratedShellDir()
+	if err := os.MkdirAll(generatedShellDir, 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create generated shell directory: %w", err)
 	}
 
 	// If no names specified, use all components
@@ -213,7 +232,10 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 		ConfigFiles: make([]*configfile.GeneratedFile, 0),
 	}
 
-	cfManager := configfile.NewManager(m.config.DryRun)
+	// Create config file manager with generated directory
+	// Config files are written to $DOTFILES_ROOT/generated/{component}/{filename}
+	generatedDir := filepath.Dir(generatedShellDir) // parent of shell/ is generated/
+	cfManager := configfile.NewManagerWithGeneratedDir(generatedDir, m.config.DryRun)
 
 	// Generate each component script
 	for _, name := range names {
@@ -223,19 +245,21 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 		}
 
 		script := m.generateComponentScript(c)
-		scriptPath := filepath.Join(m.config.AcornDir, name+".sh")
+		generatedPath := filepath.Join(generatedShellDir, name+".sh")
+		symlinkPath := filepath.Join(m.config.AcornDir, name+".sh")
 
 		genScript := &GeneratedScript{
-			Component:   name,
-			Description: c.Description,
-			TargetPath:  scriptPath,
-			Content:     script,
-			Written:     false,
+			Component:     name,
+			Description:   c.Description,
+			GeneratedPath: generatedPath,
+			SymlinkPath:   symlinkPath,
+			Content:       script,
+			Written:       false,
 		}
 
 		if !m.config.DryRun {
-			if err := os.WriteFile(scriptPath, []byte(script), 0o644); err != nil {
-				return nil, fmt.Errorf("failed to write %s: %w", scriptPath, err)
+			if err := os.WriteFile(generatedPath, []byte(script), 0o644); err != nil {
+				return nil, fmt.Errorf("failed to write %s: %w", generatedPath, err)
 			}
 			genScript.Written = true
 		}
@@ -246,7 +270,7 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 		if files, ok := m.fileSpecs[name]; ok {
 			for _, spec := range files {
 				fc := componentConfigFromSpec(spec)
-				genFile, err := cfManager.GenerateFile(fc)
+				genFile, err := cfManager.GenerateFileForComponent(name, fc)
 				if err != nil {
 					return nil, fmt.Errorf("failed to generate config for %s: %w", name, err)
 				}
@@ -268,6 +292,8 @@ func componentConfigFromSpec(spec FileSpec) componentconfig.FileConfig {
 }
 
 // GenerateAll generates all component shell scripts and the entrypoint.
+// All scripts are written to $DOTFILES_ROOT/generated/shell/ and should be
+// symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateAll() (*GenerateResult, error) {
 	result, err := m.GenerateComponents() // all components
 	if err != nil {
@@ -275,19 +301,24 @@ func (m *Manager) GenerateAll() (*GenerateResult, error) {
 	}
 
 	// Generate the main entrypoint
+	// Named "shell.sh" as the primary entrypoint sourced by rc files
+	// Written to generated/shell/shell.sh, symlinked to ~/.config/acorn/shell.sh
 	entrypoint := m.generateEntrypoint()
-	entrypointPath := filepath.Join(m.config.AcornDir, "shell.sh")
+	generatedShellDir := m.getGeneratedShellDir()
+	generatedPath := filepath.Join(generatedShellDir, "shell.sh")
+	symlinkPath := filepath.Join(m.config.AcornDir, "shell.sh")
 
 	result.Entrypoint = &GeneratedScript{
-		Component:   "shell",
-		Description: "Main entrypoint that sources all component scripts",
-		TargetPath:  entrypointPath,
-		Content:     entrypoint,
-		Written:     false,
+		Component:     "entrypoint",
+		Description:   "Main entrypoint that sources all component scripts",
+		GeneratedPath: generatedPath,
+		SymlinkPath:   symlinkPath,
+		Content:       entrypoint,
+		Written:       false,
 	}
 
 	if !m.config.DryRun {
-		if err := os.WriteFile(entrypointPath, []byte(entrypoint), 0o644); err != nil {
+		if err := os.WriteFile(generatedPath, []byte(entrypoint), 0o644); err != nil {
 			return nil, fmt.Errorf("failed to write entrypoint: %w", err)
 		}
 		result.Entrypoint.Written = true
@@ -333,6 +364,8 @@ func (m *Manager) generateComponentScript(c *Component) string {
 }
 
 // generateEntrypoint generates the main shell.sh entrypoint.
+// Components are sourced in the order defined by GetComponentOrder() to ensure
+// dependencies are met (e.g., shell before theme, xdg before everything else).
 func (m *Manager) generateEntrypoint() string {
 	var b strings.Builder
 
@@ -341,80 +374,20 @@ func (m *Manager) generateEntrypoint() string {
 	b.WriteString("# Generated by acorn - do not edit manually\n")
 	b.WriteString("# Source this file from your shell rc file\n\n")
 
-	// Homebrew PATH setup (before everything else)
-	b.WriteString("# Homebrew PATH setup\n")
-	b.WriteString("if [ -x \"/opt/homebrew/bin/brew\" ]; then\n")
-	b.WriteString("    eval \"$(/opt/homebrew/bin/brew shellenv)\"\n")
-	b.WriteString("elif [ -x \"/usr/local/bin/brew\" ]; then\n")
-	b.WriteString("    eval \"$(/usr/local/bin/brew shellenv)\"\n")
-	b.WriteString("fi\n\n")
-
-	// Shell and platform detection
-	b.WriteString("# Shell and platform detection\n")
-	b.WriteString("if [ -n \"$ZSH_VERSION\" ]; then\n")
-	b.WriteString("    export CURRENT_SHELL=\"zsh\"\n")
-	b.WriteString("    export IS_LOGIN_SHELL=\"$([[ -o login ]] && echo true || echo false)\"\n")
-	b.WriteString("elif [ -n \"$BASH_VERSION\" ]; then\n")
-	b.WriteString("    export CURRENT_SHELL=\"bash\"\n")
-	b.WriteString("    export IS_LOGIN_SHELL=\"$(shopt -q login_shell && echo true || echo false)\"\n")
-	b.WriteString("else\n")
-	b.WriteString("    export CURRENT_SHELL=\"sh\"\n")
-	b.WriteString("    export IS_LOGIN_SHELL=\"false\"\n")
-	b.WriteString("fi\n\n")
-
-	b.WriteString(fmt.Sprintf("export CURRENT_PLATFORM=\"%s\"\n", m.config.Platform))
-	b.WriteString("export IS_INTERACTIVE=\"true\"\n\n")
-
-	// XDG Base Directory
-	b.WriteString("# XDG Base Directory\n")
-	b.WriteString("export XDG_CONFIG_HOME=\"${XDG_CONFIG_HOME:-$HOME/.config}\"\n")
-	b.WriteString("export XDG_DATA_HOME=\"${XDG_DATA_HOME:-$HOME/.local/share}\"\n")
-	b.WriteString("export XDG_CACHE_HOME=\"${XDG_CACHE_HOME:-$HOME/.cache}\"\n")
-	b.WriteString("export XDG_STATE_HOME=\"${XDG_STATE_HOME:-$HOME/.local/state}\"\n\n")
-
-	// XDG_RUNTIME_DIR (platform-specific)
-	b.WriteString("# XDG Runtime Directory (platform-specific)\n")
-	b.WriteString("if [ -z \"$XDG_RUNTIME_DIR\" ]; then\n")
-	b.WriteString("    case \"$CURRENT_PLATFORM\" in\n")
-	b.WriteString("        darwin)\n")
-	b.WriteString("            export XDG_RUNTIME_DIR=\"${TMPDIR:-/tmp}\"\n")
-	b.WriteString("            ;;\n")
-	b.WriteString("        linux)\n")
-	b.WriteString("            if [ -d \"/run/user/$(id -u)\" ]; then\n")
-	b.WriteString("                export XDG_RUNTIME_DIR=\"/run/user/$(id -u)\"\n")
-	b.WriteString("            else\n")
-	b.WriteString("                export XDG_RUNTIME_DIR=\"/tmp/runtime-$(id -u)\"\n")
-	b.WriteString("            fi\n")
-	b.WriteString("            ;;\n")
-	b.WriteString("        *)\n")
-	b.WriteString("            export XDG_RUNTIME_DIR=\"/tmp\"\n")
-	b.WriteString("            ;;\n")
-	b.WriteString("    esac\n")
-	b.WriteString("fi\n\n")
-
-	// Warning tracking directory
-	b.WriteString("# Component warning tracking\n")
-	b.WriteString("export DOTFILES_WARNING_FILE=\"${XDG_STATE_HOME}/shell/component_warnings\"\n")
-	b.WriteString("mkdir -p \"$(dirname \"$DOTFILES_WARNING_FILE\")\" 2>/dev/null\n\n")
-
 	b.WriteString("# Acorn configuration directory\n")
-	b.WriteString(fmt.Sprintf("ACORN_CONFIG_DIR=\"%s\"\n\n", m.config.AcornDir))
+	b.WriteString(fmt.Sprintf("ACORN_CONFIG_DIR=\"%s\"\n", m.config.AcornDir))
+	b.WriteString("export ACORN_CONFIG_DIR\n\n")
 
-	b.WriteString("# Source all component scripts\n")
-	for name := range m.components {
-		b.WriteString(fmt.Sprintf("[ -f \"$ACORN_CONFIG_DIR/%s.sh\" ] && . \"$ACORN_CONFIG_DIR/%s.sh\"\n", name, name))
+	b.WriteString("# Source all component scripts in dependency order\n")
+	// Use GetComponentOrder() to maintain correct loading order
+	for _, name := range GetComponentOrder() {
+		// Only include components that are registered
+		if _, ok := m.components[name]; ok {
+			b.WriteString(fmt.Sprintf("[ -f \"$ACORN_CONFIG_DIR/%s.sh\" ] && . \"$ACORN_CONFIG_DIR/%s.sh\"\n", name, name))
+		}
 	}
 
-	// Local overrides
-	b.WriteString("\n# Local overrides\n")
-	b.WriteString("[ -f \"${XDG_CONFIG_HOME}/shell/local.sh\" ] && . \"${XDG_CONFIG_HOME}/shell/local.sh\"\n")
-	b.WriteString("[ -f \"${HOME}/.shell_local\" ] && . \"${HOME}/.shell_local\"\n\n")
-
-	// Mark components as loaded
-	b.WriteString("# Mark components as loaded\n")
-	b.WriteString("export DOTFILES_COMPONENTS_LOADED=1\n\n")
-
-	b.WriteString("# Acorn CLI completions\n")
+	b.WriteString("\n# Acorn CLI completions\n")
 	b.WriteString("if command -v acorn >/dev/null 2>&1; then\n")
 	if m.config.Shell == "zsh" {
 		b.WriteString("    eval \"$(acorn completion zsh)\"\n")

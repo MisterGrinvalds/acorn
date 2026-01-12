@@ -141,8 +141,9 @@ func TestManagerGenerateFileDryRun(t *testing.T) {
 		t.Error("File should not be written in dry run mode")
 	}
 
-	if result.Target != "/tmp/test-config-dry-run" {
-		t.Errorf("Target = %q, want %q", result.Target, "/tmp/test-config-dry-run")
+	// In legacy mode (no generatedDir), GeneratedPath and SymlinkTarget are the same
+	if result.SymlinkTarget != "/tmp/test-config-dry-run" {
+		t.Errorf("SymlinkTarget = %q, want %q", result.SymlinkTarget, "/tmp/test-config-dry-run")
 	}
 
 	if result.Format != "ghostty" {

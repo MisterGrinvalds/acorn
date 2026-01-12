@@ -262,8 +262,11 @@ func (g *Generator) generateAliasesString(aliases map[string]string) string {
 }
 
 // generateFunctionsString generates wrappers and shell functions as a string.
+// Functions prefixed with __ are considered init functions and will be called
+// automatically after definition.
 func (g *Generator) generateFunctionsString(cfg *componentconfig.BaseConfig) string {
 	var b strings.Builder
+	var initFunctions []string // Track init functions to call
 
 	// Generate wrappers
 	for _, w := range cfg.Wrappers {
@@ -291,6 +294,20 @@ func (g *Generator) generateFunctionsString(cfg *componentconfig.BaseConfig) str
 			}
 		}
 		b.WriteString("}\n\n")
+
+		// Track init functions (prefixed with __)
+		if strings.HasPrefix(name, "__") {
+			initFunctions = append(initFunctions, name)
+		}
+	}
+
+	// Call init functions in order
+	if len(initFunctions) > 0 {
+		b.WriteString("# Call init functions\n")
+		for _, name := range initFunctions {
+			b.WriteString(fmt.Sprintf("%s\n", name))
+		}
+		b.WriteString("\n")
 	}
 
 	return b.String()
