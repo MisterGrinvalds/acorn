@@ -1,23 +1,106 @@
 # Git component configuration
 name: git
-description: Git version control aliases and functions
+description: Git version control configuration and aliases
 version: 1.0.0
 
-# File sync configuration
-# Syncs git config files from dotfiles to user's home directory
+# Generated config file
+# Creates a complete .gitconfig from declarative values
+files:
+  - target: "${HOME}/.gitconfig"
+    format: gitconfig
+    values:
+      core:
+        editor: nvim
+
+      user:
+        name: MisterGrinvalds
+        email: "8541275+MisterGrinvalds@users.noreply.github.com"
+
+      color:
+        ui: auto
+
+      # Git native aliases - faster than shell aliases
+      alias:
+        # Basic commands
+        a: add
+        A: "add -A"
+        aa: "add --all"
+        s: status
+        c: commit
+        cm: "commit -m"
+        ca: "commit --amend"
+        can: "commit --amend --no-edit"
+        cA: "!git add -A && git commit"
+        # Checkout/Branch
+        co: checkout
+        cob: "checkout -b"
+        b: branch
+        br: branch
+        ba: "branch -a"
+        bd: "branch -d"
+        bD: "branch -D"
+        # Diff
+        d: diff
+        dc: "diff --cached"
+        ds: "diff --staged"
+        # Fetch/Pull/Push
+        f: fetch
+        fa: "fetch --all"
+        ff: "pull --ff"
+        p: push
+        pf: "push --force-with-lease"
+        pu: "!git push -u origin $(git rev-parse --abbrev-ref HEAD)"
+        pl: pull
+        plr: "pull --rebase"
+        # Merge/Rebase
+        m: merge
+        r: rebase
+        ri: "rebase -i"
+        rc: "rebase --continue"
+        ra: "rebase --abort"
+        # Stash
+        st: stash
+        stp: "stash pop"
+        stl: "stash list"
+        # Log
+        l: log
+        lo: "log --oneline -20"
+        loa: "log --oneline --all --graph --decorate"
+        lg: "log --graph --pretty=format:'%C(yellow)%h%Creset %C(red)%d%Creset %s %C(white)(%cr)%Creset %C(cyan)<%an>%Creset' --abbrev-commit"
+        # Remote
+        rv: "remote -v"
+        ru: "remote update"
+        # Reset
+        rh: "reset HEAD"
+        rhh: "reset HEAD --hard"
+        rhs: "reset HEAD --soft"
+        undo: "reset --soft HEAD~1"
+        # Clean
+        clean-fd: "clean -fd"
+        pristine: "!git reset --hard && git clean -fdx"
+        # Info
+        w: whatchanged
+        sh: "show --stat"
+        bl: "blame -n"
+
+      # Credential helpers
+      credential:
+        "https://github.com":
+          helper:
+            - ""
+            - "!/opt/homebrew/bin/gh auth git-credential"
+        "https://gist.github.com":
+          helper:
+            - ""
+            - "!/opt/homebrew/bin/gh auth git-credential"
+
+      # Conditional includes for work identity
+      includeIf:
+        "gitdir:~/Repos/work/":
+          path: "~/.config/git/config.work"
+
+# Sync work identity file (sensitive - not generated)
 sync_files:
-  - source: "config/git/config"
-    target: "${HOME}/.gitconfig"
-    mode: "symlink"
-
-  - source: "config/git/config.alias"
-    target: "${HOME}/.config/git/config.alias"
-    mode: "symlink"
-
-  - source: "config/git/config.color"
-    target: "${HOME}/.config/git/config.color"
-    mode: "symlink"
-
   - source: "config/git/config.work"
     target: "${HOME}/.config/git/config.work"
     mode: "symlink"
@@ -26,58 +109,20 @@ sync_files:
 env:
   DEFAULT_REPOS_DIR: "${DEFAULT_REPOS_DIR:-$HOME/Repos}"
 
-# Shell aliases
+# Shell aliases - shortcuts that invoke git
+# These are faster to type than 'git <alias>'
 aliases:
-  # Basic git commands
   g: "git"
   gs: "git status"
-  ga: "git add"
-  gaa: "git add --all"
-  gc: "git commit"
-  gcm: "git commit -m"
-  gca: "git commit --amend"
-  gco: "git checkout"
-  # Branch management
-  gb: "git branch"
-  gba: "git branch -a"
-  gbd: "git branch -d"
-  gbD: "git branch -D"
-  # Diff
   gd: "git diff"
-  gds: "git diff --staged"
-  # Push/Pull
-  gp: "git push"
-  gpf: "git push --force-with-lease"
-  gpl: "git pull"
-  gplr: "git pull --rebase"
-  # Fetch
-  gf: "git fetch"
-  gfa: "git fetch --all"
-  # Merge/Rebase
-  gm: "git merge"
-  gr: "git rebase"
-  gri: "git rebase -i"
-  grc: "git rebase --continue"
-  gra: "git rebase --abort"
-  # Stash
-  gst: "git stash"
-  gstp: "git stash pop"
-  gstl: "git stash list"
-  # Log
   gl: "git log --oneline -20"
-  glog: "git log --oneline --graph --decorate"
-  glg: 'git log --graph --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset"'
-  gla: "git log --oneline --all --graph --decorate"
-  # Remote
-  grv: "git remote -v"
-  gru: "git remote update"
-  # Reset
-  grh: "git reset HEAD"
-  grhh: "git reset HEAD --hard"
-  grhs: "git reset HEAD --soft"
-  # Clean
-  gclean: "git clean -fd"
-  gpristine: "git reset --hard && git clean -fdx"
+  ga: "git add"
+  gc: "git commit"
+  gp: "git push"
+  gpl: "git pull"
+  gco: "git checkout"
+  gb: "git branch"
+  gst: "git stash"
 
 # Wrapper functions that call acorn commands
 wrappers:
@@ -93,51 +138,8 @@ wrappers:
   - name: gcleanb
     command: "acorn git clean-branches"
 
-# Shell functions (need cd, interactive git)
+# Shell functions (only those that need cd or shell state)
 shell_functions:
   # Clone and cd into repository
   gclone: |
     git clone "$1" && cd "$(basename "$1" .git)" || return
-
-  # Create and checkout new branch
-  gcob: |
-    if [ -z "$1" ]; then
-        echo "Usage: gcob <branch-name>"
-        return 1
-    fi
-    git checkout -b "$1"
-
-  # Push with upstream tracking
-  gpush: |
-    local branch
-    branch=$(git rev-parse --abbrev-ref HEAD)
-    git push -u origin "$branch"
-
-  # Pull with rebase
-  gpull: |
-    git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
-
-  # Interactive add
-  gadd: |
-    git add -p "$@"
-
-  # Undo last commit (keep changes)
-  gundo: |
-    git reset --soft HEAD~1
-
-  # Amend last commit without editing message
-  gamend: |
-    git add --all
-    git commit --amend --no-edit
-
-  # Show files changed in a commit
-  gshow: |
-    git show --stat "${1:-HEAD}"
-
-  # Git blame with line numbers
-  gblame: |
-    if [ -z "$1" ]; then
-        echo "Usage: gblame <file>"
-        return 1
-    fi
-    git blame -n "$1"
