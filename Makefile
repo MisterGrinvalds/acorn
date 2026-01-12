@@ -1497,7 +1497,7 @@ go-tools: ## Install common Go development tools
 BINARY_NAME := acorn
 GO_MODULE := github.com/mistergrinvalds/acorn
 VERSION_PKG := $(GO_MODULE)/internal/version
-BUILD_DIR := build
+BUILD_DIR := bin
 CMD_DIR := cmd/acorn
 
 # Version information (extracted from git)
