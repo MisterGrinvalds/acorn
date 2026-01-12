@@ -1,0 +1,12 @@
+from os import getenv, path
+from sys import version
+
+runtime_version = version.split(" ")[0]
+print("Running Startup Scripts for Python {}".format(runtime_version[0]))
+if runtime_version[0] == "3":
+    config_dir = getenv("XDG_CONFIG_HOME", path.expanduser("~/.config"))
+    startup_file = path.join(config_dir, "python/startup3.py")
+    if path.exists(startup_file):
+        exec(open(startup_file).read())
+else:
+    print("\n WARNING: Python 2 is not supported. History writing to $HOME")
