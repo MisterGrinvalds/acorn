@@ -3,6 +3,37 @@ name: vscode
 description: VS Code integration and project helpers
 version: 1.0.0
 
+# File sync configuration
+# Note: VS Code paths differ by platform
+sync_files:
+  # macOS paths
+  - source: "config/vscode/settings.json"
+    target: "${HOME}/Library/Application Support/Code/User/settings.json"
+    mode: "merge"
+    platforms: ["darwin"]
+    merge:
+      strategy: "deep"
+      user_file: "${HOME}/Library/Application Support/Code/User/settings.local.json"
+
+  - source: "config/vscode/keybindings.json"
+    target: "${HOME}/Library/Application Support/Code/User/keybindings.json"
+    mode: "symlink"
+    platforms: ["darwin"]
+
+  # Linux paths
+  - source: "config/vscode/settings.json"
+    target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/settings.json"
+    mode: "merge"
+    platforms: ["linux"]
+    merge:
+      strategy: "deep"
+      user_file: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/settings.local.json"
+
+  - source: "config/vscode/keybindings.json"
+    target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/keybindings.json"
+    mode: "symlink"
+    platforms: ["linux"]
+
 # Shell aliases
 aliases:
   # Open current directory
