@@ -369,22 +369,38 @@ func (h *Helper) SyncConfig() error {
 }
 
 // syncFile backs up and copies a file.
+// Handles existing symlinks by removing them first.
 func (h *Helper) syncFile(src, dst string) error {
-	// Backup existing
-	if _, err := os.Stat(dst); err == nil {
-		backupPath := dst + ".backup"
-		if h.dryRun {
-			fmt.Printf("[dry-run] would backup: %s -> %s\n", dst, backupPath)
+	// Check if destination is a symlink (Lstat doesn't follow symlinks)
+	if fi, err := os.Lstat(dst); err == nil {
+		if fi.Mode()&os.ModeSymlink != 0 {
+			// It's a symlink - remove it
+			if h.dryRun {
+				fmt.Printf("[dry-run] would remove symlink: %s\n", dst)
+			} else {
+				if err := os.Remove(dst); err != nil {
+					return fmt.Errorf("failed to remove existing symlink: %w", err)
+				}
+				if h.verbose {
+					fmt.Printf("Removed symlink: %s\n", filepath.Base(dst))
+				}
+			}
 		} else {
-			data, err := os.ReadFile(dst)
-			if err != nil {
-				return fmt.Errorf("failed to read existing file: %w", err)
-			}
-			if err := os.WriteFile(backupPath, data, 0o644); err != nil {
-				return fmt.Errorf("failed to backup: %w", err)
-			}
-			if h.verbose {
-				fmt.Printf("Backed up: %s\n", filepath.Base(dst))
+			// Regular file - backup it
+			backupPath := dst + ".backup"
+			if h.dryRun {
+				fmt.Printf("[dry-run] would backup: %s -> %s\n", dst, backupPath)
+			} else {
+				data, err := os.ReadFile(dst)
+				if err != nil {
+					return fmt.Errorf("failed to read existing file: %w", err)
+				}
+				if err := os.WriteFile(backupPath, data, 0o644); err != nil {
+					return fmt.Errorf("failed to backup: %w", err)
+				}
+				if h.verbose {
+					fmt.Printf("Backed up: %s\n", filepath.Base(dst))
+				}
 			}
 		}
 	}
