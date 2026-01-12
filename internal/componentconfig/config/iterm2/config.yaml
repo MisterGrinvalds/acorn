@@ -252,5 +252,5 @@ install:
         message: |
           iTerm2 installed. To set up:
           1. Run 'iterm_install_integration' to install shell integration
-          2. Import color scheme from components/iterm2/config/catppuccin-mocha.itermcolors
+          2. Import color scheme from config/iterm2/catppuccin-mocha.itermcolors
           3. Dynamic profile will be loaded from ~/Library/Application Support/iTerm2/DynamicProfiles/
