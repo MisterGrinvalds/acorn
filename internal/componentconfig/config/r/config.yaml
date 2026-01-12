@@ -3,11 +3,20 @@ name: r
 description: R statistical programming configuration
 version: 1.0.0
 
-# File sync configuration
-sync_files:
-  - source: "config/r/Rprofile"
-    target: "${HOME}/.Rprofile"
-    mode: "symlink"
+# Generated configuration files
+files:
+  - target: "~/.Rprofile"
+    format: raw
+    values:
+      content: |
+        # R site-wide profile
+        # https://www.r-bloggers.com/setting-your-working-directory-permanently-in-r/
+        .First <- function(){
+            cat("\n   Loading Site-wide Profile\n\n")
+            setwd(Sys.getenv("XDG_CACHE_HOME"))
+            cat(getwd())
+        }
+        .Last <- function()  cat("\n   Work done!\n\n")
 
 # Installation configuration
 install:

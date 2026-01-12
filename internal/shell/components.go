@@ -20,6 +20,7 @@ var componentOrder = []string{
 	// Development tools
 	"go",
 	"python",
+	"r",
 	"node",
 	"vscode",
 	"intellij",
