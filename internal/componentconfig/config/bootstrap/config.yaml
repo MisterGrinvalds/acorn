@@ -118,10 +118,13 @@ shell_functions:
         fi
     fi
 
-    # Add dotfiles bin to PATH (for acorn and other tools)
+    # Acorn build path - where compiled binary lives
+    export ACORN_BUILD_PATH="${DOTFILES_ROOT}/bin"
+
+    # Add acorn build path to PATH (for acorn and other tools)
     case ":$PATH:" in
-        *":$DOTFILES_ROOT/bin:"*) ;;
-        *) export PATH="$DOTFILES_ROOT/bin:$PATH" ;;
+        *":$ACORN_BUILD_PATH:"*) ;;
+        *) export PATH="$ACORN_BUILD_PATH:$PATH" ;;
     esac
 
     # XDG Base Directory
