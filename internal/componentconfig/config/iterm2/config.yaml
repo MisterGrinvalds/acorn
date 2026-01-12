@@ -309,6 +309,7 @@ install:
       post_install:
         message: |
           iTerm2 installed. To set up:
-          1. Run 'iterm_install_integration' to install shell integration
-          2. Import color scheme from config/iterm2/catppuccin-mocha.itermcolors
-          3. Dynamic profile will be loaded from ~/Library/Application Support/iTerm2/DynamicProfiles/
+          1. Run 'acorn shell generate' to generate the dynamic profile
+          2. Run 'acorn sync link' to symlink to iTerm2
+          3. Run 'iterm_install_integration' to install shell integration
+          4. Restart iTerm2 - 'shell-profile' will appear in Preferences > Profiles
