@@ -430,17 +430,21 @@ func TestGetRCFile(t *testing.T) {
 	home, _ := os.UserHomeDir()
 
 	tests := []struct {
+		name     string
 		shell    string
+		platform string
 		expected string
 	}{
-		{"zsh", filepath.Join(home, ".zshrc")},
-		{"bash", filepath.Join(home, ".bashrc")},
-		{"unknown", filepath.Join(home, ".bashrc")}, // defaults to bash
+		{"zsh on darwin", "zsh", "darwin", filepath.Join(home, ".zshrc")},
+		{"zsh on linux", "zsh", "linux", filepath.Join(home, ".zshrc")},
+		{"bash on darwin", "bash", "darwin", filepath.Join(home, ".bash_profile")},
+		{"bash on linux", "bash", "linux", filepath.Join(home, ".bashrc")},
+		{"unknown shell on linux", "unknown", "linux", filepath.Join(home, ".bashrc")},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.shell, func(t *testing.T) {
-			config := &Config{Shell: tt.shell}
+		t.Run(tt.name, func(t *testing.T) {
+			config := &Config{Shell: tt.shell, Platform: tt.platform}
 			manager := NewManager(config)
 
 			rcFile := manager.GetRCFile()

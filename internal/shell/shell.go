@@ -400,11 +400,19 @@ func (m *Manager) generateEntrypoint() string {
 }
 
 // GetRCFile returns the shell rc file path.
+// For bash on macOS, returns .bash_profile (login shell default).
+// For bash on Linux, returns .bashrc (interactive shell default).
+// For zsh, returns .zshrc (works for both).
 func (m *Manager) GetRCFile() string {
 	home, _ := os.UserHomeDir()
 
 	if m.config.Shell == "zsh" {
 		return filepath.Join(home, ".zshrc")
+	}
+
+	// Bash: use .bash_profile on macOS (login shells), .bashrc on Linux
+	if m.config.Platform == "darwin" {
+		return filepath.Join(home, ".bash_profile")
 	}
 	return filepath.Join(home, ".bashrc")
 }
