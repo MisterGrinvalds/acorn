@@ -1,0 +1,24 @@
+# Wget component configuration
+name: wget
+description: Wget download utility configuration
+version: 1.0.0
+
+# File sync configuration
+sync_files:
+  - source: "config/wget/wgetrc"
+    target: "${HOME}/.wgetrc"
+    mode: "symlink"
+
+# Installation configuration
+install:
+  tools:
+    - name: wget
+      description: Network downloader
+      check: "command -v wget"
+      methods:
+        darwin:
+          type: brew
+          package: wget
+        linux:
+          type: apt
+          package: wget
