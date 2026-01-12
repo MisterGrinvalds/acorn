@@ -7,10 +7,11 @@ version: 1.0.0
 platforms: [darwin]
 
 # File sync configuration
+# Note: iTerm2 doesn't follow symlinks for dynamic profiles, use copy mode
 sync_files:
   - source: "config/iterm2/DynamicProfiles/dotfiles-profile.json"
     target: "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/dotfiles-profile.json"
-    mode: "symlink"
+    mode: "copy"
 
 # Environment variables
 env:
