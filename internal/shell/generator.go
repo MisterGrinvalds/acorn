@@ -315,11 +315,41 @@ func (g *Generator) generateFunctionsString(cfg *componentconfig.BaseConfig) str
 
 // GenerateConfigFiles generates all config files for a component.
 // Returns the list of generated files and any error.
+// Files are filtered by platform if the Platforms field is set.
 func (g *Generator) GenerateConfigFiles(cfg *componentconfig.BaseConfig) ([]*configfile.GeneratedFile, error) {
 	if len(cfg.Files) == 0 {
 		return nil, nil
 	}
 
+	// Filter files by platform
+	var filteredFiles []componentconfig.FileConfig
+	for _, fc := range cfg.Files {
+		if g.shouldGenerateForPlatform(fc.Platforms) {
+			filteredFiles = append(filteredFiles, fc)
+		}
+	}
+
+	if len(filteredFiles) == 0 {
+		return nil, nil
+	}
+
 	manager := configfile.NewManager(g.dryRun)
-	return manager.GenerateFiles(cfg.Files)
+	return manager.GenerateFiles(filteredFiles)
+}
+
+// shouldGenerateForPlatform checks if a file should be generated for the current platform.
+func (g *Generator) shouldGenerateForPlatform(platforms []string) bool {
+	// If no platforms specified, generate for all
+	if len(platforms) == 0 {
+		return true
+	}
+
+	// Check if current platform is in the list
+	for _, p := range platforms {
+		if p == g.platform {
+			return true
+		}
+	}
+
+	return false
 }

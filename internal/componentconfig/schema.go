@@ -42,6 +42,10 @@ type FileConfig struct {
 	// Format is the output format identifier (ghostty, json, yaml, toml, ini, keyvalue)
 	Format string `yaml:"format"`
 
+	// Platforms is an optional list of platforms this file applies to (darwin, linux)
+	// If empty, the file is generated on all platforms
+	Platforms []string `yaml:"platforms,omitempty"`
+
 	// Schema defines the field types and defaults (optional, for validation)
 	Schema map[string]FieldSchema `yaml:"schema,omitempty"`
 

@@ -103,9 +103,10 @@ type Manager struct {
 
 // FileSpec holds file generation specification.
 type FileSpec struct {
-	Target string                 `json:"target" yaml:"target"`
-	Format string                 `json:"format" yaml:"format"`
-	Values map[string]interface{} `json:"values" yaml:"values"`
+	Target    string                 `json:"target" yaml:"target"`
+	Format    string                 `json:"format" yaml:"format"`
+	Platforms []string               `json:"platforms,omitempty" yaml:"platforms,omitempty"`
+	Values    map[string]interface{} `json:"values" yaml:"values"`
 }
 
 // NewManager creates a new shell Manager.
@@ -269,6 +270,10 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 		// Generate config files for this component
 		if files, ok := m.fileSpecs[name]; ok {
 			for _, spec := range files {
+				// Skip files not for this platform
+				if !m.shouldGenerateForPlatform(spec.Platforms) {
+					continue
+				}
 				fc := componentConfigFromSpec(spec)
 				genFile, err := cfManager.GenerateFileForComponent(name, fc)
 				if err != nil {
@@ -285,10 +290,28 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 // componentConfigFromSpec converts a FileSpec to componentconfig.FileConfig.
 func componentConfigFromSpec(spec FileSpec) componentconfig.FileConfig {
 	return componentconfig.FileConfig{
-		Target: spec.Target,
-		Format: spec.Format,
-		Values: spec.Values,
+		Target:    spec.Target,
+		Format:    spec.Format,
+		Platforms: spec.Platforms,
+		Values:    spec.Values,
 	}
+}
+
+// shouldGenerateForPlatform checks if a file should be generated for the current platform.
+func (m *Manager) shouldGenerateForPlatform(platforms []string) bool {
+	// If no platforms specified, generate for all
+	if len(platforms) == 0 {
+		return true
+	}
+
+	// Check if current platform is in the list
+	for _, p := range platforms {
+		if p == m.config.Platform {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GenerateAll generates all component shell scripts and the entrypoint.

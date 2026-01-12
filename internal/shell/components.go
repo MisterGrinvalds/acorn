@@ -116,9 +116,10 @@ func loadComponentWithFiles(name string) *ComponentWithFiles {
 		result.Files = make([]FileSpec, len(cfg.Files))
 		for i, fc := range cfg.Files {
 			result.Files[i] = FileSpec{
-				Target: fc.Target,
-				Format: fc.Format,
-				Values: fc.Values,
+				Target:    fc.Target,
+				Format:    fc.Format,
+				Platforms: fc.Platforms,
+				Values:    fc.Values,
 			}
 		}
 	}

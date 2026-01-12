@@ -1,51 +1,600 @@
 # VS Code component configuration
 name: vscode
-description: VS Code integration and project helpers
+description: VS Code configuration and project helpers
 version: 1.0.0
 
-# File sync configuration
-# Note: VS Code paths differ by platform
-sync_files:
-  # macOS paths
-  - source: "config/vscode/settings.json"
-    target: "${HOME}/Library/Application Support/Code/User/settings.json"
-    mode: "merge"
-    platforms: ["darwin"]
-    merge:
-      strategy: "deep"
-      user_file: "${HOME}/Library/Application Support/Code/User/settings.local.json"
+# Generated config files
+files:
+  # macOS settings
+  - target: "${HOME}/Library/Application Support/Code/User/settings.json"
+    format: json
+    platforms: [darwin]
+    values:
+      # Editor
+      editor.fontSize: 14
+      editor.fontFamily: "JetBrainsMono Nerd Font, Menlo, Monaco, 'Courier New', monospace"
+      editor.fontLigatures: true
+      editor.lineHeight: 1.5
+      editor.tabSize: 2
+      editor.insertSpaces: true
+      editor.detectIndentation: true
+      editor.wordWrap: "off"
+      editor.rulers: [80, 120]
+      editor.minimap.enabled: true
+      editor.minimap.maxColumn: 80
+      editor.renderWhitespace: "boundary"
+      editor.cursorStyle: "block"
+      editor.cursorBlinking: "solid"
+      editor.smoothScrolling: true
+      editor.scrollBeyondLastLine: false
+      editor.formatOnSave: true
+      editor.formatOnPaste: false
+      editor.linkedEditing: true
+      editor.bracketPairColorization.enabled: true
+      editor.guides.bracketPairs: true
+      editor.stickyScroll.enabled: true
+      editor.inlineSuggest.enabled: true
+      editor.accessibilitySupport: "off"
 
-  - source: "config/vscode/keybindings.json"
-    target: "${HOME}/Library/Application Support/Code/User/keybindings.json"
-    mode: "symlink"
-    platforms: ["darwin"]
+      # Files
+      files.trimTrailingWhitespace: true
+      files.insertFinalNewline: true
+      files.trimFinalNewlines: true
+      files.autoSave: "afterDelay"
+      files.autoSaveDelay: 1000
+      files.exclude:
+        "**/.git": true
+        "**/.DS_Store": true
+        "**/node_modules": true
+        "**/__pycache__": true
+        "**/*.pyc": true
+        "**/.pytest_cache": true
+        "**/.mypy_cache": true
+        "**/.venv": true
+        "**/venv": true
+        "**/.idea": true
+        "**/dist": true
+        "**/build": true
+        "**/*.egg-info": true
 
-  # Linux paths
-  - source: "config/vscode/settings.json"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/settings.json"
-    mode: "merge"
-    platforms: ["linux"]
-    merge:
-      strategy: "deep"
-      user_file: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/settings.local.json"
+      # Workbench
+      workbench.colorTheme: "Catppuccin Mocha"
+      workbench.iconTheme: "catppuccin-mocha"
+      workbench.startupEditor: "none"
+      workbench.editor.enablePreview: true
+      workbench.editor.highlightModifiedTabs: true
+      workbench.editor.showTabs: "multiple"
+      workbench.tree.indent: 16
+      workbench.tree.renderIndentGuides: "always"
+      workbench.sideBar.location: "left"
 
-  - source: "config/vscode/keybindings.json"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/keybindings.json"
-    mode: "symlink"
-    platforms: ["linux"]
+      # Terminal
+      terminal.integrated.fontSize: 14
+      terminal.integrated.fontFamily: "JetBrainsMono Nerd Font"
+      terminal.integrated.cursorStyle: "block"
+      terminal.integrated.cursorBlinking: false
+      terminal.integrated.scrollback: 10000
+      terminal.integrated.defaultProfile.osx: "bash"
+      terminal.integrated.defaultProfile.linux: "bash"
+
+      # Search
+      search.exclude:
+        "**/node_modules": true
+        "**/bower_components": true
+        "**/*.code-search": true
+        "**/dist": true
+        "**/build": true
+        "**/.git": true
+      search.useIgnoreFiles: true
+      search.smartCase: true
+
+      # Git
+      git.enableSmartCommit: true
+      git.confirmSync: false
+      git.autofetch: true
+      git.autofetchPeriod: 180
+      git.pruneOnFetch: true
+      git.openRepositoryInParentFolders: "always"
+
+      # Explorer
+      explorer.confirmDelete: false
+      explorer.confirmDragAndDrop: false
+      explorer.sortOrder: "type"
+      explorer.compactFolders: true
+
+      # Language-Specific: Python
+      "[python]":
+        editor.tabSize: 4
+        editor.rulers: [88, 120]
+        editor.formatOnSave: true
+        editor.defaultFormatter: "charliermarsh.ruff"
+        editor.codeActionsOnSave:
+          source.organizeImports: "explicit"
+          source.fixAll: "explicit"
+      python.analysis.typeCheckingMode: "basic"
+      python.analysis.autoImportCompletions: true
+
+      # Language-Specific: JavaScript/TypeScript
+      "[javascript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[typescript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[typescriptreact]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[javascriptreact]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+
+      # Language-Specific: JSON
+      "[json]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[jsonc]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+
+      # Language-Specific: Markdown
+      "[markdown]":
+        editor.wordWrap: "on"
+        editor.quickSuggestions:
+          other: "off"
+          comments: "off"
+          strings: "off"
+
+      # Language-Specific: YAML
+      "[yaml]":
+        editor.tabSize: 2
+        editor.autoIndent: "advanced"
+
+      # Language-Specific: Shell
+      "[shellscript]":
+        editor.tabSize: 4
+        editor.defaultFormatter: "foxundermoon.shell-format"
+
+      # Language-Specific: Go
+      "[go]":
+        editor.formatOnSave: true
+        editor.codeActionsOnSave:
+          source.organizeImports: "explicit"
+      go.useLanguageServer: true
+      gopls:
+        ui.semanticTokens: true
+
+      # Language-Specific: Rust
+      "[rust]":
+        editor.formatOnSave: true
+        editor.defaultFormatter: "rust-lang.rust-analyzer"
+
+      # Extensions
+      extensions.autoUpdate: true
+      extensions.ignoreRecommendations: false
+
+      # Telemetry
+      telemetry.telemetryLevel: "off"
+      redhat.telemetry.enabled: false
+
+  # Linux settings (same content, different path)
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/settings.json"
+    format: json
+    platforms: [linux]
+    values:
+      # Editor
+      editor.fontSize: 14
+      editor.fontFamily: "JetBrainsMono Nerd Font, Menlo, Monaco, 'Courier New', monospace"
+      editor.fontLigatures: true
+      editor.lineHeight: 1.5
+      editor.tabSize: 2
+      editor.insertSpaces: true
+      editor.detectIndentation: true
+      editor.wordWrap: "off"
+      editor.rulers: [80, 120]
+      editor.minimap.enabled: true
+      editor.minimap.maxColumn: 80
+      editor.renderWhitespace: "boundary"
+      editor.cursorStyle: "block"
+      editor.cursorBlinking: "solid"
+      editor.smoothScrolling: true
+      editor.scrollBeyondLastLine: false
+      editor.formatOnSave: true
+      editor.formatOnPaste: false
+      editor.linkedEditing: true
+      editor.bracketPairColorization.enabled: true
+      editor.guides.bracketPairs: true
+      editor.stickyScroll.enabled: true
+      editor.inlineSuggest.enabled: true
+      editor.accessibilitySupport: "off"
+
+      # Files
+      files.trimTrailingWhitespace: true
+      files.insertFinalNewline: true
+      files.trimFinalNewlines: true
+      files.autoSave: "afterDelay"
+      files.autoSaveDelay: 1000
+      files.exclude:
+        "**/.git": true
+        "**/.DS_Store": true
+        "**/node_modules": true
+        "**/__pycache__": true
+        "**/*.pyc": true
+        "**/.pytest_cache": true
+        "**/.mypy_cache": true
+        "**/.venv": true
+        "**/venv": true
+        "**/.idea": true
+        "**/dist": true
+        "**/build": true
+        "**/*.egg-info": true
+
+      # Workbench
+      workbench.colorTheme: "Catppuccin Mocha"
+      workbench.iconTheme: "catppuccin-mocha"
+      workbench.startupEditor: "none"
+      workbench.editor.enablePreview: true
+      workbench.editor.highlightModifiedTabs: true
+      workbench.editor.showTabs: "multiple"
+      workbench.tree.indent: 16
+      workbench.tree.renderIndentGuides: "always"
+      workbench.sideBar.location: "left"
+
+      # Terminal
+      terminal.integrated.fontSize: 14
+      terminal.integrated.fontFamily: "JetBrainsMono Nerd Font"
+      terminal.integrated.cursorStyle: "block"
+      terminal.integrated.cursorBlinking: false
+      terminal.integrated.scrollback: 10000
+      terminal.integrated.defaultProfile.osx: "bash"
+      terminal.integrated.defaultProfile.linux: "bash"
+
+      # Search
+      search.exclude:
+        "**/node_modules": true
+        "**/bower_components": true
+        "**/*.code-search": true
+        "**/dist": true
+        "**/build": true
+        "**/.git": true
+      search.useIgnoreFiles: true
+      search.smartCase: true
+
+      # Git
+      git.enableSmartCommit: true
+      git.confirmSync: false
+      git.autofetch: true
+      git.autofetchPeriod: 180
+      git.pruneOnFetch: true
+      git.openRepositoryInParentFolders: "always"
+
+      # Explorer
+      explorer.confirmDelete: false
+      explorer.confirmDragAndDrop: false
+      explorer.sortOrder: "type"
+      explorer.compactFolders: true
+
+      # Language-Specific: Python
+      "[python]":
+        editor.tabSize: 4
+        editor.rulers: [88, 120]
+        editor.formatOnSave: true
+        editor.defaultFormatter: "charliermarsh.ruff"
+        editor.codeActionsOnSave:
+          source.organizeImports: "explicit"
+          source.fixAll: "explicit"
+      python.analysis.typeCheckingMode: "basic"
+      python.analysis.autoImportCompletions: true
+
+      # Language-Specific: JavaScript/TypeScript
+      "[javascript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[typescript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[typescriptreact]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[javascriptreact]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+
+      # Language-Specific: JSON
+      "[json]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[jsonc]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+
+      # Language-Specific: Markdown
+      "[markdown]":
+        editor.wordWrap: "on"
+        editor.quickSuggestions:
+          other: "off"
+          comments: "off"
+          strings: "off"
+
+      # Language-Specific: YAML
+      "[yaml]":
+        editor.tabSize: 2
+        editor.autoIndent: "advanced"
+
+      # Language-Specific: Shell
+      "[shellscript]":
+        editor.tabSize: 4
+        editor.defaultFormatter: "foxundermoon.shell-format"
+
+      # Language-Specific: Go
+      "[go]":
+        editor.formatOnSave: true
+        editor.codeActionsOnSave:
+          source.organizeImports: "explicit"
+      go.useLanguageServer: true
+      gopls:
+        ui.semanticTokens: true
+
+      # Language-Specific: Rust
+      "[rust]":
+        editor.formatOnSave: true
+        editor.defaultFormatter: "rust-lang.rust-analyzer"
+
+      # Extensions
+      extensions.autoUpdate: true
+      extensions.ignoreRecommendations: false
+
+      # Telemetry
+      telemetry.telemetryLevel: "off"
+      redhat.telemetry.enabled: false
+
+  # macOS keybindings
+  - target: "${HOME}/Library/Application Support/Code/User/keybindings.json"
+    format: jsonarray
+    platforms: [darwin]
+    values:
+      items:
+        # Navigation
+        - key: "cmd+p"
+          command: "workbench.action.quickOpen"
+        - key: "cmd+shift+p"
+          command: "workbench.action.showCommands"
+        - key: "cmd+shift+o"
+          command: "workbench.action.gotoSymbol"
+        - key: "cmd+t"
+          command: "workbench.action.showAllSymbols"
+        - key: "cmd+g"
+          command: "workbench.action.gotoLine"
+
+        # Editor Tabs & Splits
+        - key: "cmd+\\"
+          command: "workbench.action.splitEditor"
+        - key: "cmd+k cmd+\\"
+          command: "workbench.action.splitEditorDown"
+        - key: "cmd+1"
+          command: "workbench.action.focusFirstEditorGroup"
+        - key: "cmd+2"
+          command: "workbench.action.focusSecondEditorGroup"
+        - key: "cmd+3"
+          command: "workbench.action.focusThirdEditorGroup"
+        - key: "cmd+w"
+          command: "workbench.action.closeActiveEditor"
+        - key: "cmd+shift+t"
+          command: "workbench.action.reopenClosedEditor"
+        - key: "ctrl+tab"
+          command: "workbench.action.nextEditor"
+        - key: "ctrl+shift+tab"
+          command: "workbench.action.previousEditor"
+
+        # Editing
+        - key: "cmd+shift+k"
+          command: "editor.action.deleteLines"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "cmd+shift+d"
+          command: "editor.action.copyLinesDownAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "alt+up"
+          command: "editor.action.moveLinesUpAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "alt+down"
+          command: "editor.action.moveLinesDownAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "cmd+/"
+          command: "editor.action.commentLine"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "cmd+shift+/"
+          command: "editor.action.blockComment"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "cmd+l"
+          command: "expandLineSelection"
+          when: "textInputFocus"
+        - key: "cmd+d"
+          command: "editor.action.addSelectionToNextFindMatch"
+          when: "editorFocus"
+
+        # Code Intelligence
+        - key: "f12"
+          command: "editor.action.revealDefinition"
+          when: "editorHasDefinitionProvider && editorTextFocus"
+        - key: "cmd+f12"
+          command: "editor.action.goToImplementation"
+          when: "editorHasImplementationProvider && editorTextFocus"
+        - key: "shift+f12"
+          command: "editor.action.goToReferences"
+          when: "editorHasReferenceProvider && editorTextFocus"
+        - key: "f2"
+          command: "editor.action.rename"
+          when: "editorHasRenameProvider && editorTextFocus && !editorReadonly"
+        - key: "cmd+."
+          command: "editor.action.quickFix"
+          when: "editorHasCodeActionsProvider && editorTextFocus && !editorReadonly"
+        - key: "cmd+shift+r"
+          command: "editor.action.refactor"
+          when: "editorHasCodeActionsProvider && editorTextFocus && !editorReadonly"
+
+        # Search & Replace
+        - key: "cmd+f"
+          command: "actions.find"
+        - key: "cmd+shift+f"
+          command: "workbench.action.findInFiles"
+        - key: "cmd+h"
+          command: "editor.action.startFindReplaceAction"
+        - key: "cmd+shift+h"
+          command: "workbench.action.replaceInFiles"
+
+        # Terminal
+        - key: "cmd+shift+`"
+          command: "workbench.action.terminal.new"
+        - key: "cmd+k"
+          command: "workbench.action.terminal.clear"
+          when: "terminalFocus"
+
+        # Sidebar & Panels
+        - key: "cmd+b"
+          command: "workbench.action.toggleSidebarVisibility"
+        - key: "cmd+shift+e"
+          command: "workbench.view.explorer"
+        - key: "cmd+shift+g"
+          command: "workbench.view.scm"
+        - key: "cmd+shift+d"
+          command: "workbench.view.debug"
+        - key: "cmd+shift+x"
+          command: "workbench.view.extensions"
+        - key: "cmd+j"
+          command: "workbench.action.togglePanel"
+
+        # Git
+        - key: "cmd+enter"
+          command: "git.commitAll"
+          when: "!inDebugMode && !terminalFocus"
+
+        # Zen Mode & Focus
+        - key: "cmd+k z"
+          command: "workbench.action.toggleZenMode"
+        - key: "cmd+k cmd+f"
+          command: "workbench.action.toggleFullScreen"
+
+  # Linux keybindings (same structure, different path)
+  - target: "${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/keybindings.json"
+    format: jsonarray
+    platforms: [linux]
+    values:
+      items:
+        # Navigation
+        - key: "ctrl+p"
+          command: "workbench.action.quickOpen"
+        - key: "ctrl+shift+p"
+          command: "workbench.action.showCommands"
+        - key: "ctrl+shift+o"
+          command: "workbench.action.gotoSymbol"
+        - key: "ctrl+t"
+          command: "workbench.action.showAllSymbols"
+        - key: "ctrl+g"
+          command: "workbench.action.gotoLine"
+
+        # Editor Tabs & Splits
+        - key: "ctrl+\\"
+          command: "workbench.action.splitEditor"
+        - key: "ctrl+k ctrl+\\"
+          command: "workbench.action.splitEditorDown"
+        - key: "ctrl+1"
+          command: "workbench.action.focusFirstEditorGroup"
+        - key: "ctrl+2"
+          command: "workbench.action.focusSecondEditorGroup"
+        - key: "ctrl+3"
+          command: "workbench.action.focusThirdEditorGroup"
+        - key: "ctrl+w"
+          command: "workbench.action.closeActiveEditor"
+        - key: "ctrl+shift+t"
+          command: "workbench.action.reopenClosedEditor"
+        - key: "ctrl+tab"
+          command: "workbench.action.nextEditor"
+        - key: "ctrl+shift+tab"
+          command: "workbench.action.previousEditor"
+
+        # Editing
+        - key: "ctrl+shift+k"
+          command: "editor.action.deleteLines"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "ctrl+shift+d"
+          command: "editor.action.copyLinesDownAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "alt+up"
+          command: "editor.action.moveLinesUpAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "alt+down"
+          command: "editor.action.moveLinesDownAction"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "ctrl+/"
+          command: "editor.action.commentLine"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "ctrl+shift+/"
+          command: "editor.action.blockComment"
+          when: "editorTextFocus && !editorReadonly"
+        - key: "ctrl+l"
+          command: "expandLineSelection"
+          when: "textInputFocus"
+        - key: "ctrl+d"
+          command: "editor.action.addSelectionToNextFindMatch"
+          when: "editorFocus"
+
+        # Code Intelligence
+        - key: "f12"
+          command: "editor.action.revealDefinition"
+          when: "editorHasDefinitionProvider && editorTextFocus"
+        - key: "ctrl+f12"
+          command: "editor.action.goToImplementation"
+          when: "editorHasImplementationProvider && editorTextFocus"
+        - key: "shift+f12"
+          command: "editor.action.goToReferences"
+          when: "editorHasReferenceProvider && editorTextFocus"
+        - key: "f2"
+          command: "editor.action.rename"
+          when: "editorHasRenameProvider && editorTextFocus && !editorReadonly"
+        - key: "ctrl+."
+          command: "editor.action.quickFix"
+          when: "editorHasCodeActionsProvider && editorTextFocus && !editorReadonly"
+        - key: "ctrl+shift+r"
+          command: "editor.action.refactor"
+          when: "editorHasCodeActionsProvider && editorTextFocus && !editorReadonly"
+
+        # Search & Replace
+        - key: "ctrl+f"
+          command: "actions.find"
+        - key: "ctrl+shift+f"
+          command: "workbench.action.findInFiles"
+        - key: "ctrl+h"
+          command: "editor.action.startFindReplaceAction"
+        - key: "ctrl+shift+h"
+          command: "workbench.action.replaceInFiles"
+
+        # Terminal
+        - key: "ctrl+shift+`"
+          command: "workbench.action.terminal.new"
+        - key: "ctrl+k"
+          command: "workbench.action.terminal.clear"
+          when: "terminalFocus"
+
+        # Sidebar & Panels
+        - key: "ctrl+b"
+          command: "workbench.action.toggleSidebarVisibility"
+        - key: "ctrl+shift+e"
+          command: "workbench.view.explorer"
+        - key: "ctrl+shift+g"
+          command: "workbench.view.scm"
+        - key: "ctrl+shift+d"
+          command: "workbench.view.debug"
+        - key: "ctrl+shift+x"
+          command: "workbench.view.extensions"
+        - key: "ctrl+j"
+          command: "workbench.action.togglePanel"
+
+        # Git
+        - key: "ctrl+enter"
+          command: "git.commitAll"
+          when: "!inDebugMode && !terminalFocus"
+
+        # Zen Mode & Focus
+        - key: "ctrl+k z"
+          command: "workbench.action.toggleZenMode"
+        - key: "ctrl+k ctrl+f"
+          command: "workbench.action.toggleFullScreen"
 
 # Shell aliases
 aliases:
-  # Open current directory
   c: "code ."
-  # Open with options
   cg: "code --goto"
   cn: "code --new-window"
   ca: "code --add"
   cr: "code --reuse-window"
-  # Diff mode
   cdiff: "code --diff"
-  # Extensions
   cext: "code --list-extensions"
   cexti: "code --install-extension"
   cextu: "code --uninstall-extension"
@@ -84,7 +633,6 @@ wrappers:
 
 # Shell functions that need special handling (fzf, read, interactive)
 shell_functions:
-  # Open Python files with fzf
   cpy: |
     if ! command -v fzf >/dev/null 2>&1; then
         echo "fzf required"
@@ -92,7 +640,6 @@ shell_functions:
     fi
     find . -name "*.py" -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
 
-  # Open Go files with fzf
   cgo: |
     if ! command -v fzf >/dev/null 2>&1; then
         echo "fzf required"
@@ -100,7 +647,6 @@ shell_functions:
     fi
     find . -name "*.go" -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
 
-  # Open TypeScript/JavaScript files with fzf
   cts: |
     if ! command -v fzf >/dev/null 2>&1; then
         echo "fzf required"
@@ -108,7 +654,6 @@ shell_functions:
     fi
     find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -type f 2>/dev/null | head -50 | fzf --preview 'head -50 {}' | xargs -r code
 
-  # Full VS Code setup (extensions + config)
   vscode_setup: |
     echo "VS Code Setup"
     echo "============="
