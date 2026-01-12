@@ -1,0 +1,26 @@
+# SSH component configuration
+name: ssh
+description: SSH client configuration with multiple identity support
+version: 1.0.0
+
+# File sync configuration
+# Note: SSH config uses copy mode with strict permissions for security
+sync_files:
+  - source: "config/ssh/config"
+    target: "${HOME}/.ssh/config"
+    mode: "copy"
+    permissions: "600"
+
+# Installation configuration
+install:
+  tools:
+    - name: openssh
+      description: OpenSSH client
+      check: "command -v ssh"
+      methods:
+        darwin:
+          type: system
+          note: "Pre-installed on macOS"
+        linux:
+          type: apt
+          package: openssh-client

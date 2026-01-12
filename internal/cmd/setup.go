@@ -258,7 +258,7 @@ func setupComponentSync(dotfilesRoot string) error {
 	fmt.Fprintf(os.Stdout, "Step 5: Syncing component configurations\n")
 
 	// Get list of components with sync_files
-	components := []string{"claude", "git", "iterm2", "karabiner", "python", "r"} // Add more as needed
+	components := []string{"claude", "git", "iterm2", "karabiner", "python", "r", "ssh"} // Add more as needed
 
 	syncedCount := 0
 	for _, component := range components {
