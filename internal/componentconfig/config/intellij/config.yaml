@@ -3,6 +3,582 @@ name: intellij
 description: IntelliJ IDEA IDE configuration and helpers
 version: 1.0.0
 
+# Generated configuration files
+files:
+  # Custom keymap (VSCode-like bindings)
+  - target: "~/Library/Application Support/JetBrains/IntelliJIdea2024.3/keymaps/Custom.xml"
+    format: xml
+    platforms: [darwin]
+    values:
+      root: keymap
+      attrs:
+        version: "1"
+        name: "Custom"
+        parent: "Mac OS X 10.5+"
+      children:
+        # Navigation
+        - element: action
+          attrs:
+            id: GotoFile
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta P
+        - element: action
+          attrs:
+            id: GotoClass
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift O
+        - element: action
+          attrs:
+            id: GotoSymbol
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift S
+        - element: action
+          attrs:
+            id: SearchEverywhere
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: shift shift
+        - element: action
+          attrs:
+            id: GotoAction
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift P
+        # Code Navigation
+        - element: action
+          attrs:
+            id: GotoDeclaration
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: F12
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta B
+        - element: action
+          attrs:
+            id: GotoImplementation
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta alt B
+        - element: action
+          attrs:
+            id: GotoTypeDeclaration
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift B
+        - element: action
+          attrs:
+            id: FindUsages
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: alt F7
+        - element: action
+          attrs:
+            id: ShowUsages
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta alt F7
+        # Editing
+        - element: action
+          attrs:
+            id: EditorDuplicate
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift D
+        - element: action
+          attrs:
+            id: EditorDeleteLine
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift K
+        - element: action
+          attrs:
+            id: MoveLineUp
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: alt UP
+        - element: action
+          attrs:
+            id: MoveLineDown
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: alt DOWN
+        - element: action
+          attrs:
+            id: CommentByLineComment
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta SLASH
+        - element: action
+          attrs:
+            id: CommentByBlockComment
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift SLASH
+        # Code Completion
+        - element: action
+          attrs:
+            id: CodeCompletion
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl SPACE
+        - element: action
+          attrs:
+            id: SmartTypeCompletion
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift SPACE
+        - element: action
+          attrs:
+            id: ParameterInfo
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta P
+        # Refactoring
+        - element: action
+          attrs:
+            id: RenameElement
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: F2
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: shift F6
+        - element: action
+          attrs:
+            id: Refactorings.QuickListPopupAction
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl T
+        - element: action
+          attrs:
+            id: ExtractMethod
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta alt M
+        - element: action
+          attrs:
+            id: ExtractVariable
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta alt V
+        - element: action
+          attrs:
+            id: Inline
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta alt N
+        # Run/Debug
+        - element: action
+          attrs:
+            id: Run
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl R
+        - element: action
+          attrs:
+            id: Debug
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl D
+        - element: action
+          attrs:
+            id: RunClass
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift R
+        - element: action
+          attrs:
+            id: DebugClass
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift D
+        - element: action
+          attrs:
+            id: Stop
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta F2
+        # Git
+        - element: action
+          attrs:
+            id: Vcs.QuickListPopupAction
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl V
+        - element: action
+          attrs:
+            id: Git.Pull
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta T
+        - element: action
+          attrs:
+            id: Vcs.Push
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift K
+        - element: action
+          attrs:
+            id: CheckinProject
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta K
+        # Tools
+        - element: action
+          attrs:
+            id: ActivateTerminalToolWindow
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta BACK_QUOTE
+        - element: action
+          attrs:
+            id: ActivateProjectToolWindow
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta 1
+        - element: action
+          attrs:
+            id: ActivateVersionControlToolWindow
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta 9
+        # Window Management
+        - element: action
+          attrs:
+            id: CloseContent
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta W
+        - element: action
+          attrs:
+            id: ReopenClosedTab
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta shift T
+        - element: action
+          attrs:
+            id: SplitVertically
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: meta BACK_SLASH
+
+  # Linux keymap
+  - target: "~/.config/JetBrains/IntelliJIdea2024.3/keymaps/Custom.xml"
+    format: xml
+    platforms: [linux]
+    values:
+      root: keymap
+      attrs:
+        version: "1"
+        name: "Custom"
+        parent: "Default"
+      children:
+        # Navigation (ctrl instead of meta on Linux)
+        - element: action
+          attrs:
+            id: GotoFile
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl P
+        - element: action
+          attrs:
+            id: GotoClass
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift O
+        - element: action
+          attrs:
+            id: GotoSymbol
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift S
+        - element: action
+          attrs:
+            id: SearchEverywhere
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: shift shift
+        - element: action
+          attrs:
+            id: GotoAction
+          children:
+            - element: keyboard-shortcut
+              attrs:
+                first-keystroke: ctrl shift P
+
+  # Editor settings (macOS)
+  - target: "~/Library/Application Support/JetBrains/IntelliJIdea2024.3/options/editor.xml"
+    format: xml
+    platforms: [darwin]
+    values:
+      root: application
+      children:
+        - element: component
+          attrs:
+            name: CodeInsightSettings
+          children:
+            - element: option
+              attrs:
+                name: AUTO_POPUP_PARAMETER_INFO
+                value: "true"
+            - element: option
+              attrs:
+                name: AUTO_POPUP_JAVADOC_INFO
+                value: "true"
+            - element: option
+              attrs:
+                name: AUTO_POPUP_COMPLETION_LOOKUP
+                value: "true"
+            - element: option
+              attrs:
+                name: COMPLETION_CASE_SENSITIVE
+                value: "1"
+            - element: option
+              attrs:
+                name: TAB_EXITS_BRACKETS_AND_QUOTES
+                value: "true"
+        - element: component
+          attrs:
+            name: EditorSettings
+          children:
+            - element: option
+              attrs:
+                name: IS_WHITESPACES_SHOWN
+                value: "true"
+            - element: option
+              attrs:
+                name: LINE_NUMBERS_SHOWN
+                value: "true"
+            - element: option
+              attrs:
+                name: SOFT_MARGINS
+                value: "80,120"
+            - element: option
+              attrs:
+                name: IS_RIGHT_MARGIN_SHOWN
+                value: "true"
+            - element: option
+              attrs:
+                name: RIGHT_MARGIN
+                value: "120"
+            - element: option
+              attrs:
+                name: IS_VIRTUAL_SPACE
+                value: "false"
+            - element: option
+              attrs:
+                name: IS_CARET_INSIDE_TABS
+                value: "false"
+            - element: option
+              attrs:
+                name: STRIP_TRAILING_SPACES
+                value: Modified
+            - element: option
+              attrs:
+                name: ENSURE_NEWLINE_AT_EOF
+                value: "true"
+            - element: option
+              attrs:
+                name: IS_CARET_BLINKING
+                value: "false"
+            - element: option
+              attrs:
+                name: CARET_BLINKING_PERIOD
+                value: "500"
+            - element: option
+              attrs:
+                name: USE_BLOCK_CARET
+                value: "false"
+            - element: option
+              attrs:
+                name: SHOW_BREADCRUMBS
+                value: "true"
+            - element: option
+              attrs:
+                name: SHOW_STICKY_LINES
+                value: "true"
+            - element: option
+              attrs:
+                name: STICKY_LINES_LIMIT
+                value: "5"
+            - element: option
+              attrs:
+                name: USE_LIGATURES
+                value: "true"
+            - element: option
+              attrs:
+                name: FONT_LIGATURES
+                value: "true"
+            - element: option
+              attrs:
+                name: FOLDING_ENABLED
+                value: "true"
+            - element: option
+              attrs:
+                name: SHOW_COLLAPSE_BUTTON
+                value: "true"
+        - element: component
+          attrs:
+            name: UISettings
+          children:
+            - element: option
+              attrs:
+                name: SHOW_MEMORY_INDICATOR
+                value: "true"
+            - element: option
+              attrs:
+                name: SHOW_MAIN_TOOLBAR
+                value: "false"
+            - element: option
+              attrs:
+                name: SHOW_NAVIGATION_BAR
+                value: "true"
+            - element: option
+              attrs:
+                name: SHOW_STATUS_BAR
+                value: "true"
+            - element: option
+              attrs:
+                name: SHOW_TOOL_WINDOW_NUMBERS
+                value: "true"
+            - element: option
+              attrs:
+                name: ANIMATE_WINDOWS
+                value: "true"
+            - element: option
+              attrs:
+                name: SCROLL_TAB_LAYOUT_IN_EDITOR
+                value: "true"
+            - element: option
+              attrs:
+                name: EDITOR_TAB_PLACEMENT
+                value: "1"
+            - element: option
+              attrs:
+                name: CLOSE_NON_MODIFIED_FILES_FIRST
+                value: "true"
+            - element: option
+              attrs:
+                name: ACTIVATE_MRU_EDITOR_ON_CLOSE
+                value: "true"
+        - element: component
+          attrs:
+            name: GeneralSettings
+          children:
+            - element: option
+              attrs:
+                name: autoSaveIfInactive
+                value: "true"
+            - element: option
+              attrs:
+                name: inactiveTimeout
+                value: "15"
+            - element: option
+              attrs:
+                name: confirmExit
+                value: "false"
+            - element: option
+              attrs:
+                name: reopenLastProject
+                value: "true"
+            - element: option
+              attrs:
+                name: openNewProjectInNewWindow
+                value: "false"
+            - element: option
+              attrs:
+                name: defaultProjectDirectory
+                value: "$USER_HOME$/Projects"
+
+  # Editor settings (Linux)
+  - target: "~/.config/JetBrains/IntelliJIdea2024.3/options/editor.xml"
+    format: xml
+    platforms: [linux]
+    values:
+      root: application
+      children:
+        - element: component
+          attrs:
+            name: EditorSettings
+          children:
+            - element: option
+              attrs:
+                name: IS_WHITESPACES_SHOWN
+                value: "true"
+            - element: option
+              attrs:
+                name: LINE_NUMBERS_SHOWN
+                value: "true"
+            - element: option
+              attrs:
+                name: SOFT_MARGINS
+                value: "80,120"
+            - element: option
+              attrs:
+                name: RIGHT_MARGIN
+                value: "120"
+            - element: option
+              attrs:
+                name: STRIP_TRAILING_SPACES
+                value: Modified
+            - element: option
+              attrs:
+                name: ENSURE_NEWLINE_AT_EOF
+                value: "true"
+
+# Keep plugins.txt as reference file
+sync_files:
+  - source: config/intellij/plugins.txt
+    target: "~/.local/share/dotfiles/intellij/plugins.txt"
+    description: "Reference list of recommended plugins"
+
 # Shell aliases
 aliases:
   # Open current directory in IntelliJ
@@ -84,7 +660,8 @@ shell_functions:
         echo "  Logs:    ~/.cache/JetBrains/IntelliJIdea*/log"
     fi
     echo ""
-    echo "Reference configs: \$DOTFILES_ROOT/config/intellij/"
+    echo "Generated configs: \$DOTFILES_ROOT/generated/intellij/"
+    echo "Run 'acorn shell generate' to regenerate"
 
 # Installation configuration
 install:
@@ -103,7 +680,7 @@ install:
       post_install:
         message: |
           IntelliJ installed. To set up:
-          1. Run 'intellij_paths' to find config locations
-          2. Import keymaps from config/intellij/keymaps/
-          3. Import editor settings from config/intellij/options/
+          1. Run 'acorn shell generate' to generate configs
+          2. Symlinks are created to generated/intellij/
+          3. Run 'intellij_paths' to verify config locations
           4. Run 'intellij_install_plugins' to install recommended plugins
