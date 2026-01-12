@@ -24,7 +24,7 @@ Scan repositories for Claude Code agents, commands, and subagents, then aggregat
    - If contents differ, prefix the new file with the repo name (e.g., `myrepo-agent-name.md`)
    - Report conflicts to the user
 
-4. **Copy new files** to `$DOTFILES_ROOT/components/claude/config/`:
+4. **Copy new files** to `$DOTFILES_ROOT/ai/`:
    - Agents → `config/agents/`
    - Commands → `config/commands/`
    - Subagents → `config/subagents/`
@@ -67,7 +67,7 @@ Files added:
 - Compare file contents with `diff` or by reading both files
 - Preserve file permissions when copying
 - Skip any files in `.gitignore` patterns
-- The central location is `$DOTFILES_ROOT/components/claude/config/`
+- The central location is `$DOTFILES_ROOT/ai/`
 
 ## Arguments
 

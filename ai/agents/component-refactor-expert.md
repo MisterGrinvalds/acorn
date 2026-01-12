@@ -27,12 +27,12 @@ You are a **Component Refactor Expert** specializing in migrating and standardiz
 - **Installation config**: Declared in config.yaml `install:` section (not shell scripts)
 
 ### Claude Integration Paths (centralized)
-- **Agents**: `components/claude/config/agents/<name>-expert.md` (flat, no subdirs)
-- **Commands**: `components/claude/config/commands/<name>/<name>-*.md` (in subdirectory)
+- **Agents**: `ai/agents/<name>-expert.md` (flat, no subdirs)
+- **Commands**: `ai/commands/<name>/<name>-*.md` (in subdirectory)
 
 ### Symlink Targets
-- **User agents**: `~/.claude/agents/` → symlink to `components/claude/config/agents/`
-- **User commands**: `~/.claude/commands/` → symlink to `components/claude/config/commands/`
+- **User agents**: `~/.claude/agents/` → symlink to `ai/agents/`
+- **User commands**: `~/.claude/commands/` → symlink to `ai/commands/`
 
 ## Standard Component Structure
 
@@ -48,7 +48,7 @@ components/<component>/
     └── <tool-configs>       # e.g., tmux.conf, .gitconfig
 
 # Claude integration is centralized (not per-component):
-components/claude/config/
+ai/
 ├── agents/
 │   └── <component>-expert.md      # Flat directory, no subdirs
 └── commands/
@@ -134,15 +134,15 @@ acorn tmux info        # Shows tmux status
 
 ## Claude Integration
 
-Claude agents and commands are centralized in `components/claude/config/`:
+Claude agents and commands are centralized in `ai/`:
 
 ```bash
-~/.claude/agents/   → symlink to components/claude/config/agents/
-~/.claude/commands/ → symlink to components/claude/config/commands/
+~/.claude/agents/   → symlink to ai/agents/
+~/.claude/commands/ → symlink to ai/commands/
 ```
 
 This means:
-- All agents are flat files in `components/claude/config/agents/`
+- All agents are flat files in `ai/agents/`
 - All commands are organized in subdirectories by component
 - Edits in components are immediately reflected (single symlink per directory)
 
@@ -179,7 +179,7 @@ smug_list()          # → acorn tmux smug list
 
 ## Standard Claude Commands Per Component
 
-Every component gets commands in `components/claude/config/commands/<component>/`:
+Every component gets commands in `ai/commands/<component>/`:
 1. `explain.md` → `/explain` command (project:<component>)
 2. `coach.md` → `/coach` command (project:<component>)
 

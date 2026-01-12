@@ -18,7 +18,7 @@ Create standard and tool-specific Claude slash commands for the component.
 
 Create the subdirectory for this component's commands:
 ```
-components/claude/config/commands/$ARGUMENTS/
+ai/commands/$ARGUMENTS/
 ```
 
 ### 2. Generate Standard Commands
@@ -144,7 +144,7 @@ Based on the component's capabilities, create additional commands:
 
 Look for existing commands to preserve:
 ```bash
-ls components/claude/config/commands/$ARGUMENTS/*.md 2>/dev/null
+ls ai/commands/$ARGUMENTS/*.md 2>/dev/null
 ```
 
 Migrate any existing commands that should be preserved.
@@ -156,7 +156,7 @@ Output:
 Generated Commands: $ARGUMENTS
 ==============================
 
-Location: components/claude/config/commands/$ARGUMENTS/
+Location: ai/commands/$ARGUMENTS/
 
 Standard commands:
   - explain.md → /explain (project:$ARGUMENTS)

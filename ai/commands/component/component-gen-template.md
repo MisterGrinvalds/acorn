@@ -26,7 +26,7 @@ components/$ARGUMENTS/
 
 Note:
 - Installation is configured via `install:` section in config.yaml (not shell scripts)
-- Claude agents/commands are centralized in `components/claude/config/`, not per-component
+- Claude agents/commands are centralized in `ai/`, not per-component
 
 ### 2. Read Existing Config (if any)
 
@@ -115,7 +115,7 @@ shell_functions: <approved functions only>
 
 Create the command subdirectory (agents and commands are centralized):
 ```bash
-mkdir -p components/claude/config/commands/$ARGUMENTS
+mkdir -p ai/commands/$ARGUMENTS
 ```
 
 Note: Agent and commands will be created by:
@@ -132,7 +132,7 @@ Generated Template: $ARGUMENTS
 Created directories:
   - components/$ARGUMENTS/shell/
   - components/$ARGUMENTS/config/
-  - components/claude/config/commands/$ARGUMENTS/
+  - ai/commands/$ARGUMENTS/
 
 Created files:
   - components/$ARGUMENTS/config.yaml

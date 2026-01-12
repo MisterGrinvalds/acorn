@@ -66,7 +66,7 @@ Check each shell script in `components/$ARGUMENTS/shell/`:
 ### 4. Validate Claude Integration (Centralized)
 
 **Agent file:**
-- [ ] `components/claude/config/agents/$ARGUMENTS-expert.md` exists
+- [ ] `ai/agents/$ARGUMENTS-expert.md` exists
 - [ ] Valid YAML frontmatter
 - [ ] Required sections present:
   - [ ] Core Competencies
@@ -76,7 +76,7 @@ Check each shell script in `components/$ARGUMENTS/shell/`:
   - [ ] Approach
 
 **Command files:**
-- [ ] `components/claude/config/commands/$ARGUMENTS/` directory exists
+- [ ] `ai/commands/$ARGUMENTS/` directory exists
 - [ ] At least `explain.md` or `$ARGUMENTS-explain.md` exists
 - [ ] At least `coach.md` or `$ARGUMENTS-coach.md` exists
 - [ ] All commands have valid frontmatter
@@ -137,9 +137,9 @@ Shell Scripts:                [PASS/FAIL]
 
 Claude Integration:           [PASS/FAIL]
   - Agent                     [FOUND/MISSING]
-    Location: components/claude/config/agents/$ARGUMENTS-expert.md
+    Location: ai/agents/$ARGUMENTS-expert.md
   - Commands dir              [FOUND/MISSING]
-    Location: components/claude/config/commands/$ARGUMENTS/
+    Location: ai/commands/$ARGUMENTS/
   - explain command           [FOUND/MISSING]
   - coach command             [FOUND/MISSING]
   - Other commands            [N found]

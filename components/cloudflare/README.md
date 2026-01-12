@@ -88,8 +88,8 @@ cloudflare/
 ```
 
 Claude Code AI integration files are in:
-- Agent: `components/claude/config/agents/cloudflare-expert.md`
-- Commands: `components/claude/config/commands/cloudflare/`
+- Agent: `ai/agents/cloudflare-expert.md`
+- Commands: `ai/commands/cloudflare/`
 
 ## Dependencies
 

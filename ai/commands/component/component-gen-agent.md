@@ -26,7 +26,7 @@ Check: `components/$ARGUMENTS/config.yaml`
 
 ### 2. Create Agent File
 
-Create `components/claude/config/agents/$ARGUMENTS-expert.md`:
+Create `ai/agents/$ARGUMENTS-expert.md`:
 
 ```yaml
 ---
@@ -66,7 +66,7 @@ You are a **$ARGUMENTS Expert** specializing in <domain>.
 - Format: `alias` - description
 
 **Available Commands:**
-- List slash commands in `components/claude/config/commands/$ARGUMENTS/`
+- List slash commands in `ai/commands/$ARGUMENTS/`
 - Format: `/command-name` - description (project:$ARGUMENTS)
 
 **Best Practices:**
@@ -93,7 +93,7 @@ Always reference file locations when discussing code.
 ### 4. Check for Existing Agent
 
 Look for existing agent to migrate or reference:
-- `components/claude/config/agents/$ARGUMENTS-expert.md` (current location)
+- `ai/agents/$ARGUMENTS-expert.md` (current location)
 
 If exists, preserve good content and update structure.
 
@@ -104,7 +104,7 @@ Output:
 Generated Agent: $ARGUMENTS-expert
 ==================================
 
-Location: components/claude/config/agents/$ARGUMENTS-expert.md
+Location: ai/agents/$ARGUMENTS-expert.md
 
 Sections included:
   - Core Competencies (N items)

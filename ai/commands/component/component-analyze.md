@@ -62,9 +62,9 @@ ls components/$ARGUMENTS/ai/claude/agents/$ARGUMENTS-expert.md 2>/dev/null
 # Check for commands in component
 ls components/$ARGUMENTS/ai/claude/commands/$ARGUMENTS-*.md 2>/dev/null
 
-# Also check legacy location (components/claude/config/)
-ls components/claude/config/agents/$ARGUMENTS-*.md 2>/dev/null
-ls components/claude/config/commands/$ARGUMENTS-*.md 2>/dev/null
+# Also check legacy location (ai/)
+ls ai/agents/$ARGUMENTS-*.md 2>/dev/null
+ls ai/commands/$ARGUMENTS-*.md 2>/dev/null
 ```
 
 ### 4. Check Existing Shell Scripts

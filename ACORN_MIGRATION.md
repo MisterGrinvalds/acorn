@@ -70,7 +70,7 @@ This document tracks the migration of shell components to the acorn Go CLI.
 - [x] `components/vscode/*.sh` - DELETED (config/ kept for settings.json)
 - [x] `components/python/*.sh` - DELETED (config/ kept for startup.py)
 - [x] `components/tmux/*.sh` - DELETED (config/ kept for tmux.conf, smug configs)
-- [x] `components/claude/*.sh` - DELETED (config/ kept for settings.json, agents/, commands/, subagents/)
+- [x] `components/claude/` - DELETED (agents/, commands/, subagents/ moved to `ai/`)
 
 ### Build Commands
 ```bash
