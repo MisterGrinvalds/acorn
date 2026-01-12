@@ -3,20 +3,9 @@ name: python
 description: Python development with UV package manager
 version: 1.0.0
 
-# File sync configuration
-sync_files:
-  - source: "config/python/pythonrc"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/python/pythonrc"
-    mode: "symlink"
-
-  - source: "config/python/startup3.py"
-    target: "${XDG_CONFIG_HOME:-$HOME/.config}/python/startup3.py"
-    mode: "symlink"
-
 # Environment variables
 env:
   ENVS_LOCATION: "${ENVS_LOCATION:-$HOME/.virtualenvs}"
-  PYTHONSTARTUP: "${XDG_CONFIG_HOME:-$HOME/.config}/python/pythonrc"
   IPYTHONDIR: "${XDG_CONFIG_HOME:-$HOME/.config}/ipython"
   UV_CACHE_DIR: "${XDG_CACHE_HOME:-$HOME/.cache}/uv"
 
