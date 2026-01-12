@@ -6,12 +6,63 @@ version: 1.0.0
 # Platform restriction
 platforms: [darwin]
 
-# File sync configuration
-# Note: iTerm2 doesn't follow symlinks for dynamic profiles, use copy mode
-sync_files:
-  - source: "config/iterm2/DynamicProfiles/dotfiles-profile.json"
-    target: "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/dotfiles-profile.json"
-    mode: "copy"
+# Generated config files
+# Dynamic profile is generated from these values and symlinked to iTerm2
+files:
+  - target: "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/dotfiles-profile.json"
+    format: iterm2
+    values:
+      profile:
+        name: "shell-profile"
+        guid: "shell-profile-001"
+        parent: "Default"
+        description: "Shell profile with Catppuccin Mocha theme"
+
+      font:
+        family: "JetBrainsMonoNF-Regular"
+        size: 14
+        anti_aliased: true
+        horizontal_spacing: 1
+        vertical_spacing: 1.1
+        use_bold: true
+        use_bright_bold: true
+        use_italic: true
+
+      terminal:
+        type: "xterm-256color"
+        scrollback_lines: 50000
+        unlimited_scrollback: false
+
+      cursor:
+        type: block
+        blinking: false
+        boost: 0
+
+      input:
+        option_key_sends: meta
+        right_option_key_sends: normal
+
+      mouse:
+        reporting: true
+        allow_wheel: true
+
+      behavior:
+        working_directory: recycle
+        close_on_end: true
+        silence_bell: false
+        flash_tab: true
+
+      colors:
+        scheme: "catppuccin-mocha"
+
+      keyboard_maps:
+        - key: "0xd-0x20000"
+          action: 10
+          text: "[13;2u"
+
+      tags:
+        - "dotfiles"
+        - "catppuccin"
 
 # Environment variables
 env:
