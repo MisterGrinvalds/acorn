@@ -3,6 +3,21 @@ name: tmux
 description: Tmux session management with TPM and smug
 version: 1.0.0
 
+# File sync configuration
+sync_files:
+  # Smug session configs
+  - source: "config/tmux/smug/dev.yml"
+    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/dev.yml"
+    mode: "symlink"
+
+  - source: "config/tmux/smug/k8s.yml"
+    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/k8s.yml"
+    mode: "symlink"
+
+  - source: "config/tmux/smug/project.yml"
+    target: "${XDG_CONFIG_HOME:-$HOME/.config}/smug/project.yml"
+    mode: "symlink"
+
 # Environment variables
 env:
   TMUX_CONFIG_DIR: "${XDG_CONFIG_HOME:-$HOME/.config}/tmux"
