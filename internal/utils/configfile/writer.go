@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	rootconfig "github.com/mistergrinvalds/acorn/config"
 )
 
 // Writer defines the interface for config file format writers.
@@ -60,8 +61,23 @@ type Manager struct {
 }
 
 // NewManager creates a new config file manager.
-// If generatedDir is empty, files are written directly to their target paths (legacy behavior).
+// Uses .sapling/generated as the default output directory if .sapling exists.
+// Falls back to legacy behavior (direct writes) if .sapling cannot be found.
 func NewManager(dryRun bool) *Manager {
+	// Try to use .sapling/generated if .sapling exists
+	if genDir, err := rootconfig.GeneratedDir(); err == nil {
+		// Only use it if the .sapling directory actually exists
+		if saplingRoot, err := rootconfig.SaplingRoot(); err == nil {
+			if _, err := os.Stat(saplingRoot); err == nil {
+				return &Manager{
+					dryRun:       dryRun,
+					generatedDir: genDir,
+				}
+			}
+		}
+	}
+
+	// Fallback to legacy behavior (no generated dir)
 	return &Manager{dryRun: dryRun}
 }
 

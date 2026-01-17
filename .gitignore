@@ -22,3 +22,6 @@ build/
 dist/
 bin/
 generated/
+
+# Sapling config repository
+.sapling/

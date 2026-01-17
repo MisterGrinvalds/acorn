@@ -10,6 +10,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
+	rootconfig "github.com/mistergrinvalds/acorn/config"
 	"github.com/spf13/cobra"
 )
 
@@ -211,11 +212,16 @@ func setupShellInject() error {
 func setupSyncLink() error {
 	fmt.Fprintf(os.Stdout, "Step 4: Creating config symlinks\n")
 
-	generatedDir := filepath.Join(getDotfilesRootOrDefault(), "generated")
+	// Use .sapling/generated directory
+	generatedDir, err := rootconfig.GeneratedDir()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "  %s Could not find .sapling/generated directory\n\n", output.Warning("!"))
+		return nil
+	}
 
 	// Check if generated directory exists
 	if _, err := os.Stat(generatedDir); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stdout, "  %s No generated files to link\n\n", output.Info("○"))
+		fmt.Fprintf(os.Stdout, "  %s No generated files to link (directory doesn't exist yet)\n\n", output.Info("○"))
 		return nil
 	}
 
@@ -226,7 +232,7 @@ func setupSyncLink() error {
 
 	// Count files that would be linked
 	count := 0
-	err := filepath.Walk(generatedDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(generatedDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}

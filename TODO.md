@@ -6,8 +6,9 @@
 ## 🔥 High Priority
 
 ### 1. Fix Pre-existing Test Failures
-- [ ] Fix `internal/ide/neovim/neovim.go:206` - non-constant format string in fmt.Errorf
-- [ ] Fix `internal/terminal/shell/shell_test.go:330` - test expects "shell" but gets "entrypoint"
+- [x] Fix `internal/ide/neovim/neovim.go:206` - non-constant format string in fmt.Errorf
+- [x] Fix `internal/terminal/shell/shell_test.go:330` - test expects "shell" but gets "entrypoint"
+- [x] Move config writers back to component packages to maintain proper organization
 
 ### 2. Document New Structure
 - [ ] Add README.md to explain internal/ reorganization

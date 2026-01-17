@@ -12,6 +12,7 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
+	rootconfig "github.com/mistergrinvalds/acorn/config"
 )
 
 // Config holds shell integration configuration.
@@ -155,12 +156,19 @@ func (m *Manager) GetComponent(name string) (*Component, bool) {
 }
 
 // getGeneratedShellDir returns the directory for generated shell scripts.
-// Scripts are written to $DOTFILES_ROOT/generated/shell/
+// Scripts are written to .sapling/generated/shell/
 func (m *Manager) getGeneratedShellDir() string {
+	// Try to use .sapling/generated/shell
+	if genDir, err := rootconfig.GeneratedDir(); err == nil {
+		return filepath.Join(genDir, "shell")
+	}
+
+	// Fallback: use DOTFILES_ROOT if set
 	if dotfilesRoot := os.Getenv("DOTFILES_ROOT"); dotfilesRoot != "" {
 		return filepath.Join(dotfilesRoot, "generated", "shell")
 	}
-	// Fallback: derive from home directory
+
+	// Last resort: derive from home directory
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, "Repos", "personal", "tools", "generated", "shell")
 }

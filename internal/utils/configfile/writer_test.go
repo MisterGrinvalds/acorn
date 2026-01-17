@@ -170,6 +170,11 @@ func TestManagerGenerateFileActualWrite(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	// Force legacy mode (no .sapling) by setting SAPLING_DIR to non-existent path
+	oldSaplingDir := os.Getenv("SAPLING_DIR")
+	os.Setenv("SAPLING_DIR", filepath.Join(tmpDir, "nonexistent"))
+	defer os.Setenv("SAPLING_DIR", oldSaplingDir)
+
 	targetPath := filepath.Join(tmpDir, "subdir", "config")
 
 	manager := configfile.NewManager(false) // not dry run
