@@ -1,11 +1,18 @@
-package configfile
+package configfile_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
+	// Import component packages to register their config file writers
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
+	_ "github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
 )
 
 func TestExpandPath(t *testing.T) {
@@ -60,9 +67,9 @@ func TestExpandPath(t *testing.T) {
 				defer os.Unsetenv(k)
 			}
 
-			result := ExpandPath(tt.input)
+			result := configfile.ExpandPath(tt.input)
 			if result != tt.expected {
-				t.Errorf("ExpandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+				t.Errorf("configfile.ExpandPath(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -93,9 +100,9 @@ func TestExpandPathWithTilde(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ExpandPath(tt.input)
+			result := configfile.ExpandPath(tt.input)
 			if result != tt.expected {
-				t.Errorf("ExpandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+				t.Errorf("configfile.ExpandPath(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -103,9 +110,9 @@ func TestExpandPathWithTilde(t *testing.T) {
 
 func TestRegistry(t *testing.T) {
 	// Ghostty writer should be registered via init()
-	writer, err := GetWriter("ghostty")
+	writer, err := configfile.GetWriter("ghostty")
 	if err != nil {
-		t.Fatalf("GetWriter(ghostty) failed: %v", err)
+		t.Fatalf("configfile.GetWriter(ghostty) failed: %v", err)
 	}
 
 	if writer.Format() != "ghostty" {
@@ -114,14 +121,14 @@ func TestRegistry(t *testing.T) {
 }
 
 func TestGetWriterUnknownFormat(t *testing.T) {
-	_, err := GetWriter("unknown_format")
+	_, err := configfile.GetWriter("unknown_format")
 	if err == nil {
-		t.Error("GetWriter(unknown_format) should return error")
+		t.Error("configfile.GetWriter(unknown_format) should return error")
 	}
 }
 
 func TestManagerGenerateFileDryRun(t *testing.T) {
-	manager := NewManager(true) // dry run
+	manager := configfile.NewManager(true) // dry run
 
 	fc := config.FileConfig{
 		Target: "/tmp/test-config-dry-run",
@@ -165,7 +172,7 @@ func TestManagerGenerateFileActualWrite(t *testing.T) {
 
 	targetPath := filepath.Join(tmpDir, "subdir", "config")
 
-	manager := NewManager(false) // not dry run
+	manager := configfile.NewManager(false) // not dry run
 
 	fc := config.FileConfig{
 		Target: targetPath,
@@ -202,7 +209,7 @@ func TestManagerGenerateFileActualWrite(t *testing.T) {
 }
 
 func TestManagerGenerateFiles(t *testing.T) {
-	manager := NewManager(true) // dry run
+	manager := configfile.NewManager(true) // dry run
 
 	files := []config.FileConfig{
 		{
@@ -228,7 +235,7 @@ func TestManagerGenerateFiles(t *testing.T) {
 }
 
 func TestManagerGenerateFileUnknownFormat(t *testing.T) {
-	manager := NewManager(true)
+	manager := configfile.NewManager(true)
 
 	fc := config.FileConfig{
 		Target: "/tmp/test",

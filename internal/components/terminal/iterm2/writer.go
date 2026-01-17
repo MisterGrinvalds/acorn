@@ -1,4 +1,4 @@
-package configfile
+package iterm2
 
 import (
 	"encoding/json"
@@ -6,29 +6,29 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
+	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
 )
 
-// Iterm2Writer implements the Writer interface for iTerm2 Dynamic Profiles.
+// Writer implements the configfile.Writer interface for iTerm2 Dynamic Profiles.
 // It generates JSON profile files from declarative YAML configuration.
-type Iterm2Writer struct{}
+type Writer struct{}
 
 func init() {
-	Register(&Iterm2Writer{})
+	configfile.Register(&Writer{})
 }
 
-// NewIterm2Writer creates a new iTerm2 profile writer.
-func NewIterm2Writer() *Iterm2Writer {
-	return &Iterm2Writer{}
+// NewWriter creates a new iTerm2 profile writer.
+func NewWriter() *Writer {
+	return &Writer{}
 }
 
 // Format returns the format identifier.
-func (w *Iterm2Writer) Format() string {
+func (w *Writer) Format() string {
 	return "iterm2"
 }
 
 // Write generates iTerm2 dynamic profile JSON from values.
-func (w *Iterm2Writer) Write(values map[string]any) ([]byte, error) {
+func (w *Writer) Write(values map[string]any) ([]byte, error) {
 	profile := make(map[string]any)
 
 	// Process each section
@@ -72,7 +72,7 @@ func (w *Iterm2Writer) Write(values map[string]any) ([]byte, error) {
 }
 
 // processProfile handles profile identity fields.
-func (w *Iterm2Writer) processProfile(profile, p map[string]any) {
+func (w *Writer) processProfile(profile, p map[string]any) {
 	if name, ok := p["name"].(string); ok {
 		profile["Name"] = name
 	}
@@ -88,7 +88,7 @@ func (w *Iterm2Writer) processProfile(profile, p map[string]any) {
 }
 
 // processFont handles font configuration.
-func (w *Iterm2Writer) processFont(profile, f map[string]any) {
+func (w *Writer) processFont(profile, f map[string]any) {
 	family := "Menlo"
 	size := 14
 
@@ -141,7 +141,7 @@ func (w *Iterm2Writer) processFont(profile, f map[string]any) {
 }
 
 // processTerminal handles terminal settings.
-func (w *Iterm2Writer) processTerminal(profile, t map[string]any) {
+func (w *Writer) processTerminal(profile, t map[string]any) {
 	if tt, ok := t["type"].(string); ok {
 		profile["Terminal Type"] = tt
 	} else {
@@ -166,7 +166,7 @@ func (w *Iterm2Writer) processTerminal(profile, t map[string]any) {
 }
 
 // processCursor handles cursor settings.
-func (w *Iterm2Writer) processCursor(profile, c map[string]any) {
+func (w *Writer) processCursor(profile, c map[string]any) {
 	if ct, ok := c["type"].(string); ok {
 		profile["Cursor Type"] = w.cursorTypeToInt(ct)
 	} else {
@@ -189,7 +189,7 @@ func (w *Iterm2Writer) processCursor(profile, c map[string]any) {
 }
 
 // cursorTypeToInt converts cursor type name to iTerm2 int.
-func (w *Iterm2Writer) cursorTypeToInt(ct string) int {
+func (w *Writer) cursorTypeToInt(ct string) int {
 	switch strings.ToLower(ct) {
 	case "underline":
 		return 1
@@ -201,7 +201,7 @@ func (w *Iterm2Writer) cursorTypeToInt(ct string) int {
 }
 
 // processInput handles keyboard/input settings.
-func (w *Iterm2Writer) processInput(profile, i map[string]any) {
+func (w *Writer) processInput(profile, i map[string]any) {
 	if opt, ok := i["option_key_sends"].(string); ok {
 		profile["Option Key Sends"] = w.optionKeyToInt(opt)
 	} else {
@@ -216,7 +216,7 @@ func (w *Iterm2Writer) processInput(profile, i map[string]any) {
 }
 
 // optionKeyToInt converts option key mode to iTerm2 int.
-func (w *Iterm2Writer) optionKeyToInt(mode string) int {
+func (w *Writer) optionKeyToInt(mode string) int {
 	switch strings.ToLower(mode) {
 	case "meta":
 		return 2
@@ -228,7 +228,7 @@ func (w *Iterm2Writer) optionKeyToInt(mode string) int {
 }
 
 // processMouse handles mouse settings.
-func (w *Iterm2Writer) processMouse(profile, m map[string]any) {
+func (w *Writer) processMouse(profile, m map[string]any) {
 	if mr, ok := m["reporting"].(bool); ok {
 		profile["Mouse Reporting"] = mr
 	} else {
@@ -243,7 +243,7 @@ func (w *Iterm2Writer) processMouse(profile, m map[string]any) {
 }
 
 // processBehavior handles window/session behavior.
-func (w *Iterm2Writer) processBehavior(profile, b map[string]any) {
+func (w *Writer) processBehavior(profile, b map[string]any) {
 	if wd, ok := b["working_directory"].(string); ok {
 		profile["Custom Directory"] = w.workingDirToString(wd)
 	} else {
@@ -277,7 +277,7 @@ func (w *Iterm2Writer) processBehavior(profile, b map[string]any) {
 }
 
 // workingDirToString converts working directory mode to iTerm2 string.
-func (w *Iterm2Writer) workingDirToString(mode string) string {
+func (w *Writer) workingDirToString(mode string) string {
 	switch strings.ToLower(mode) {
 	case "home":
 		return "Home"
@@ -289,10 +289,10 @@ func (w *Iterm2Writer) workingDirToString(mode string) string {
 }
 
 // processColors handles color scheme or inline colors.
-func (w *Iterm2Writer) processColors(profile, c map[string]any) {
+func (w *Writer) processColors(profile, c map[string]any) {
 	// Check for scheme reference first
 	if scheme, ok := c["scheme"].(string); ok {
-		if cs, exists := iterm2.ColorSchemes[scheme]; exists {
+		if cs, exists := ColorSchemes[scheme]; exists {
 			w.applyColorScheme(profile, cs)
 		}
 	}
@@ -331,7 +331,7 @@ func (w *Iterm2Writer) processColors(profile, c map[string]any) {
 }
 
 // applyColorScheme applies a predefined color scheme to the profile.
-func (w *Iterm2Writer) applyColorScheme(profile map[string]any, cs iterm2.ColorScheme) {
+func (w *Writer) applyColorScheme(profile map[string]any, cs ColorScheme) {
 	profile["Background Color"] = w.hexToITermColor(cs.Background)
 	profile["Foreground Color"] = w.hexToITermColor(cs.Foreground)
 	profile["Bold Color"] = w.hexToITermColor(cs.Bold)
@@ -346,7 +346,7 @@ func (w *Iterm2Writer) applyColorScheme(profile map[string]any, cs iterm2.ColorS
 }
 
 // hexToITermColor converts #RRGGBB to iTerm2 color dict with normalized RGB.
-func (w *Iterm2Writer) hexToITermColor(hex string) map[string]any {
+func (w *Writer) hexToITermColor(hex string) map[string]any {
 	hex = strings.TrimPrefix(hex, "#")
 	if len(hex) != 6 {
 		// Return black for invalid colors
@@ -371,7 +371,7 @@ func (w *Iterm2Writer) hexToITermColor(hex string) map[string]any {
 }
 
 // processKeyboardMaps handles keyboard mapping configuration.
-func (w *Iterm2Writer) processKeyboardMaps(profile map[string]any, kms []any) {
+func (w *Writer) processKeyboardMaps(profile map[string]any, kms []any) {
 	keymap := make(map[string]any)
 
 	for _, km := range kms {
@@ -395,7 +395,7 @@ func (w *Iterm2Writer) processKeyboardMaps(profile map[string]any, kms []any) {
 }
 
 // processTags handles profile tags.
-func (w *Iterm2Writer) processTags(profile map[string]any, tags []any) {
+func (w *Writer) processTags(profile map[string]any, tags []any) {
 	tagStrings := make([]string, 0, len(tags))
 	for _, t := range tags {
 		if s, ok := t.(string); ok {

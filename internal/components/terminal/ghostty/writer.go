@@ -1,32 +1,34 @@
-package configfile
+package ghostty
 
 import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
 )
 
-// GhosttyWriter implements the Writer interface for Ghostty config format.
+// Writer implements the configfile.Writer interface for Ghostty config format.
 // Ghostty uses a simple key = value format with no sections.
 // Special handling: list values emit multiple lines with the same key.
-type GhosttyWriter struct{}
+type Writer struct{}
 
 func init() {
-	Register(&GhosttyWriter{})
+	configfile.Register(&Writer{})
 }
 
-// NewGhosttyWriter creates a new Ghostty config writer.
-func NewGhosttyWriter() *GhosttyWriter {
-	return &GhosttyWriter{}
+// NewWriter creates a new Ghostty config writer.
+func NewWriter() *Writer {
+	return &Writer{}
 }
 
 // Format returns the format identifier.
-func (w *GhosttyWriter) Format() string {
+func (w *Writer) Format() string {
 	return "ghostty"
 }
 
 // Write generates Ghostty config content from values.
-func (w *GhosttyWriter) Write(values map[string]any) ([]byte, error) {
+func (w *Writer) Write(values map[string]any) ([]byte, error) {
 	var b strings.Builder
 
 	b.WriteString("# Ghostty Configuration\n")
@@ -44,7 +46,7 @@ func (w *GhosttyWriter) Write(values map[string]any) ([]byte, error) {
 		value := values[key]
 
 		// Handle list values - emit multiple lines with same key
-		if list, ok := ghosttyToStringSlice(value); ok {
+		if list, ok := toStringSlice(value); ok {
 			for _, item := range list {
 				b.WriteString(fmt.Sprintf("%s = %s\n", key, item))
 			}
@@ -58,8 +60,8 @@ func (w *GhosttyWriter) Write(values map[string]any) ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
-// ghosttyToStringSlice converts various list types to []string.
-func ghosttyToStringSlice(v any) ([]string, bool) {
+// toStringSlice converts various list types to []string.
+func toStringSlice(v any) ([]string, bool) {
 	switch val := v.(type) {
 	case []string:
 		return val, true

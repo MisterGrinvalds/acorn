@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	// Import component packages to register their config file writers
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
+	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
+	_ "github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
-	_ "github.com/mistergrinvalds/acorn/internal/utils/configfile" // Import to register all config file writers
 	"github.com/mistergrinvalds/acorn/internal/utils/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
