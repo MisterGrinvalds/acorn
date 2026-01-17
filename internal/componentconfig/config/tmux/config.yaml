@@ -418,7 +418,7 @@ files:
         C-b: send-prefix -2
         r: 'source-file ~/.config/tmux/tmux.conf \; display "Config reloaded!"'
         "|": 'split-window -h -c "#{pane_current_path}"'
-        "-": 'split-window -v -c "#{pane_current_path}"'
+        "-- -": 'split-window -v -c "#{pane_current_path}"'
         v: 'split-window -h -c "#{pane_current_path}"'
         s: 'split-window -v -c "#{pane_current_path}"'
         c: 'new-window -c "#{pane_current_path}"'
