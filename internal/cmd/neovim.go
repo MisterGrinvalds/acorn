@@ -87,7 +87,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(nvimCmd)
+	ideCmd.AddCommand(nvimCmd)
 
 	// Add subcommands
 	nvimCmd.AddCommand(nvimHealthCmd)

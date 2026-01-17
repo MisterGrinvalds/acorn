@@ -161,7 +161,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(shellCmd)
+	terminalCmd.AddCommand(shellCmd)
 
 	// Add subcommands
 	shellCmd.AddCommand(shellStatusCmd)

@@ -142,7 +142,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(ghosttyCmd)
+	terminalCmd.AddCommand(ghosttyCmd)
 
 	// Add subcommands
 	ghosttyCmd.AddCommand(ghosttyInfoCmd)

@@ -118,7 +118,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(k8sCmd)
+	devopsCmd.AddCommand(k8sCmd)
 
 	// Add subcommands
 	k8sCmd.AddCommand(k8sInfoCmd)

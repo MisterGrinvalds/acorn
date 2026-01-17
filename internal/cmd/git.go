@@ -98,7 +98,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(gitCmd)
+	vcsCmd.AddCommand(gitCmd)
 
 	// Add subcommands
 	gitCmd.AddCommand(gitInfoCmd)

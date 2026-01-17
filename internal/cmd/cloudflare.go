@@ -317,7 +317,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(cfCmd)
+	cloudCmd.AddCommand(cfCmd)
 
 	// Add subcommands
 	cfCmd.AddCommand(cfInstallCmd)

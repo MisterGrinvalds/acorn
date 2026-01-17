@@ -210,7 +210,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(pythonCmd)
+	programmingCmd.AddCommand(pythonCmd)
 
 	// Venv subcommands
 	pythonCmd.AddCommand(pythonVenvCmd)

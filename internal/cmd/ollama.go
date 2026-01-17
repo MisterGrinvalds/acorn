@@ -163,7 +163,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(ollamaCmd)
+	aiCmd.AddCommand(ollamaCmd)
 
 	// Add subcommands
 	ollamaCmd.AddCommand(ollamaStatusCmd)

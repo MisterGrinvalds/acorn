@@ -100,7 +100,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(hfCmd)
+	aiCmd.AddCommand(hfCmd)
 
 	// Add subcommands
 	hfCmd.AddCommand(hfStatusCmd)

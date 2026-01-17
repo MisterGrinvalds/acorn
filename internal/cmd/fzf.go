@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/io/fzf"
+	"github.com/mistergrinvalds/acorn/internal/components/terminal/fzf"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
@@ -83,7 +83,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(fzfCmd)
+	terminalCmd.AddCommand(fzfCmd)
 
 	// Add subcommands
 	fzfCmd.AddCommand(fzfStatusCmd)

@@ -180,7 +180,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(goCmd)
+	programmingCmd.AddCommand(goCmd)
 
 	// Add subcommands
 	goCmd.AddCommand(goNewCmd)

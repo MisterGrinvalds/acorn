@@ -185,7 +185,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(vscodeCmd)
+	ideCmd.AddCommand(vscodeCmd)
 
 	// Add subcommands
 	vscodeCmd.AddCommand(vscodeWorkspacesCmd)

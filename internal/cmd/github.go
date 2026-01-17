@@ -175,7 +175,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(ghCmd)
+	vcsCmd.AddCommand(ghCmd)
 
 	// Add subcommands
 	ghCmd.AddCommand(ghStatusCmd)

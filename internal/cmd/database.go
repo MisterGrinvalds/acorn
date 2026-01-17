@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/database"
+	"github.com/mistergrinvalds/acorn/internal/components/data/database"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
@@ -129,7 +129,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(dbCmd)
+	dataCmd.AddCommand(dbCmd)
 
 	// Add subcommands
 	dbCmd.AddCommand(dbStatusCmd)

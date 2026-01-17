@@ -325,7 +325,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(claudeCmd)
+	aiCmd.AddCommand(claudeCmd)
 
 	// Add subcommands
 	claudeCmd.AddCommand(claudeInfoCmd)

@@ -203,9 +203,9 @@ Examples:
 var nodeCacheClean bool
 
 func init() {
-	rootCmd.AddCommand(nodeCmd)
-	rootCmd.AddCommand(nvmCmd)
-	rootCmd.AddCommand(pnpmCmd)
+	programmingCmd.AddCommand(nodeCmd)
+	programmingCmd.AddCommand(nvmCmd)
+	programmingCmd.AddCommand(pnpmCmd)
 
 	// Node subcommands
 	nodeCmd.AddCommand(nodeStatusCmd)

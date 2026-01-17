@@ -131,7 +131,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(secretsCmd)
+	dataCmd.AddCommand(secretsCmd)
 
 	// Add subcommands
 	secretsCmd.AddCommand(secretsStatusCmd)

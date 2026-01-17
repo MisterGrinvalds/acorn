@@ -272,7 +272,7 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(tmuxCmd)
+	terminalCmd.AddCommand(tmuxCmd)
 
 	// Main subcommands
 	tmuxCmd.AddCommand(tmuxInfoCmd)
