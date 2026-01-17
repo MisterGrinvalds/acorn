@@ -6,10 +6,10 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/mistergrinvalds/acorn/internal/componentconfig"
-	"github.com/mistergrinvalds/acorn/internal/filesync"
-	"github.com/mistergrinvalds/acorn/internal/output"
-	"github.com/mistergrinvalds/acorn/internal/shell"
+	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
 	"github.com/spf13/cobra"
 )
 
@@ -262,7 +262,7 @@ func setupComponentSync(dotfilesRoot string) error {
 
 	syncedCount := 0
 	for _, component := range components {
-		loader := componentconfig.NewLoader()
+		loader := config.NewComponentLoader()
 		cfg, err := loader.LoadBase(component)
 		if err != nil {
 			if setupVerbose {

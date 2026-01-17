@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/output"
-	"github.com/mistergrinvalds/acorn/internal/secrets"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/components/data/secrets"
 	"github.com/spf13/cobra"
 )
 

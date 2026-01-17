@@ -25,10 +25,10 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/mistergrinvalds/acorn/internal/version.Version={{.Version}}
-      - -X github.com/mistergrinvalds/acorn/internal/version.Commit={{.ShortCommit}}
-      - -X github.com/mistergrinvalds/acorn/internal/version.Date={{.Date}}
-      - -X github.com/mistergrinvalds/acorn/internal/version.BuiltBy=goreleaser
+      - -X github.com/mistergrinvalds/acorn/internal/utils/version.Version={{.Version}}
+      - -X github.com/mistergrinvalds/acorn/internal/utils/version.Commit={{.ShortCommit}}
+      - -X github.com/mistergrinvalds/acorn/internal/utils/version.Date={{.Date}}
+      - -X github.com/mistergrinvalds/acorn/internal/utils/version.BuiltBy=goreleaser
     mod_timestamp: '{{ .CommitTimestamp }}'
 
 archives:

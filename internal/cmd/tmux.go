@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/installer"
-	"github.com/mistergrinvalds/acorn/internal/output"
-	tmuxpkg "github.com/mistergrinvalds/acorn/internal/tmux"
+	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	tmuxpkg "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
 	"github.com/spf13/cobra"
 )
 

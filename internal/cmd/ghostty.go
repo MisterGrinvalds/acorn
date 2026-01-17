@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/ghostty"
-	"github.com/mistergrinvalds/acorn/internal/installer"
-	"github.com/mistergrinvalds/acorn/internal/output"
+	"github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
+	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 

@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/output"
-	"github.com/mistergrinvalds/acorn/internal/tools"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/tools"
 	"github.com/spf13/cobra"
 )
 

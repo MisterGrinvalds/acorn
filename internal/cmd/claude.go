@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/claude"
-	"github.com/mistergrinvalds/acorn/internal/componentconfig"
-	"github.com/mistergrinvalds/acorn/internal/filesync"
-	"github.com/mistergrinvalds/acorn/internal/installer"
-	"github.com/mistergrinvalds/acorn/internal/output"
+	"github.com/mistergrinvalds/acorn/internal/components/ai/claude"
+	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
+	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
@@ -990,7 +990,7 @@ func runClaudeSync(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load claude component config
-	loader := componentconfig.NewLoader()
+	loader := config.NewComponentLoader()
 	cfg, err := loader.LoadBase("claude")
 	if err != nil {
 		return fmt.Errorf("failed to load claude config: %w", err)
@@ -1067,7 +1067,7 @@ func runClaudeSyncStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load claude component config
-	loader := componentconfig.NewLoader()
+	loader := config.NewComponentLoader()
 	cfg, err := loader.LoadBase("claude")
 	if err != nil {
 		return fmt.Errorf("failed to load claude config: %w", err)

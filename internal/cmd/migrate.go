@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/component"
-	"github.com/mistergrinvalds/acorn/internal/migrate"
-	"github.com/mistergrinvalds/acorn/internal/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/component"
+	"github.com/mistergrinvalds/acorn/internal/components/io/migrate"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
