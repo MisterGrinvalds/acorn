@@ -5,24 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
-	"github.com/mistergrinvalds/acorn/internal/components/vcs/git"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
-	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
+	_ "github.com/mistergrinvalds/acorn/internal/utils/configfile" // Import to register all config file writers
 	"github.com/mistergrinvalds/acorn/internal/utils/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-func init() {
-	// Register component-specific config file writers
-	configfile.Register(ghostty.NewWriter())
-	configfile.Register(tmux.NewWriter())
-	configfile.Register(git.NewConfigWriter())
-	configfile.Register(iterm2.NewWriter())
-}
 
 var (
 	cfgFile string

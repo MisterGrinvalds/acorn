@@ -1,4 +1,4 @@
-package tmux
+package configfile
 
 import (
 	"fmt"
@@ -6,17 +6,21 @@ import (
 	"strings"
 )
 
-// Writer implements the configfile.Writer interface for tmux config format.
+// TmuxWriter implements the Writer interface for tmux config format.
 // Tmux uses command-based syntax: set -g option value, bind key command, etc.
-type Writer struct{}
+type TmuxWriter struct{}
 
-// NewWriter creates a new tmux config writer.
-func NewWriter() *Writer {
-	return &Writer{}
+func init() {
+	Register(&TmuxWriter{})
+}
+
+// NewTmuxWriter creates a new tmux config writer.
+func NewTmuxWriter() *TmuxWriter {
+	return &TmuxWriter{}
 }
 
 // Format returns the format identifier.
-func (w *Writer) Format() string {
+func (w *TmuxWriter) Format() string {
 	return "tmux"
 }
 
@@ -39,7 +43,7 @@ func (w *Writer) Format() string {
 //	plugin_options: map of plugin options (@option)
 //	raw: list of raw config lines (for conditionals, etc.)
 //	run: list of commands to run
-func (w *Writer) Write(values map[string]any) ([]byte, error) {
+func (w *TmuxWriter) Write(values map[string]any) ([]byte, error) {
 	var b strings.Builder
 
 	b.WriteString("# =============================================================================\n")
@@ -63,7 +67,7 @@ func (w *Writer) Write(values map[string]any) ([]byte, error) {
 }
 
 // writeSetOptions writes set commands for a given flag.
-func (w *Writer) writeSetOptions(b *strings.Builder, values map[string]any, key, flag, header string) {
+func (w *TmuxWriter) writeSetOptions(b *strings.Builder, values map[string]any, key, flag, header string) {
 	opts, ok := values[key].(map[string]any)
 	if !ok || len(opts) == 0 {
 		return
@@ -80,7 +84,7 @@ func (w *Writer) writeSetOptions(b *strings.Builder, values map[string]any, key,
 }
 
 // writeAppendOptions writes set -ga and set -as options.
-func (w *Writer) writeAppendOptions(b *strings.Builder, values map[string]any) {
+func (w *TmuxWriter) writeAppendOptions(b *strings.Builder, values map[string]any) {
 	// set -ga options
 	if opts, ok := values["set_ga"].(map[string]any); ok && len(opts) > 0 {
 		keys := sortedKeys(opts)
@@ -91,7 +95,7 @@ func (w *Writer) writeAppendOptions(b *strings.Builder, values map[string]any) {
 	}
 
 	// set -as options (list format)
-	if opts, ok := toStringSlice(values["set_as"]); ok {
+	if opts, ok := tmuxToStringSlice(values["set_as"]); ok {
 		for _, opt := range opts {
 			fmt.Fprintf(b, "set -as %s\n", opt)
 		}
@@ -100,8 +104,8 @@ func (w *Writer) writeAppendOptions(b *strings.Builder, values map[string]any) {
 }
 
 // writeTerminalFeatures writes terminal-features settings.
-func (w *Writer) writeTerminalFeatures(b *strings.Builder, values map[string]any) {
-	features, ok := toStringSlice(values["terminal_features"])
+func (w *TmuxWriter) writeTerminalFeatures(b *strings.Builder, values map[string]any) {
+	features, ok := tmuxToStringSlice(values["terminal_features"])
 	if !ok || len(features) == 0 {
 		return
 	}
@@ -114,10 +118,10 @@ func (w *Writer) writeTerminalFeatures(b *strings.Builder, values map[string]any
 }
 
 // writeUnbinds writes unbind commands.
-func (w *Writer) writeUnbinds(b *strings.Builder, values map[string]any) {
+func (w *TmuxWriter) writeUnbinds(b *strings.Builder, values map[string]any) {
 	hasUnbinds := false
 
-	if keys, ok := toStringSlice(values["unbind"]); ok && len(keys) > 0 {
+	if keys, ok := tmuxToStringSlice(values["unbind"]); ok && len(keys) > 0 {
 		if !hasUnbinds {
 			b.WriteString("# Unbindings\n")
 			hasUnbinds = true
@@ -127,7 +131,7 @@ func (w *Writer) writeUnbinds(b *strings.Builder, values map[string]any) {
 		}
 	}
 
-	if keys, ok := toStringSlice(values["unbind_n"]); ok && len(keys) > 0 {
+	if keys, ok := tmuxToStringSlice(values["unbind_n"]); ok && len(keys) > 0 {
 		if !hasUnbinds {
 			b.WriteString("# Unbindings\n")
 			hasUnbinds = true
@@ -143,7 +147,7 @@ func (w *Writer) writeUnbinds(b *strings.Builder, values map[string]any) {
 }
 
 // writeBindings writes key bindings.
-func (w *Writer) writeBindings(b *strings.Builder, values map[string]any) {
+func (w *TmuxWriter) writeBindings(b *strings.Builder, values map[string]any) {
 	hasBindings := false
 
 	// Regular prefix bindings
@@ -202,8 +206,8 @@ func (w *Writer) writeBindings(b *strings.Builder, values map[string]any) {
 }
 
 // writeRaw writes raw config lines.
-func (w *Writer) writeRaw(b *strings.Builder, values map[string]any) {
-	raw, ok := toStringSlice(values["raw"])
+func (w *TmuxWriter) writeRaw(b *strings.Builder, values map[string]any) {
+	raw, ok := tmuxToStringSlice(values["raw"])
 	if !ok || len(raw) == 0 {
 		return
 	}
@@ -216,8 +220,8 @@ func (w *Writer) writeRaw(b *strings.Builder, values map[string]any) {
 }
 
 // writePlugins writes TPM plugin configuration.
-func (w *Writer) writePlugins(b *strings.Builder, values map[string]any) {
-	plugins, ok := toStringSlice(values["plugins"])
+func (w *TmuxWriter) writePlugins(b *strings.Builder, values map[string]any) {
+	plugins, ok := tmuxToStringSlice(values["plugins"])
 	if !ok || len(plugins) == 0 {
 		return
 	}
@@ -246,8 +250,8 @@ func (w *Writer) writePlugins(b *strings.Builder, values map[string]any) {
 }
 
 // writeRun writes run commands (typically TPM initialization).
-func (w *Writer) writeRun(b *strings.Builder, values map[string]any) {
-	runs, ok := toStringSlice(values["run"])
+func (w *TmuxWriter) writeRun(b *strings.Builder, values map[string]any) {
+	runs, ok := tmuxToStringSlice(values["run"])
 	if !ok || len(runs) == 0 {
 		return
 	}
@@ -258,8 +262,8 @@ func (w *Writer) writeRun(b *strings.Builder, values map[string]any) {
 	}
 }
 
-// toStringSlice converts various list types to []string.
-func toStringSlice(v any) ([]string, bool) {
+// tmuxToStringSlice converts various list types to []string.
+func tmuxToStringSlice(v any) ([]string, bool) {
 	if v == nil {
 		return nil, false
 	}

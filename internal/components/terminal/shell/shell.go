@@ -332,7 +332,7 @@ func (m *Manager) GenerateAll() (*GenerateResult, error) {
 	symlinkPath := filepath.Join(m.config.AcornDir, "shell.sh")
 
 	result.Entrypoint = &GeneratedScript{
-		Component:     "entrypoint",
+		Component:     "shell",
 		Description:   "Main entrypoint that sources all component scripts",
 		GeneratedPath: generatedPath,
 		SymlinkPath:   symlinkPath,

@@ -1,4 +1,4 @@
-package git
+package configfile
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ConfigWriter implements the configfile.Writer interface for git config format.
+// GitConfigWriter implements the Writer interface for git config format.
 // Generates INI-style config with sections, subsections, and multi-value support.
 //
 // Expected structure:
@@ -27,20 +27,24 @@ import (
 //	includeIf:
 //	  "gitdir:~/Repos/work/":
 //	    path: "~/.config/git/config.work"
-type ConfigWriter struct{}
+type GitConfigWriter struct{}
 
-// NewConfigWriter creates a new git config writer.
-func NewConfigWriter() *ConfigWriter {
-	return &ConfigWriter{}
+func init() {
+	Register(&GitConfigWriter{})
+}
+
+// NewGitConfigWriter creates a new git config writer.
+func NewGitConfigWriter() *GitConfigWriter {
+	return &GitConfigWriter{}
 }
 
 // Format returns the format identifier.
-func (w *ConfigWriter) Format() string {
+func (w *GitConfigWriter) Format() string {
 	return "gitconfig"
 }
 
 // Write generates git config content from values.
-func (w *ConfigWriter) Write(values map[string]any) ([]byte, error) {
+func (w *GitConfigWriter) Write(values map[string]any) ([]byte, error) {
 	var b strings.Builder
 
 	b.WriteString("# Git Configuration\n")
@@ -82,7 +86,7 @@ func (w *ConfigWriter) Write(values map[string]any) ([]byte, error) {
 }
 
 // writeSection writes a section with its values.
-func (w *ConfigWriter) writeSection(b *strings.Builder, name string, value any) error {
+func (w *GitConfigWriter) writeSection(b *strings.Builder, name string, value any) error {
 	switch v := value.(type) {
 	case map[string]any:
 		// Check if this is a subsection container (like credential or includeIf)
@@ -109,7 +113,7 @@ func (w *ConfigWriter) writeSection(b *strings.Builder, name string, value any) 
 }
 
 // hasSubsections checks if a map contains nested maps (subsections).
-func (w *ConfigWriter) hasSubsections(m map[string]any) bool {
+func (w *GitConfigWriter) hasSubsections(m map[string]any) bool {
 	for _, v := range m {
 		if _, ok := v.(map[string]any); ok {
 			return true
@@ -119,7 +123,7 @@ func (w *ConfigWriter) hasSubsections(m map[string]any) bool {
 }
 
 // writeSubsections writes sections with subsection names like [credential "url"].
-func (w *ConfigWriter) writeSubsections(b *strings.Builder, section string, subsections map[string]any) error {
+func (w *GitConfigWriter) writeSubsections(b *strings.Builder, section string, subsections map[string]any) error {
 	// Sort subsection names for deterministic output
 	names := make([]string, 0, len(subsections))
 	for name := range subsections {
@@ -140,7 +144,7 @@ func (w *ConfigWriter) writeSubsections(b *strings.Builder, section string, subs
 }
 
 // writeKeyValues writes key-value pairs with proper indentation.
-func (w *ConfigWriter) writeKeyValues(b *strings.Builder, m map[string]any) {
+func (w *GitConfigWriter) writeKeyValues(b *strings.Builder, m map[string]any) {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
