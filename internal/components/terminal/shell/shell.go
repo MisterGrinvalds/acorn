@@ -181,6 +181,11 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 		return nil, fmt.Errorf("component not found: %s (available: %v)", name, m.ListComponents())
 	}
 
+	// Check for valid sapling repo before generating
+	if !rootconfig.IsValidSaplingRepo() {
+		return nil, fmt.Errorf("no valid .sapling repository found. Run 'acorn setup' to configure one")
+	}
+
 	generatedDir := m.getGeneratedShellDir()
 	if err := os.MkdirAll(generatedDir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create generated directory: %w", err)
@@ -221,6 +226,11 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 // Shell scripts are written to $DOTFILES_ROOT/.sapling/generated/shell/ and should be
 // symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
+	// Check for valid sapling repo before generating
+	if !rootconfig.IsValidSaplingRepo() {
+		return nil, fmt.Errorf("no valid .sapling repository found. Run 'acorn setup' to configure one")
+	}
+
 	// Ensure generated shell directory exists
 	generatedShellDir := m.getGeneratedShellDir()
 	if err := os.MkdirAll(generatedShellDir, 0o755); err != nil {

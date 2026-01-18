@@ -195,8 +195,40 @@ func GeneratedDir() (string, error) {
 	return filepath.Join(root, "generated"), nil
 }
 
+// IsValidSaplingRepo checks if the .sapling directory is a real sapling repository.
+// A valid sapling repo must have config/, .git, or ai/ directory.
+// Just having generated/ is not enough (that gets auto-created).
+func IsValidSaplingRepo() bool {
+	root, err := SaplingRoot()
+	if err != nil {
+		return false
+	}
+
+	// Check for config/ directory (primary indicator)
+	if _, err := os.Stat(filepath.Join(root, "config")); err == nil {
+		return true
+	}
+
+	// Check for .git directory
+	if _, err := os.Stat(filepath.Join(root, ".git")); err == nil {
+		return true
+	}
+
+	// Check for ai/ directory
+	if _, err := os.Stat(filepath.Join(root, "ai")); err == nil {
+		return true
+	}
+
+	return false
+}
+
 // EnsureGeneratedDir creates the .sapling/generated directory if it doesn't exist.
+// Returns an error if no valid sapling repository is found.
 func EnsureGeneratedDir() error {
+	if !IsValidSaplingRepo() {
+		return fmt.Errorf("no valid .sapling repository found. Run 'acorn setup' to configure one")
+	}
+
 	genDir, err := GeneratedDir()
 	if err != nil {
 		return err
