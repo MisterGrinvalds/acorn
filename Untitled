@@ -1,0 +1,53 @@
+ai
+- claude
+- huggingface
+- ollama
+artifacts
+- jfrog
+
+cloud
+- aws
+- azure
+- cloudflare
+- digitalocean
+data
+- db
+- datagrip
+- infisical
+- openmetadata
+- postman
+- posting https://github.com/darrenburns/posting
+- secrets
+devops
+- docker
+- lazydocker
+- kubernetes
+- helm
+- kubectl
+- k9s
+- argocd
+- n8n
+ide
+- nvim
+- vscode
+- goland
+identity
+- keycloak
+programming
+- python
+- uv
+- node
+- nvm
+- pnpm
+- go
+sysadm
+- btop++
+terminal
+- fzf
+- ghostty
+- shell
+- tmux
+vcs
+- git
+- gh
+
