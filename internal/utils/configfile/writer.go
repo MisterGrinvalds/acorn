@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
-	rootconfig "github.com/mistergrinvalds/acorn/config"
 )
 
 // Writer defines the interface for config file format writers.
@@ -65,9 +64,9 @@ type Manager struct {
 // Falls back to legacy behavior (direct writes) if .sapling cannot be found.
 func NewManager(dryRun bool) *Manager {
 	// Try to use .sapling/generated if .sapling exists
-	if genDir, err := rootconfig.GeneratedDir(); err == nil {
+	if genDir, err := config.GeneratedDir(); err == nil {
 		// Only use it if the .sapling directory actually exists
-		if saplingRoot, err := rootconfig.SaplingRoot(); err == nil {
+		if saplingRoot, err := config.SaplingRoot(); err == nil {
 			if _, err := os.Stat(saplingRoot); err == nil {
 				return &Manager{
 					dryRun:       dryRun,

@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	rootconfig "github.com/mistergrinvalds/acorn/config"
+	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
@@ -146,7 +146,7 @@ func init() {
 
 // getSaplingRoot returns the .sapling directory path
 func getSaplingRoot() (string, error) {
-	root, err := rootconfig.SaplingRoot()
+	root, err := config.SaplingRoot()
 	if err != nil {
 		return "", fmt.Errorf("failed to find .sapling directory: %w", err)
 	}

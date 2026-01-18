@@ -1,6 +1,3 @@
-// Package config provides component configuration file loading from .sapling/config.
-// This package reads config.yaml files from .sapling/config at runtime and supports
-// template rendering for dynamic configuration.
 package config
 
 import (
@@ -46,9 +43,9 @@ func saplingConfigDir() (string, error) {
 	return filepath.Join(cwd, ".sapling", "config"), nil
 }
 
-// GetConfig returns the config.yaml for a component from .sapling/config.
+// GetComponentConfig returns the config.yaml for a component from .sapling/config.
 // Returns the raw YAML bytes or an error if not found.
-func GetConfig(component string) ([]byte, error) {
+func GetComponentConfig(component string) ([]byte, error) {
 	configDir, err := saplingConfigDir()
 	if err != nil {
 		return nil, err
@@ -62,9 +59,9 @@ func GetConfig(component string) ([]byte, error) {
 	return data, nil
 }
 
-// GetConfigWithTemplate returns the config.yaml for a component with template rendering.
+// GetComponentConfigWithTemplate returns the config.yaml for a component with template rendering.
 // The config file is treated as a Go template and rendered with the provided data.
-func GetConfigWithTemplate(component string, templateData map[string]any) ([]byte, error) {
+func GetComponentConfigWithTemplate(component string, templateData map[string]any) ([]byte, error) {
 	configDir, err := saplingConfigDir()
 	if err != nil {
 		return nil, err
@@ -90,8 +87,8 @@ func GetConfigWithTemplate(component string, templateData map[string]any) ([]byt
 	return buf.Bytes(), nil
 }
 
-// ListComponents returns all component names that have configs in .sapling/config.
-func ListComponents() ([]string, error) {
+// ListComponentConfigs returns all component names that have configs in .sapling/config.
+func ListComponentConfigs() ([]string, error) {
 	configDir, err := saplingConfigDir()
 	if err != nil {
 		return nil, err
@@ -116,15 +113,15 @@ func ListComponents() ([]string, error) {
 	return components, nil
 }
 
-// HasConfig checks if a component has a config in .sapling/config.
-func HasConfig(component string) bool {
-	_, err := GetConfig(component)
+// HasComponentConfig checks if a component has a config in .sapling/config.
+func HasComponentConfig(component string) bool {
+	_, err := GetComponentConfig(component)
 	return err == nil
 }
 
-// WalkConfigs walks all config.yaml files in .sapling/config.
+// WalkComponentConfigs walks all config.yaml files in .sapling/config.
 // For each config file found, it calls the provided function with the component name.
-func WalkConfigs(fn func(component string, path string) error) error {
+func WalkComponentConfigs(fn func(component string, path string) error) error {
 	configDir, err := saplingConfigDir()
 	if err != nil {
 		return err
@@ -211,11 +208,6 @@ func IsValidSaplingRepo() bool {
 
 	// Check for .git directory
 	if _, err := os.Stat(filepath.Join(root, ".git")); err == nil {
-		return true
-	}
-
-	// Check for ai/ directory
-	if _, err := os.Stat(filepath.Join(root, "ai")); err == nil {
 		return true
 	}
 

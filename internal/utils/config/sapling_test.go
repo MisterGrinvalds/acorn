@@ -7,9 +7,9 @@ import (
 	"testing"
 )
 
-func TestGetConfig(t *testing.T) {
+func TestGetComponentConfig(t *testing.T) {
 	// Test loading a component config
-	data, err := GetConfig("git")
+	data, err := GetComponentConfig("git")
 	if err != nil {
 		t.Fatalf("Failed to load git config: %v", err)
 	}
@@ -19,8 +19,8 @@ func TestGetConfig(t *testing.T) {
 	}
 }
 
-func TestListComponents(t *testing.T) {
-	components, err := ListComponents()
+func TestListComponentConfigs(t *testing.T) {
+	components, err := ListComponentConfigs()
 	if err != nil {
 		t.Fatalf("Failed to list components: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestListComponents(t *testing.T) {
 	t.Logf("Found %d components: %v", len(components), components)
 }
 
-func TestGetConfigWithTemplate(t *testing.T) {
+func TestGetComponentConfigWithTemplate(t *testing.T) {
 	// Create a temporary test config with template
 	tempDir := t.TempDir()
 	testComponent := "test-template"
@@ -66,7 +66,7 @@ description: Test component for {{ .Name }}`
 		"Version": "1.0.0",
 	}
 
-	rendered, err := GetConfigWithTemplate(testComponent, templateData)
+	rendered, err := GetComponentConfigWithTemplate(testComponent, templateData)
 	if err != nil {
 		t.Fatalf("Failed to render template: %v", err)
 	}
@@ -80,14 +80,14 @@ description: Test component for TestApp`
 	}
 }
 
-func TestHasConfig(t *testing.T) {
+func TestHasComponentConfig(t *testing.T) {
 	// Test with existing component
-	if !HasConfig("git") {
+	if !HasComponentConfig("git") {
 		t.Error("Expected git component to exist")
 	}
 
 	// Test with non-existing component
-	if HasConfig("nonexistent-component-xyz") {
+	if HasComponentConfig("nonexistent-component-xyz") {
 		t.Error("Expected nonexistent component to not exist")
 	}
 }
@@ -129,6 +129,12 @@ func TestEnsureGeneratedDir(t *testing.T) {
 	// Create temp test environment
 	tempDir := t.TempDir()
 	saplingDir := filepath.Join(tempDir, ".sapling")
+
+	// Create config directory to make it a valid sapling repo
+	configDir := filepath.Join(saplingDir, "config")
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		t.Fatalf("Failed to create config dir: %v", err)
+	}
 
 	oldSaplingDir := os.Getenv("SAPLING_DIR")
 	os.Setenv("SAPLING_DIR", saplingDir)

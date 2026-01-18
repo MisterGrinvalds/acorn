@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	rootconfig "github.com/mistergrinvalds/acorn/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -31,10 +30,10 @@ func NewComponentLoader() *ComponentLoader {
 }
 
 // Load loads a component config with user overlay.
-// First loads embedded defaults, then merges user overrides if present.
+// First loads from .sapling/config, then merges user overrides if present.
 func (l *ComponentLoader) Load(component string, target any) error {
-	// 1. Load embedded default
-	defaultData, err := rootconfig.GetConfig(component)
+	// 1. Load from .sapling/config
+	defaultData, err := GetComponentConfig(component)
 	if err != nil {
 		return err
 	}
@@ -88,8 +87,8 @@ func (l *ComponentLoader) GetAcornDir() string {
 
 // CreateUserOverride creates a user override file with the component's default config.
 func (l *ComponentLoader) CreateUserOverride(component string) error {
-	// Get embedded default
-	defaultData, err := rootconfig.GetConfig(component)
+	// Get config from .sapling/config
+	defaultData, err := GetComponentConfig(component)
 	if err != nil {
 		return err
 	}
@@ -245,20 +244,3 @@ func mergeMaps(a, b map[string]string) map[string]string {
 	return result
 }
 
-// GetEmbeddedConfig returns the embedded config.yaml for a component.
-// Deprecated: Use github.com/mistergrinvalds/acorn/config.GetConfig directly.
-func GetEmbeddedConfig(component string) ([]byte, error) {
-	return rootconfig.GetConfig(component)
-}
-
-// ListEmbeddedComponents returns all component names that have embedded configs.
-// Deprecated: Use github.com/mistergrinvalds/acorn/config.ListComponents directly.
-func ListEmbeddedComponents() ([]string, error) {
-	return rootconfig.ListComponents()
-}
-
-// HasEmbeddedConfig checks if a component has an embedded config.
-// Deprecated: Use github.com/mistergrinvalds/acorn/config.HasConfig directly.
-func HasEmbeddedConfig(component string) bool {
-	return rootconfig.HasConfig(component)
-}

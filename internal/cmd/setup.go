@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	rootconfig "github.com/mistergrinvalds/acorn/config"
 	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
@@ -463,7 +462,7 @@ func setupShellGenerate() error {
 	fmt.Fprintf(os.Stdout, "Step 2: Generating shell scripts\n")
 
 	// Check for valid sapling repo
-	if !rootconfig.IsValidSaplingRepo() {
+	if !config.IsValidSaplingRepo() {
 		if setupDryRun {
 			fmt.Fprintf(os.Stdout, "  %s Would generate shell scripts (after .sapling setup)\n\n", output.Info("○"))
 			return nil
@@ -534,7 +533,7 @@ func setupSyncLink() error {
 	fmt.Fprintf(os.Stdout, "Step 4: Creating config symlinks\n")
 
 	// Use .sapling/generated directory
-	generatedDir, err := rootconfig.GeneratedDir()
+	generatedDir, err := config.GeneratedDir()
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "  %s Could not find .sapling/generated directory\n\n", output.Warning("!"))
 		return nil

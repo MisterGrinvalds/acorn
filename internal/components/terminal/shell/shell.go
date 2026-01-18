@@ -12,7 +12,6 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
-	rootconfig "github.com/mistergrinvalds/acorn/config"
 )
 
 // Config holds shell integration configuration.
@@ -159,7 +158,7 @@ func (m *Manager) GetComponent(name string) (*Component, bool) {
 // Scripts are written to .sapling/generated/shell/
 func (m *Manager) getGeneratedShellDir() string {
 	// Try to use .sapling/generated/shell
-	if genDir, err := rootconfig.GeneratedDir(); err == nil {
+	if genDir, err := config.GeneratedDir(); err == nil {
 		return filepath.Join(genDir, "shell")
 	}
 
@@ -182,7 +181,7 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 	}
 
 	// Check for valid sapling repo before generating
-	if !rootconfig.IsValidSaplingRepo() {
+	if !config.IsValidSaplingRepo() {
 		return nil, fmt.Errorf("no valid .sapling repository found. Run 'acorn setup' to configure one")
 	}
 
@@ -227,7 +226,7 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 // symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 	// Check for valid sapling repo before generating
-	if !rootconfig.IsValidSaplingRepo() {
+	if !config.IsValidSaplingRepo() {
 		return nil, fmt.Errorf("no valid .sapling repository found. Run 'acorn setup' to configure one")
 	}
 
