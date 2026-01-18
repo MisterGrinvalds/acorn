@@ -116,7 +116,7 @@ var syncLinkCmd = &cobra.Command{
 
 For each component with generated config files, creates a symlink from
 the XDG path (e.g., ~/.config/tmux/tmux.conf) to the generated file
-in the repository (e.g., $DOTFILES_ROOT/generated/tmux/tmux.conf).
+in the repository (e.g., $DOTFILES_ROOT/.sapling/generated/tmux/tmux.conf).
 
 This allows you to:
   - Keep config files version controlled
@@ -131,7 +131,7 @@ var syncUnlinkCmd = &cobra.Command{
 	Short: "Remove config symlinks",
 	Long: `Remove symlinks that point to the generated config files.
 
-Only removes symlinks that point to files in $DOTFILES_ROOT/generated/.
+Only removes symlinks that point to files in $DOTFILES_ROOT/.sapling/generated/.
 Regular files are left untouched to prevent data loss.`,
 	RunE: runSyncUnlink,
 }
@@ -177,9 +177,9 @@ func getSyncRoot() string {
 	return root
 }
 
-// getGeneratedDir returns the generated directory path
+// getGeneratedDir returns the generated directory path (.sapling/generated)
 func getGeneratedDir() string {
-	return filepath.Join(getSyncRoot(), "generated")
+	return filepath.Join(getSyncRoot(), ".sapling", "generated")
 }
 
 // isSyncGitRepo checks if the directory is a git repository

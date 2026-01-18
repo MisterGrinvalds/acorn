@@ -567,8 +567,8 @@ func (h *Helper) SmugLinkConfigs(dotfilesRoot string) error {
 		return nil
 	}
 
-	// Fallback to dotfiles
-	sourceDir := filepath.Join(dotfilesRoot, "components", "tmux", "config", "smug")
+	// Fallback to dotfiles (.sapling/generated/tmux has smug configs)
+	sourceDir := filepath.Join(dotfilesRoot, ".sapling", "generated", "tmux")
 	if _, err := os.Stat(sourceDir); os.IsNotExist(err) {
 		return fmt.Errorf("no smug configs found. Run: acorn tmux smug repo-init")
 	}

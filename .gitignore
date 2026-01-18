@@ -21,7 +21,7 @@ tmp-dotfiles/
 build/
 dist/
 bin/
-generated/
+generated
 
 # Sapling config repository
 .sapling/

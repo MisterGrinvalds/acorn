@@ -225,7 +225,7 @@ Plugin location: %s
 For lazy.nvim, add to your plugins:
 
 {
-  dir = vim.env.DOTFILES_ROOT and (vim.env.DOTFILES_ROOT .. "/components/neovim/plugin") or nil,
+  dir = vim.env.DOTFILES_ROOT and (vim.env.DOTFILES_ROOT .. "/plugins/neovim/plugin") or nil,
   name = "dotfiles",
   config = function()
     require("dotfiles").setup({

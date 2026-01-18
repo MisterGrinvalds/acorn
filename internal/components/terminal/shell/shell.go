@@ -163,14 +163,14 @@ func (m *Manager) getGeneratedShellDir() string {
 		return filepath.Join(genDir, "shell")
 	}
 
-	// Fallback: use DOTFILES_ROOT if set
+	// Fallback: use DOTFILES_ROOT/.sapling/generated if set
 	if dotfilesRoot := os.Getenv("DOTFILES_ROOT"); dotfilesRoot != "" {
-		return filepath.Join(dotfilesRoot, "generated", "shell")
+		return filepath.Join(dotfilesRoot, ".sapling", "generated", "shell")
 	}
 
 	// Last resort: derive from home directory
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "Repos", "personal", "tools", "generated", "shell")
+	return filepath.Join(home, "Repos", "personal", "tools", ".sapling", "generated", "shell")
 }
 
 // GenerateComponent generates a shell script for a single component.
@@ -218,7 +218,7 @@ func (m *Manager) GenerateComponent(name string) (*GenerateResult, error) {
 
 // GenerateComponents generates shell scripts for specific components.
 // If names is empty, generates for all components.
-// Shell scripts are written to $DOTFILES_ROOT/generated/shell/ and should be
+// Shell scripts are written to $DOTFILES_ROOT/.sapling/generated/shell/ and should be
 // symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 	// Ensure generated shell directory exists
@@ -242,7 +242,7 @@ func (m *Manager) GenerateComponents(names ...string) (*GenerateResult, error) {
 	}
 
 	// Create config file manager with generated directory
-	// Config files are written to $DOTFILES_ROOT/generated/{component}/{filename}
+	// Config files are written to $DOTFILES_ROOT/.sapling/generated/{component}/{filename}
 	generatedDir := filepath.Dir(generatedShellDir) // parent of shell/ is generated/
 	cfManager := configfile.NewManagerWithGeneratedDir(generatedDir, m.config.DryRun)
 
@@ -323,7 +323,7 @@ func (m *Manager) shouldGenerateForPlatform(platforms []string) bool {
 }
 
 // GenerateAll generates all component shell scripts and the entrypoint.
-// All scripts are written to $DOTFILES_ROOT/generated/shell/ and should be
+// All scripts are written to $DOTFILES_ROOT/.sapling/generated/shell/ and should be
 // symlinked to $XDG_CONFIG_HOME/acorn/ via `acorn sync link`.
 func (m *Manager) GenerateAll() (*GenerateResult, error) {
 	result, err := m.GenerateComponents() // all components

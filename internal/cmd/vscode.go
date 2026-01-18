@@ -336,7 +336,7 @@ func runVscodeExtInstall(cmd *cobra.Command, args []string) error {
 			home, _ := os.UserHomeDir()
 			dotfilesRoot = home + "/.config/dotfiles"
 		}
-		filePath = dotfilesRoot + "/config/vscode/extensions.txt"
+		filePath = dotfilesRoot + "/.sapling/generated/vscode/extensions.txt"
 	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {

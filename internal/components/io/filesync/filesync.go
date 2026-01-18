@@ -335,6 +335,7 @@ func (s *Syncer) syncMerge(source, target string, cfg *config.MergeConfig) (stri
 
 // mergeJSON performs a deep merge of two JSON objects.
 // User values override base values. PreserveUserKeys are always taken from user.
+// Empty arrays in user config are skipped (base arrays are preserved).
 func mergeJSON(base, user map[string]any, cfg *config.MergeConfig) map[string]any {
 	if base == nil {
 		return user
@@ -355,6 +356,11 @@ func mergeJSON(base, user map[string]any, cfg *config.MergeConfig) map[string]an
 
 	// Merge user values
 	for k, v := range user {
+		// Skip empty arrays - preserve base arrays instead
+		if arr, ok := v.([]any); ok && len(arr) == 0 {
+			continue
+		}
+
 		if deep {
 			// Deep merge for nested objects
 			if baseMap, ok := result[k].(map[string]any); ok {
