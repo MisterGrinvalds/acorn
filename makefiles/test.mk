@@ -5,6 +5,7 @@
 .PHONY: test-required-tools test-auth-status test-install test-installer-components test-integration
 .PHONY: test-security test-performance test-workflows test-ci test-dev-env test-comprehensive
 .PHONY: analyze-logs test-report benchmark stress-test
+.PHONY: test-components test-component test-component-unit review-components
 
 # Quick tests
 test: test-quick ## Alias for test-quick
@@ -71,6 +72,23 @@ test-installer-components: ## Test installer component structure
 # Integration tests
 test-integration: ## Test component integration
 	@bash -c 'export DOTFILES_ROOT="$(DOTFILES_DIR)"; source core/bootstrap.sh; declare -f dotfiles_status >/dev/null'
+
+# Component tests using acorn CLI
+test-components: build ## Test all sapling components
+	@./bin/acorn test --skip-missing
+
+test-component: build ## Test a specific component (COMPONENT=name)
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "Usage: make test-component COMPONENT=<name>"; \
+		exit 1; \
+	fi
+	@./bin/acorn test $(COMPONENT)
+
+test-component-unit: ## Run Go unit tests for component package
+	@go test -v ./internal/utils/component/...
+
+review-components: build ## Review all components
+	@./bin/acorn review --all
 
 # Security tests
 test-security: ## Check for security issues
