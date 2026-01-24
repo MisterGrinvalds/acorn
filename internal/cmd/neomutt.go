@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/components/mail/neomutt"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -181,6 +182,56 @@ Examples:
 	RunE: runNeomuttCacheClean,
 }
 
+// Generate command
+var neomuttGenerateCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Generate configuration files",
+	Long: `Generate NeoMutt configuration files from component config.
+
+Creates:
+  - ~/.config/neomutt/neomuttrc (main config)
+
+Examples:
+  acorn mail neomutt generate
+  acorn mail neomutt generate --dry-run`,
+	Aliases: []string{"gen"},
+	RunE:    runNeomuttGenerate,
+}
+
+// Account add commands
+var neomuttAccountAddCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add email accounts",
+	Long: `Add a new email account configuration.
+
+Examples:
+  acorn mail neomutt accounts add gmail
+  acorn mail neomutt accounts add microsoft`,
+}
+
+var neomuttAccountAddGmailCmd = &cobra.Command{
+	Use:   "gmail <email> <real-name>",
+	Short: "Add Gmail account",
+	Long: `Add a Gmail account with OAuth2 authentication.
+
+Examples:
+  acorn mail neomutt accounts add gmail ross.bercot@gmail.com "Ross Grinvalds"`,
+	Args: cobra.ExactArgs(2),
+	RunE: runNeomuttAddGmail,
+}
+
+var neomuttAccountAddMicrosoftCmd = &cobra.Command{
+	Use:   "microsoft <email> <real-name>",
+	Short: "Add Microsoft/Office365 account",
+	Long: `Add a Microsoft/Office365 account with OAuth2 authentication.
+
+Examples:
+  acorn mail neomutt accounts add microsoft ross@lfblooms.farm "Ross Grinvalds"`,
+	Aliases: []string{"ms", "office365", "outlook"},
+	Args:    cobra.ExactArgs(2),
+	RunE:    runNeomuttAddMicrosoft,
+}
+
 func init() {
 	mailCmd.AddCommand(neomuttCmd)
 
@@ -201,6 +252,14 @@ func init() {
 	neomuttCmd.AddCommand(neomuttCacheCmd)
 	neomuttCacheCmd.AddCommand(neomuttCacheInfoCmd)
 	neomuttCacheCmd.AddCommand(neomuttCacheCleanCmd)
+
+	// Generate command
+	neomuttCmd.AddCommand(neomuttGenerateCmd)
+
+	// Account add subcommands
+	neomuttAccountsCmd.AddCommand(neomuttAccountAddCmd)
+	neomuttAccountAddCmd.AddCommand(neomuttAccountAddGmailCmd)
+	neomuttAccountAddCmd.AddCommand(neomuttAccountAddMicrosoftCmd)
 
 	// Persistent flags
 	neomuttCmd.PersistentFlags().StringVarP(&neomuttOutputFormat, "output", "o", "table",
@@ -405,4 +464,101 @@ func runNeomuttCacheClean(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Cache cleaned\n", output.Success("✓"))
 	return nil
+}
+
+func runNeomuttGenerate(cmd *cobra.Command, args []string) error {
+	helper := newNeomuttHelper()
+
+	// Initialize config directories first
+	if err := helper.InitConfig(); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Generating NeoMutt Configuration"))
+	fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	// Generate main neomuttrc
+	if err := helper.GenerateMainConfig(neomuttDryRun); err != nil {
+		return err
+	}
+
+	if neomuttDryRun {
+		fmt.Fprintf(os.Stdout, "\n%s Dry run complete. No files written.\n", output.Info("!"))
+	} else {
+		fmt.Fprintf(os.Stdout, "\n%s Configuration generated successfully\n", output.Success("✓"))
+		fmt.Fprintln(os.Stdout, "\nNext steps:")
+		fmt.Fprintln(os.Stdout, "  1. Add accounts: acorn mail neomutt accounts add gmail <email> <name>")
+		fmt.Fprintln(os.Stdout, "  2. Authorize OAuth2: acorn mail neomutt tokens authorize <account>")
+		fmt.Fprintln(os.Stdout, "  3. Launch: neomutt")
+	}
+
+	return nil
+}
+
+func runNeomuttAddGmail(cmd *cobra.Command, args []string) error {
+	helper := newNeomuttHelper()
+	email := args[0]
+	realName := args[1]
+
+	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Adding Gmail Account"))
+	fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	accountFile, err := helper.AddGmailAccount(email, realName, neomuttDryRun)
+	if err != nil {
+		return err
+	}
+
+	if neomuttDryRun {
+		fmt.Fprintf(os.Stdout, "Would create: %s\n", accountFile)
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Created: %s\n", output.Success("✓"), accountFile)
+		fmt.Fprintln(os.Stdout, "\nNext steps:")
+		fmt.Fprintln(os.Stdout, "  1. Authorize OAuth2: acorn mail neomutt tokens authorize gmail-"+extractUsername(email))
+		fmt.Fprintln(os.Stdout, "  2. Update neomuttrc to source this account")
+	}
+
+	return nil
+}
+
+func runNeomuttAddMicrosoft(cmd *cobra.Command, args []string) error {
+	helper := newNeomuttHelper()
+	email := args[0]
+	realName := args[1]
+
+	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Adding Microsoft Account"))
+	fmt.Fprintln(os.Stdout, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	accountFile, err := helper.AddMicrosoftAccount(email, realName, neomuttDryRun)
+	if err != nil {
+		return err
+	}
+
+	if neomuttDryRun {
+		fmt.Fprintf(os.Stdout, "Would create: %s\n", accountFile)
+	} else {
+		fmt.Fprintf(os.Stdout, "%s Created: %s\n", output.Success("✓"), accountFile)
+		fmt.Fprintln(os.Stdout, "\nNext steps:")
+		fmt.Fprintln(os.Stdout, "  1. Authorize OAuth2: acorn mail neomutt tokens authorize microsoft-"+extractAccountName(email))
+		fmt.Fprintln(os.Stdout, "  2. Update neomuttrc to source this account")
+	}
+
+	return nil
+}
+
+// extractUsername extracts username from email (e.g., ross.bercot from ross.bercot@gmail.com)
+func extractUsername(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return email
+}
+
+// extractAccountName creates account name from email (e.g., domain.com-user from user@domain.com)
+func extractAccountName(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		return parts[1] + "-" + parts[0]
+	}
+	return email
 }
