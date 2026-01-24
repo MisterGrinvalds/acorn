@@ -166,20 +166,25 @@ func init() {
 	syncDriftCmd.Flags().BoolVarP(&syncQuiet, "quiet", "q", false, "Minimal output (for shell startup)")
 }
 
-// getSyncRoot returns the dotfiles repository root for sync operations
+// getSyncRoot returns the .sapling repository root for sync operations
+// This is where config files live and what acorn sync manages
 func getSyncRoot() string {
+	saplingRoot, err := getSaplingRoot()
+	if err == nil {
+		return saplingRoot
+	}
+	// Fallback to dotfiles root with .sapling appended
 	root, err := getDotfilesRoot()
 	if err != nil {
-		// Fallback
 		home, _ := os.UserHomeDir()
-		return filepath.Join(home, "Repos", "personal", "tools")
+		return filepath.Join(home, "Repos", "personal", "tools", ".sapling")
 	}
-	return root
+	return filepath.Join(root, ".sapling")
 }
 
 // getGeneratedDir returns the generated directory path (.sapling/generated)
 func getGeneratedDir() string {
-	return filepath.Join(getSyncRoot(), ".sapling", "generated")
+	return filepath.Join(getSyncRoot(), "generated")
 }
 
 // isSyncGitRepo checks if the directory is a git repository
@@ -276,73 +281,52 @@ func runSyncPull(cmd *cobra.Command, args []string) error {
 
 // runSyncPush commits and pushes changes
 func runSyncPush(cmd *cobra.Command, args []string) error {
+	root := getSyncRoot()
+
+	if !isSyncGitRepo(root) {
+		return fmt.Errorf("not a git repository: %s", root)
+	}
+
+	// Check for changes
+	statusOut, _ := syncGitCmd("status", "--porcelain").Output()
+	if len(statusOut) == 0 {
+		fmt.Fprintf(os.Stdout, "%s No changes to commit\n", output.Info("ℹ"))
+		return nil
+	}
+
 	// Determine commit message
 	message := "Update dotfiles"
 	if len(args) > 0 {
 		message = args[0]
 	}
 
-	// Sync .sapling repo first (config files)
-	saplingRoot, err := getSaplingRoot()
-	if err == nil && isSyncGitRepo(saplingRoot) {
-		if err := syncRepo(saplingRoot, message, ".sapling"); err != nil {
-			// Log but don't fail - continue with main repo
-			fmt.Fprintf(os.Stderr, "%s .sapling sync failed: %v\n", output.Warning("!"), err)
-		}
-	}
-
-	// Sync main repo
-	root := getSyncRoot()
-	if !isSyncGitRepo(root) {
-		return fmt.Errorf("not a git repository: %s", root)
-	}
-
-	return syncRepo(root, message, "dotfiles")
-}
-
-// syncRepo commits and pushes changes for a single repository
-func syncRepo(root, message, name string) error {
-	// Helper to run git commands in the specified directory
-	gitCmd := func(args ...string) *exec.Cmd {
-		cmd := exec.Command("git", args...)
-		cmd.Dir = root
-		return cmd
-	}
-
-	// Check for changes
-	statusOut, _ := gitCmd("status", "--porcelain").Output()
-	if len(statusOut) == 0 {
-		fmt.Fprintf(os.Stdout, "%s [%s] No changes to commit\n", output.Info("ℹ"), name)
-		return nil
-	}
-
-	fmt.Fprintf(os.Stdout, "%s [%s] Committing changes...\n", output.Info("→"), name)
+	fmt.Fprintf(os.Stdout, "%s Committing changes...\n", output.Info("→"))
 
 	// Add all changes
-	addCmd := gitCmd("add", "-A")
+	addCmd := syncGitCmd("add", "-A")
 	if err := addCmd.Run(); err != nil {
 		return fmt.Errorf("git add failed: %w", err)
 	}
 
 	// Commit
-	commitCmd := gitCmd("commit", "-m", message)
+	commitCmd := syncGitCmd("commit", "-m", message)
 	commitCmd.Stdout = os.Stdout
 	commitCmd.Stderr = os.Stderr
 	if err := commitCmd.Run(); err != nil {
 		return fmt.Errorf("git commit failed: %w", err)
 	}
 
-	fmt.Fprintf(os.Stdout, "%s [%s] Pushing to remote...\n", output.Info("→"), name)
+	fmt.Fprintf(os.Stdout, "%s Pushing to remote...\n", output.Info("→"))
 
 	// Push
-	pushCmd := gitCmd("push")
+	pushCmd := syncGitCmd("push")
 	pushCmd.Stdout = os.Stdout
 	pushCmd.Stderr = os.Stderr
 	if err := pushCmd.Run(); err != nil {
 		return fmt.Errorf("git push failed: %w", err)
 	}
 
-	fmt.Fprintf(os.Stdout, "%s [%s] Push complete\n", output.Success("✓"), name)
+	fmt.Fprintf(os.Stdout, "%s Push complete\n", output.Success("✓"))
 	return nil
 }
 
