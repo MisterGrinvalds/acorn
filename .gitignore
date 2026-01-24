@@ -23,6 +23,8 @@ dist/
 bin/
 generated
 
-# Sapling config repository
-.sapling/
+# Sapling - track config directory, ignore everything else
+.sapling/generated/
+.sapling/state/
+.sapling/cache/
 acorn
