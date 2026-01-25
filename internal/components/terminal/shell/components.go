@@ -41,7 +41,10 @@ var componentOrder = []string{
 	"cloudflare",
 	"kubernetes",
 	"database",
+	"postgres",
 	"tailscale",
+	"pulumi",
+	"terraform",
 
 	// AI and ML
 	"claude",
