@@ -8,6 +8,13 @@ import (
 	"golang.org/x/term"
 )
 
+// AddOutputFlag adds just the output format flag to a command.
+// Use this for subcommand groups that need their own output flag.
+func AddOutputFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringP("output", "o", "table",
+		"Output format (table|json|yaml)")
+}
+
 // BindFlags adds I/O flags to a command (typically root command).
 // These flags are inherited by all subcommands.
 func BindFlags(cmd *cobra.Command, cfg *IOConfig) {

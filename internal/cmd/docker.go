@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/docker"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	dockerOutputFormat string
-	dockerVerbose      bool
-	dockerDryRun       bool
-	dockerAll          bool
+	dockerVerbose bool
+	dockerDryRun  bool
+	dockerAll     bool
 )
 
 // dockerCmd represents the docker command group
@@ -251,8 +251,6 @@ func init() {
 	dockerComposeCmd.AddCommand(dockerComposeLogsCmd)
 
 	// Persistent flags
-	dockerCmd.PersistentFlags().StringVarP(&dockerOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	dockerCmd.PersistentFlags().BoolVarP(&dockerVerbose, "verbose", "v", false,
 		"Show verbose output")
 	dockerCmd.PersistentFlags().BoolVar(&dockerDryRun, "dry-run", false,
@@ -276,6 +274,7 @@ func init() {
 }
 
 func runDockerStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := docker.NewHelper(dockerVerbose, dockerDryRun)
 
 	if !helper.IsDockerInstalled() {
@@ -284,14 +283,8 @@ func runDockerStatus(cmd *cobra.Command, args []string) error {
 
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(dockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -308,6 +301,7 @@ func runDockerStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runDockerPs(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := docker.NewHelper(dockerVerbose, dockerDryRun)
 
 	if !helper.IsDockerInstalled() {
@@ -319,14 +313,8 @@ func runDockerPs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(dockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"containers": containers})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"containers": containers})
 	}
 
 	if len(containers) == 0 {
@@ -343,6 +331,7 @@ func runDockerPs(cmd *cobra.Command, args []string) error {
 }
 
 func runDockerImages(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := docker.NewHelper(dockerVerbose, dockerDryRun)
 
 	if !helper.IsDockerInstalled() {
@@ -354,14 +343,8 @@ func runDockerImages(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(dockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"images": images})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"images": images})
 	}
 
 	if len(images) == 0 {
@@ -378,6 +361,7 @@ func runDockerImages(cmd *cobra.Command, args []string) error {
 }
 
 func runDockerVolumes(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := docker.NewHelper(dockerVerbose, dockerDryRun)
 
 	if !helper.IsDockerInstalled() {
@@ -389,14 +373,8 @@ func runDockerVolumes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(dockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"volumes": volumes})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"volumes": volumes})
 	}
 
 	if len(volumes) == 0 {
@@ -413,6 +391,7 @@ func runDockerVolumes(cmd *cobra.Command, args []string) error {
 }
 
 func runDockerNetworks(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := docker.NewHelper(dockerVerbose, dockerDryRun)
 
 	if !helper.IsDockerInstalled() {
@@ -424,14 +403,8 @@ func runDockerNetworks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(dockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"networks": networks})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"networks": networks})
 	}
 
 	if len(networks) == 0 {

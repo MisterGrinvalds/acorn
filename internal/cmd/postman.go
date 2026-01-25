@@ -5,16 +5,16 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/postman"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	postmanOutputFormat string
-	postmanDryRun       bool
-	postmanVerbose      bool
-	postmanEnvironment  string
-	postmanReporters    []string
+	postmanDryRun      bool
+	postmanVerbose     bool
+	postmanEnvironment string
+	postmanReporters   []string
 )
 
 // postmanCmd represents the postman command group
@@ -138,8 +138,6 @@ func init() {
 		"Newman reporters (cli,json,html)")
 
 	// Persistent flags
-	postmanCmd.PersistentFlags().StringVarP(&postmanOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	postmanCmd.PersistentFlags().BoolVar(&postmanDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	postmanCmd.PersistentFlags().BoolVarP(&postmanVerbose, "verbose", "v", false,
@@ -154,14 +152,9 @@ func runPostmanStatus(cmd *cobra.Command, args []string) error {
 	helper := newPostmanHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(postmanOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -225,14 +218,9 @@ func runPostmanCollections(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(postmanOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(collections)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(collections)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Collections"))
@@ -262,14 +250,9 @@ func runPostmanEnvironments(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(postmanOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(environments)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(environments)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Environments"))

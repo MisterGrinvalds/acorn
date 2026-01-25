@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/utils/installer"
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	tmuxpkg "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
+	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	tmuxOutputFormat string
-	tmuxDryRun       bool
-	tmuxVerbose      bool
+	tmuxDryRun  bool
+	tmuxVerbose bool
 )
 
 // tmuxCmd represents the tmux command group
@@ -306,8 +306,6 @@ func init() {
 	tmuxSmugCmd.AddCommand(tmuxSmugSyncCmd)
 
 	// Persistent flags
-	tmuxCmd.PersistentFlags().StringVarP(&tmuxOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	tmuxCmd.PersistentFlags().BoolVar(&tmuxDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	tmuxCmd.PersistentFlags().BoolVarP(&tmuxVerbose, "verbose", "v", false,
@@ -315,6 +313,7 @@ func init() {
 }
 
 func runTmuxInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := tmuxpkg.NewHelper(tmuxVerbose, tmuxDryRun)
 
 	info, err := helper.GetInfo()
@@ -322,14 +321,8 @@ func runTmuxInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tmuxOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n\n", output.Info("Tmux Information"))
@@ -359,6 +352,7 @@ func runTmuxInfo(cmd *cobra.Command, args []string) error {
 }
 
 func runTmuxSessionList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := tmuxpkg.NewHelper(tmuxVerbose, tmuxDryRun)
 
 	sessions, err := helper.ListSessions()
@@ -366,14 +360,8 @@ func runTmuxSessionList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tmuxOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(sessions)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(sessions)
 	}
 
 	if len(sessions) == 0 {
@@ -453,6 +441,7 @@ func runTmuxConfigReload(cmd *cobra.Command, args []string) error {
 }
 
 func runTmuxSmugList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := tmuxpkg.NewHelper(tmuxVerbose, tmuxDryRun)
 
 	sessions, err := helper.ListSmugSessions()
@@ -460,14 +449,8 @@ func runTmuxSmugList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tmuxOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(sessions)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(sessions)
 	}
 
 	if len(sessions) == 0 {
@@ -552,6 +535,7 @@ func runTmuxSmugRepoInit(cmd *cobra.Command, args []string) error {
 }
 
 func runTmuxSmugStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := tmuxpkg.NewHelper(tmuxVerbose, tmuxDryRun)
 
 	status, err := helper.SmugRepoStatus()
@@ -559,14 +543,8 @@ func runTmuxSmugStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tmuxOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n\n", output.Info("Smug Sessions Status"))

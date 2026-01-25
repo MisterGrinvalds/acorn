@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ide/neovim"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	nvimOutputFormat string
-	nvimVerbose      bool
-	nvimForce        bool
+	nvimVerbose bool
+	nvimForce   bool
 )
 
 // nvimCmd represents the neovim command group
@@ -96,8 +96,6 @@ func init() {
 	nvimCmd.AddCommand(nvimPluginCmd)
 
 	// Persistent flags
-	nvimCmd.PersistentFlags().StringVarP(&nvimOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	nvimCmd.PersistentFlags().BoolVarP(&nvimVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -107,17 +105,12 @@ func init() {
 }
 
 func runNvimHealth(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := neovim.NewHelper(nvimVerbose)
 	status := helper.GetHealth()
 
-	format, err := output.ParseFormat(nvimOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format

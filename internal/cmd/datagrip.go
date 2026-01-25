@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/datagrip"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	datagripOutputFormat string
-	datagripDryRun       bool
-	datagripVerbose      bool
-	datagripLine         int
+	datagripDryRun  bool
+	datagripVerbose bool
+	datagripLine    int
 )
 
 // datagripCmd represents the datagrip command group
@@ -110,8 +110,6 @@ func init() {
 	datagripOpenCmd.Flags().IntVar(&datagripLine, "line", 0, "Line number to open at")
 
 	// Persistent flags
-	datagripCmd.PersistentFlags().StringVarP(&datagripOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	datagripCmd.PersistentFlags().BoolVar(&datagripDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	datagripCmd.PersistentFlags().BoolVarP(&datagripVerbose, "verbose", "v", false,
@@ -126,14 +124,9 @@ func runDatagripStatus(cmd *cobra.Command, args []string) error {
 	helper := newDatagripHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(datagripOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format

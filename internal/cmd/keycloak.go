@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/identity/keycloak"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	keycloakOutputFormat  string
 	keycloakDryRun        bool
 	keycloakVerbose       bool
 	keycloakPort          int
@@ -160,8 +160,6 @@ func init() {
 	keycloakExportCmd.Flags().StringVarP(&keycloakOutputPath, "output", "O", "", "Output file path")
 
 	// Persistent flags
-	keycloakCmd.PersistentFlags().StringVarP(&keycloakOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	keycloakCmd.PersistentFlags().BoolVar(&keycloakDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	keycloakCmd.PersistentFlags().BoolVarP(&keycloakVerbose, "verbose", "v", false,
@@ -173,17 +171,12 @@ func newKeycloakHelper() *keycloak.Helper {
 }
 
 func runKeycloakStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newKeycloakHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(keycloakOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -248,20 +241,15 @@ func runKeycloakOpen(cmd *cobra.Command, args []string) error {
 }
 
 func runKeycloakRealms(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newKeycloakHelper()
 	realms, err := helper.ListRealms()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(keycloakOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(realms)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(realms)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Exported Realms"))

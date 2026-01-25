@@ -5,16 +5,16 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/pulumi"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	pulumiOutputFormat string
-	pulumiDryRun       bool
-	pulumiVerbose      bool
-	pulumiYes          bool
-	pulumiBackend      string
+	pulumiDryRun  bool
+	pulumiVerbose bool
+	pulumiYes     bool
+	pulumiBackend string
 )
 
 // pulumiCmd represents the pulumi command group
@@ -210,8 +210,6 @@ func init() {
 	pulumiDestroyCmd.Flags().BoolVarP(&pulumiYes, "yes", "y", false, "Skip confirmation")
 
 	// Persistent flags
-	pulumiCmd.PersistentFlags().StringVarP(&pulumiOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	pulumiCmd.PersistentFlags().BoolVar(&pulumiDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	pulumiCmd.PersistentFlags().BoolVarP(&pulumiVerbose, "verbose", "v", false,
@@ -223,17 +221,12 @@ func newPulumiHelper() *pulumi.Helper {
 }
 
 func runPulumiStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newPulumiHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(pulumiOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -298,20 +291,15 @@ func runPulumiLogout(cmd *cobra.Command, args []string) error {
 }
 
 func runPulumiStacks(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newPulumiHelper()
 	stacks, err := helper.ListStacks()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(pulumiOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(stacks)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(stacks)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Stacks"))
@@ -363,20 +351,15 @@ func runPulumiRefresh(cmd *cobra.Command, args []string) error {
 }
 
 func runPulumiOutputs(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newPulumiHelper()
 	outputs, err := helper.GetOutputs()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(pulumiOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(outputs)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(outputs)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Stack Outputs"))

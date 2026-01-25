@@ -2,20 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/jq"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	jqOutputFormat string
-	jqVerbose      bool
-	jqCompact      bool
-	jqRaw          bool
-	jqSlurp        bool
+	jqVerbose bool
+	jqCompact bool
+	jqRaw     bool
+	jqSlurp   bool
 )
 
 // jqCmd represents the jq command group
@@ -222,9 +221,7 @@ func init() {
 	jqCmd.AddCommand(jqUniqueCmd)
 	jqCmd.AddCommand(jqFlattenCmd)
 
-	// Persistent flags
-	jqCmd.PersistentFlags().StringVarP(&jqOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	jqCmd.PersistentFlags().BoolVarP(&jqVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -234,25 +231,29 @@ func init() {
 	jqFilterCmd.Flags().BoolVarP(&jqSlurp, "slurp", "s", false, "Slurp input into array")
 }
 
-func getJqInput(args []string, argIndex int) ([]byte, error) {
+func getJqInput(cmd *cobra.Command, args []string, argIndex int) ([]byte, error) {
+	ioHelper := ioutils.IO(cmd)
+
+	// Use positional file argument if provided
 	if len(args) > argIndex {
 		return os.ReadFile(args[argIndex])
 	}
-	return io.ReadAll(os.Stdin)
+
+	// Check for --input-file flag or piped stdin
+	if ioHelper.HasInput() {
+		return ioHelper.ReadRaw()
+	}
+
+	return nil, fmt.Errorf("no input provided: specify a file or pipe input")
 }
 
 func runJqStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := jq.NewHelper(jqVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(jqOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed: %v\n", status.Installed)
@@ -274,7 +275,7 @@ func runJqFilter(cmd *cobra.Command, args []string) error {
 	}
 
 	expression := args[0]
-	input, err := getJqInput(args, 1)
+	input, err := getJqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -303,7 +304,7 @@ func runJqFilter(cmd *cobra.Command, args []string) error {
 func runJqValidate(cmd *cobra.Command, args []string) error {
 	helper := jq.NewHelper(jqVerbose)
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -319,7 +320,7 @@ func runJqValidate(cmd *cobra.Command, args []string) error {
 func runJqFormat(cmd *cobra.Command, args []string) error {
 	helper := jq.NewHelper(jqVerbose)
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -336,7 +337,7 @@ func runJqFormat(cmd *cobra.Command, args []string) error {
 func runJqCompact(cmd *cobra.Command, args []string) error {
 	helper := jq.NewHelper(jqVerbose)
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -357,7 +358,7 @@ func runJqKeys(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -380,7 +381,7 @@ func runJqType(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -401,7 +402,7 @@ func runJqLength(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -423,7 +424,7 @@ func runJqSelect(cmd *cobra.Command, args []string) error {
 	}
 
 	condition := args[0]
-	input, err := getJqInput(args, 1)
+	input, err := getJqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -448,7 +449,7 @@ func runJqSort(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -473,7 +474,7 @@ func runJqUnique(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -498,7 +499,7 @@ func runJqFlatten(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("jq is not installed")
 	}
 
-	input, err := getJqInput(args, 0)
+	input, err := getJqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}

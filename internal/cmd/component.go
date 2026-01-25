@@ -9,12 +9,9 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/component"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
-)
-
-var (
-	outputFormat string
 )
 
 // componentCmd represents the component command group
@@ -116,9 +113,7 @@ func init() {
 	componentCmd.AddCommand(componentValidateCmd)
 	componentCmd.AddCommand(componentInfoCmd)
 
-	// Global flags for component commands
-	componentCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Output format is inherited from root command
 }
 
 // getDotfilesRoot returns the dotfiles root directory
@@ -149,6 +144,7 @@ func getDotfilesRoot() (string, error) {
 
 // runComponentList executes the list command
 func runComponentList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	dotfilesRoot, err := getDotfilesRoot()
 	if err != nil {
 		return err
@@ -165,14 +161,8 @@ func runComponentList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(components)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(components)
 	}
 
 	// Table format
@@ -192,6 +182,7 @@ func runComponentList(cmd *cobra.Command, args []string) error {
 
 // runComponentStatus executes the status command
 func runComponentStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	dotfilesRoot, err := getDotfilesRoot()
 	if err != nil {
 		return err
@@ -222,14 +213,8 @@ func runComponentStatus(cmd *cobra.Command, args []string) error {
 		results = append(results, hc)
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(results)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(results)
 	}
 
 	// Table format with color-coded status
@@ -285,6 +270,7 @@ func runComponentStatus(cmd *cobra.Command, args []string) error {
 
 // runComponentValidate executes the validate command
 func runComponentValidate(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	dotfilesRoot, err := getDotfilesRoot()
 	if err != nil {
 		return err
@@ -313,14 +299,8 @@ func runComponentValidate(cmd *cobra.Command, args []string) error {
 		results = append(results, vr)
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(results)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(results)
 	}
 
 	// Table format
@@ -360,6 +340,7 @@ func runComponentValidate(cmd *cobra.Command, args []string) error {
 
 // runComponentInfo executes the info command
 func runComponentInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	dotfilesRoot, err := getDotfilesRoot()
 	if err != nil {
 		return err
@@ -371,14 +352,8 @@ func runComponentInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(comp)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp)
 	}
 
 	// Detailed table format

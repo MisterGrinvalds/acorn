@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	migrateutil "github.com/mistergrinvalds/acorn/internal/components/io/migrate"
 	"github.com/mistergrinvalds/acorn/internal/utils/component"
-	"github.com/mistergrinvalds/acorn/internal/components/io/migrate"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
@@ -93,9 +94,7 @@ func init() {
 	migrateCmd.AddCommand(migratePlanCmd)
 	migrateCmd.AddCommand(migrateReportCmd)
 
-	// Shared output flag
-	migrateCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Output format is inherited from root command
 }
 
 func runMigrateAnalyze(cmd *cobra.Command, args []string) error {
@@ -105,7 +104,7 @@ func runMigrateAnalyze(cmd *cobra.Command, args []string) error {
 	}
 
 	disco := component.NewDiscovery(dotfilesRoot)
-	analyzer := migrate.NewAnalyzer(dotfilesRoot)
+	analyzer := migrateutil.NewAnalyzer(dotfilesRoot)
 
 	var components []*component.Component
 	if len(args) == 1 {
@@ -121,7 +120,7 @@ func runMigrateAnalyze(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	var analyses []*migrate.ComponentAnalysis
+	var analyses []*migrateutil.ComponentAnalysis
 	for _, comp := range components {
 		analysis, err := analyzer.AnalyzeComponent(comp)
 		if err != nil {
@@ -131,14 +130,9 @@ func runMigrateAnalyze(cmd *cobra.Command, args []string) error {
 		analyses = append(analyses, analysis)
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(analyses)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(analyses)
 	}
 
 	// Table format
@@ -149,7 +143,7 @@ func runMigrateAnalyze(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printComponentAnalysis(analysis *migrate.ComponentAnalysis) {
+func printComponentAnalysis(analysis *migrateutil.ComponentAnalysis) {
 	comp := analysis.Component
 
 	fmt.Fprintf(os.Stdout, "\n%s\n", output.Info(comp.Name))
@@ -167,11 +161,11 @@ func printComponentAnalysis(analysis *migrate.ComponentAnalysis) {
 		for _, f := range analysis.Functions {
 			typeColor := output.ColorGray
 			switch f.Type {
-			case migrate.FuncTypeAction:
+			case migrateutil.FuncTypeAction:
 				typeColor = output.ColorGreen
-			case migrate.FuncTypeWrapper:
+			case migrateutil.FuncTypeWrapper:
 				typeColor = output.ColorYellow
-			case migrate.FuncTypeEnv:
+			case migrateutil.FuncTypeEnv:
 				typeColor = output.ColorCyan
 			}
 
@@ -182,7 +176,7 @@ func printComponentAnalysis(analysis *migrate.ComponentAnalysis) {
 				f.File,
 				f.LineCount)
 
-			if f.Type == migrate.FuncTypeAction {
+			if f.Type == migrateutil.FuncTypeAction {
 				fmt.Fprintf(os.Stdout, "      → %s\n", f.Suggestion)
 			}
 		}
@@ -215,14 +209,14 @@ func runMigratePlan(cmd *cobra.Command, args []string) error {
 	}
 
 	disco := component.NewDiscovery(dotfilesRoot)
-	analyzer := migrate.NewAnalyzer(dotfilesRoot)
+	analyzer := migrateutil.NewAnalyzer(dotfilesRoot)
 
 	components, err := disco.DiscoverAll()
 	if err != nil {
 		return err
 	}
 
-	var analyses []*migrate.ComponentAnalysis
+	var analyses []*migrateutil.ComponentAnalysis
 	for _, comp := range components {
 		analysis, err := analyzer.AnalyzeComponent(comp)
 		if err != nil {
@@ -236,14 +230,9 @@ func runMigratePlan(cmd *cobra.Command, args []string) error {
 		return analyses[i].Summary.MigrationScore > analyses[j].Summary.MigrationScore
 	})
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(analyses)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(analyses)
 	}
 
 	// Table format
@@ -290,7 +279,7 @@ func runMigrateReport(cmd *cobra.Command, args []string) error {
 	}
 
 	disco := component.NewDiscovery(dotfilesRoot)
-	analyzer := migrate.NewAnalyzer(dotfilesRoot)
+	analyzer := migrateutil.NewAnalyzer(dotfilesRoot)
 
 	components, err := disco.DiscoverAll()
 	if err != nil {
@@ -298,7 +287,7 @@ func runMigrateReport(cmd *cobra.Command, args []string) error {
 	}
 
 	// Gather all analyses
-	var analyses []*migrate.ComponentAnalysis
+	var analyses []*migrateutil.ComponentAnalysis
 	totalFunctions := 0
 	totalActions := 0
 	totalAliases := 0
@@ -316,12 +305,8 @@ func runMigrateReport(cmd *cobra.Command, args []string) error {
 		totalEnvVars += analysis.Summary.TotalEnvVars
 	}
 
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
 		report := map[string]interface{}{
 			"summary": map[string]interface{}{
 				"total_components":   len(analyses),
@@ -333,8 +318,7 @@ func runMigrateReport(cmd *cobra.Command, args []string) error {
 			},
 			"components": analyses,
 		}
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(report)
+		return ioHelper.WriteOutput(report)
 	}
 
 	// Table format report

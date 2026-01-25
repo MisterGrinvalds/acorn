@@ -5,23 +5,22 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/argocd"
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
 )
 
 var (
-	argocdOutputFormat string
-	argocdVerbose      bool
-	argocdProject      string
-	argocdSelector     string
-	argocdPrune        bool
-	argocdForce        bool
-	argocdFollow       bool
-	argocdTree         bool
-	argocdTimeout      int
-	argocdSSO          bool
-	argocdUsername     string
-	argocdPassword     string
+	argocdVerbose  bool
+	argocdProject  string
+	argocdSelector string
+	argocdPrune    bool
+	argocdForce    bool
+	argocdFollow   bool
+	argocdTree     bool
+	argocdTimeout  int
+	argocdSSO      bool
+	argocdUsername string
+	argocdPassword string
 )
 
 // argocdCmd represents the argocd command group
@@ -256,9 +255,7 @@ func init() {
 	argocdCmd.AddCommand(argocdReposCmd)
 	argocdCmd.AddCommand(argocdProjectsCmd)
 
-	// Persistent flags
-	argocdCmd.PersistentFlags().StringVarP(&argocdOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	argocdCmd.PersistentFlags().BoolVarP(&argocdVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -296,17 +293,12 @@ func init() {
 }
 
 func runArgocdStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed:        %v\n", status.Installed)
@@ -349,6 +341,7 @@ func runArgocdLogin(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdContext(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -366,14 +359,8 @@ func runArgocdContext(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"contexts": contexts})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"contexts": contexts})
 	}
 
 	fmt.Println("ArgoCD Contexts:")
@@ -389,6 +376,7 @@ func runArgocdContext(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdApps(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -404,14 +392,8 @@ func runArgocdApps(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"apps": apps})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"apps": apps})
 	}
 
 	if len(apps) == 0 {
@@ -432,6 +414,7 @@ func runArgocdApps(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdGet(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -443,14 +426,8 @@ func runArgocdGet(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(app)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(app)
 	}
 
 	fmt.Fprintf(os.Stdout, "Name:        %s\n", app.Name)
@@ -546,6 +523,7 @@ func runArgocdResources(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdClusters(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -557,14 +535,8 @@ func runArgocdClusters(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"clusters": clusters})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"clusters": clusters})
 	}
 
 	if len(clusters) == 0 {
@@ -583,6 +555,7 @@ func runArgocdClusters(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdRepos(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -594,14 +567,8 @@ func runArgocdRepos(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"repos": repos})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"repos": repos})
 	}
 
 	if len(repos) == 0 {
@@ -621,6 +588,7 @@ func runArgocdRepos(cmd *cobra.Command, args []string) error {
 }
 
 func runArgocdProjects(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := argocd.NewHelper(argocdVerbose)
 
 	if !helper.IsInstalled() {
@@ -632,14 +600,8 @@ func runArgocdProjects(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(argocdOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"projects": projects})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"projects": projects})
 	}
 
 	if len(projects) == 0 {

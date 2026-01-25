@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ide/goland"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	golandOutputFormat string
-	golandDryRun       bool
-	golandVerbose      bool
-	golandLine         int
+	golandDryRun  bool
+	golandVerbose bool
+	golandLine    int
 )
 
 // golandCmd represents the goland command group
@@ -96,8 +96,6 @@ func init() {
 	golandOpenCmd.Flags().IntVar(&golandLine, "line", 0, "Line number to jump to")
 
 	// Persistent flags
-	golandCmd.PersistentFlags().StringVarP(&golandOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	golandCmd.PersistentFlags().BoolVar(&golandDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	golandCmd.PersistentFlags().BoolVarP(&golandVerbose, "verbose", "v", false,
@@ -112,14 +110,9 @@ func runGolandStatus(cmd *cobra.Command, args []string) error {
 	helper := newGolandHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(golandOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format

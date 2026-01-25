@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/sysadm/btop"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	btopOutputFormat string
-	btopDryRun       bool
-	btopVerbose      bool
+	btopDryRun  bool
+	btopVerbose bool
 )
 
 // btopCmd represents the btop command group
@@ -149,8 +149,6 @@ func init() {
 	btopThemesCmd.AddCommand(btopThemesCurrentCmd)
 
 	// Persistent flags
-	btopCmd.PersistentFlags().StringVarP(&btopOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	btopCmd.PersistentFlags().BoolVar(&btopDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	btopCmd.PersistentFlags().BoolVarP(&btopVerbose, "verbose", "v", false,
@@ -165,14 +163,9 @@ func runBtopStatus(cmd *cobra.Command, args []string) error {
 	helper := newBtopHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(btopOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -252,14 +245,9 @@ func runBtopThemesList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(btopOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(themes)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(themes)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Available Themes"))
@@ -311,14 +299,9 @@ func runBtopThemesCurrent(cmd *cobra.Command, args []string) error {
 	helper := newBtopHelper()
 	currentTheme := helper.GetCurrentTheme()
 
-	format, err := output.ParseFormat(btopOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]string{"theme": currentTheme})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]string{"theme": currentTheme})
 	}
 
 	fmt.Fprintf(os.Stdout, "Current theme: %s\n", currentTheme)

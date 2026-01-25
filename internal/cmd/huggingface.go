@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ai/huggingface"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	hfOutputFormat string
-	hfVerbose      bool
-	hfForce        bool
+	hfVerbose bool
+	hfForce   bool
 )
 
 // hfCmd represents the huggingface command group
@@ -110,8 +110,6 @@ func init() {
 	hfCmd.AddCommand(hfClearCmd)
 
 	// Persistent flags
-	hfCmd.PersistentFlags().StringVarP(&hfOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	hfCmd.PersistentFlags().BoolVarP(&hfVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -124,14 +122,9 @@ func runHfStatus(cmd *cobra.Command, args []string) error {
 	helper := huggingface.NewHelper(hfVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(hfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -168,14 +161,9 @@ func runHfModels(cmd *cobra.Command, args []string) error {
 	helper := huggingface.NewHelper(hfVerbose)
 	models := helper.GetModels()
 
-	format, err := output.ParseFormat(hfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"models": models})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"models": models})
 	}
 
 	// Table format
@@ -204,14 +192,9 @@ func runHfPipelines(cmd *cobra.Command, args []string) error {
 	helper := huggingface.NewHelper(hfVerbose)
 	pipelines := helper.GetPipelines()
 
-	format, err := output.ParseFormat(hfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"pipelines": pipelines})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"pipelines": pipelines})
 	}
 
 	// Table format
@@ -240,14 +223,9 @@ func runHfCache(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(hfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]string{
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]string{
 			"cache_dir":  cacheDir,
 			"cache_size": cacheSize,
 		})

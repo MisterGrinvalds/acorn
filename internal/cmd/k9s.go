@@ -7,19 +7,18 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/devops/k9s"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
 )
 
 var (
-	k9sOutputFormat string
-	k9sVerbose      bool
-	k9sContext      string
-	k9sNamespace    string
-	k9sCommand      string
-	k9sReadonly     bool
-	k9sHeadless     bool
-	k9sDryRun       bool
+	k9sVerbose   bool
+	k9sContext   string
+	k9sNamespace string
+	k9sCommand   string
+	k9sReadonly  bool
+	k9sHeadless  bool
+	k9sDryRun    bool
 )
 
 // k9sCmd represents the k9s command group
@@ -193,8 +192,6 @@ func init() {
 		"Show what would be generated without writing files")
 
 	// Persistent flags
-	k9sCmd.PersistentFlags().StringVarP(&k9sOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	k9sCmd.PersistentFlags().BoolVarP(&k9sVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -224,17 +221,12 @@ func init() {
 }
 
 func runK9sStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed:         %v\n", status.Installed)
@@ -273,16 +265,11 @@ func runK9sLaunch(cmd *cobra.Command, args []string) error {
 }
 
 func runK9sKeys(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"keybindings": helper.GetKeybindingsList()})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"keybindings": helper.GetKeybindingsList()})
 	}
 
 	fmt.Print(helper.GetKeybindings())
@@ -301,6 +288,7 @@ func runK9sConfig(cmd *cobra.Command, args []string) error {
 }
 
 func runK9sInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 
 	if !helper.IsInstalled() {
@@ -312,14 +300,8 @@ func runK9sInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "Config Dir:    %s\n", info.ConfigDir)
@@ -330,6 +312,7 @@ func runK9sInfo(cmd *cobra.Command, args []string) error {
 }
 
 func runK9sSkins(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 
 	skins, err := helper.ListSkins()
@@ -337,14 +320,8 @@ func runK9sSkins(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"skins": skins})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"skins": skins})
 	}
 
 	if len(skins) == 0 {
@@ -362,6 +339,7 @@ func runK9sSkins(cmd *cobra.Command, args []string) error {
 }
 
 func runK9sContexts(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 
 	contexts, err := helper.GetContexts()
@@ -369,14 +347,8 @@ func runK9sContexts(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"contexts": contexts})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"contexts": contexts})
 	}
 
 	currentContext := helper.GetCurrentContext()
@@ -393,6 +365,7 @@ func runK9sContexts(cmd *cobra.Command, args []string) error {
 }
 
 func runK9sNamespaces(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := k9s.NewHelper(k9sVerbose)
 
 	if !helper.IsClusterConnected() {
@@ -404,14 +377,8 @@ func runK9sNamespaces(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k9sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"namespaces": namespaces})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"namespaces": namespaces})
 	}
 
 	fmt.Println("Available namespaces:")

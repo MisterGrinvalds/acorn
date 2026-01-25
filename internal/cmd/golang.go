@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/programming/golang"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	goOutputFormat string
-	goDryRun       bool
-	goVerbose      bool
+	goDryRun  bool
+	goVerbose bool
 )
 
 // goCmd represents the go command group
@@ -197,8 +197,6 @@ func init() {
 	goCobraCmd.AddCommand(goCobraAddCmd)
 
 	// Persistent flags
-	goCmd.PersistentFlags().StringVarP(&goOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	goCmd.PersistentFlags().BoolVar(&goDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	goCmd.PersistentFlags().BoolVarP(&goVerbose, "verbose", "v", false,
@@ -297,17 +295,12 @@ func runGoEnv(cmd *cobra.Command, args []string) error {
 
 	env := helper.GetGoEnv()
 
-	format, err := output.ParseFormat(goOutputFormat)
-	if err != nil {
-		return err
-	}
-
 	// Add version to env for JSON/YAML output
 	env["VERSION"] = version
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(env)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(env)
 	}
 
 	// Table format

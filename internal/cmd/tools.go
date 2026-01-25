@@ -5,15 +5,15 @@ import (
 	"os"
 	"strings"
 
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/tools"
 	"github.com/spf13/cobra"
 )
 
 var (
-	toolsOutputFormat string
-	toolsDryRun       bool
-	toolsVerbose      bool
+	toolsDryRun  bool
+	toolsVerbose bool
 )
 
 // toolsCmd represents the tools command group
@@ -166,10 +166,6 @@ func init() {
 	toolsCmd.AddCommand(toolsInstallCmd)
 	toolsCmd.AddCommand(toolsUpgradeBashCmd)
 
-	// Output format flag for all tools subcommands
-	toolsCmd.PersistentFlags().StringVarP(&toolsOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
-
 	// Flags for update/install commands
 	toolsUpdateCmd.Flags().BoolVar(&toolsDryRun, "dry-run", false, "Show what would be done without executing")
 	toolsUpdateCmd.Flags().BoolVarP(&toolsVerbose, "verbose", "v", false, "Show verbose output")
@@ -178,17 +174,12 @@ func init() {
 }
 
 func runToolsStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	checker := tools.NewChecker()
 	result := checker.CheckAll()
 
-	format, err := output.ParseFormat(toolsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format with colored status
@@ -218,16 +209,11 @@ func runToolsStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runToolsList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	registry := tools.DefaultRegistry()
 
-	format, err := output.ParseFormat(toolsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(registry)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(registry)
 	}
 
 	// Table format
@@ -242,6 +228,7 @@ func runToolsList(cmd *cobra.Command, args []string) error {
 }
 
 func runToolsCheck(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	checker := tools.NewChecker()
 
 	var results []tools.ToolStatus
@@ -256,14 +243,8 @@ func runToolsCheck(cmd *cobra.Command, args []string) error {
 		results = checker.CheckTools(args)
 	}
 
-	format, err := output.ParseFormat(toolsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(results)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(results)
 	}
 
 	// Table format
@@ -287,17 +268,12 @@ func runToolsCheck(cmd *cobra.Command, args []string) error {
 }
 
 func runToolsMissing(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	checker := tools.NewChecker()
 	missing := checker.GetMissing()
 
-	format, err := output.ParseFormat(toolsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(missing)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(missing)
 	}
 
 	if len(missing) == 0 {
@@ -323,18 +299,13 @@ func runToolsMissing(cmd *cobra.Command, args []string) error {
 }
 
 func runToolsWhich(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	name := args[0]
 	checker := tools.NewChecker()
 	status := checker.CheckTool(name)
 
-	format, err := output.ParseFormat(toolsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	if !status.Installed {

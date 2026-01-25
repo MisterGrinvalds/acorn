@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ai/opencode"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	opencodeOutputFormat string
-	opencodeDryRun       bool
-	opencodeVerbose      bool
+	opencodeDryRun  bool
+	opencodeVerbose bool
 )
 
 // opencodeCmd represents the opencode command group
@@ -106,8 +106,6 @@ func init() {
 	opencodeCmd.AddCommand(opencodeUpgradeCmd)
 
 	// Persistent flags
-	opencodeCmd.PersistentFlags().StringVarP(&opencodeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	opencodeCmd.PersistentFlags().BoolVar(&opencodeDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	opencodeCmd.PersistentFlags().BoolVarP(&opencodeVerbose, "verbose", "v", false,
@@ -119,17 +117,12 @@ func newOpencodeHelper() *opencode.Helper {
 }
 
 func runOpencodeStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newOpencodeHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(opencodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -164,17 +157,12 @@ func runOpencodeLaunch(cmd *cobra.Command, args []string) error {
 }
 
 func runOpencodeProviders(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newOpencodeHelper()
 	providers := helper.ListProviders()
 
-	format, err := output.ParseFormat(opencodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(providers)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(providers)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Supported Providers"))

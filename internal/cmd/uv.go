@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/programming/uv"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	uvOutputFormat string
-	uvDryRun       bool
-	uvVerbose      bool
+	uvDryRun  bool
+	uvVerbose bool
 )
 
 // uvCmd represents the uv command group
@@ -318,8 +318,6 @@ func init() {
 	uvCacheCmd.AddCommand(uvCachePruneCmd)
 
 	// Persistent flags
-	uvCmd.PersistentFlags().StringVarP(&uvOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	uvCmd.PersistentFlags().BoolVar(&uvDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	uvCmd.PersistentFlags().BoolVarP(&uvVerbose, "verbose", "v", false,
@@ -334,14 +332,9 @@ func runUvStatus(cmd *cobra.Command, args []string) error {
 	helper := newUvHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(uvOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -387,14 +380,9 @@ func runUvPythonList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(uvOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(versions)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(versions)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Installed Python Versions"))
@@ -427,14 +415,9 @@ func runUvToolList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(uvOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(tools)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(tools)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Installed Tools"))
@@ -478,14 +461,9 @@ func runUvCacheInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(uvOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("UV Cache"))

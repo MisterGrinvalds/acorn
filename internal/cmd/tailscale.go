@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/network/tailscale"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	tailscaleOutputFormat string
-	tailscaleVerbose      bool
-	tailscaleDryRun       bool
+	tailscaleVerbose bool
+	tailscaleDryRun  bool
 )
 
 // tailscaleCmd represents the tailscale command group
@@ -175,8 +175,6 @@ func init() {
 	tailscaleCmd.AddCommand(tailscaleNetcheckCmd)
 
 	// Persistent flags
-	tailscaleCmd.PersistentFlags().StringVarP(&tailscaleOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	tailscaleCmd.PersistentFlags().BoolVarP(&tailscaleVerbose, "verbose", "v", false,
 		"Show verbose output")
 	tailscaleCmd.PersistentFlags().BoolVar(&tailscaleDryRun, "dry-run", false,
@@ -195,14 +193,9 @@ func runTailscaleStatus(cmd *cobra.Command, args []string) error {
 
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(tailscaleOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -249,14 +242,9 @@ func runTailscalePeers(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tailscaleOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"peers": peers})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"peers": peers})
 	}
 
 	if len(peers) == 0 {
@@ -303,14 +291,9 @@ func runTailscalePing(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	format, err := output.ParseFormat(tailscaleOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s Pong from %s\n", output.Success(""), args[0])
@@ -333,14 +316,9 @@ func runTailscaleExitNodes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(tailscaleOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"exit_nodes": exitNodes})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"exit_nodes": exitNodes})
 	}
 
 	if len(exitNodes) == 0 {

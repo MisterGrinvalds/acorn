@@ -5,17 +5,17 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/automation/n8n"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	n8nOutputFormat string
-	n8nDryRun       bool
-	n8nVerbose      bool
-	n8nUseDocker    bool
-	n8nPort         int
-	n8nOutputDir    string
+	n8nDryRun    bool
+	n8nVerbose   bool
+	n8nUseDocker bool
+	n8nPort      int
+	n8nOutputDir string
 )
 
 // n8nCmd represents the n8n command group
@@ -153,8 +153,6 @@ func init() {
 	n8nExportCredsCmd.Flags().StringVarP(&n8nOutputDir, "output", "O", "", "Output directory")
 
 	// Persistent flags
-	n8nCmd.PersistentFlags().StringVarP(&n8nOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	n8nCmd.PersistentFlags().BoolVar(&n8nDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	n8nCmd.PersistentFlags().BoolVarP(&n8nVerbose, "verbose", "v", false,
@@ -169,14 +167,9 @@ func runN8nStatus(cmd *cobra.Command, args []string) error {
 	helper := newN8nHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(n8nOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -240,14 +233,9 @@ func runN8nWorkflows(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(n8nOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(workflows)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(workflows)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Exported Workflows"))

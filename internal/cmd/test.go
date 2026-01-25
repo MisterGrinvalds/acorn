@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/component"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
@@ -47,8 +48,7 @@ func init() {
 		"Skip components that don't exist instead of failing")
 	testCmd.Flags().BoolVarP(&testVerbose, "verbose", "v", false,
 		"Show verbose test output")
-	testCmd.Flags().StringVarP(&outputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Output format is inherited from root command
 }
 
 func runTest(cmd *cobra.Command, args []string) error {
@@ -91,14 +91,9 @@ func runTest(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output results
-	format, err := output.ParseFormat(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(results)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(results)
 	}
 
 	// Table format output

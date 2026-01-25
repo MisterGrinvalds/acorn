@@ -5,18 +5,18 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/terraform"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	tfOutputFormat string
-	tfDryRun       bool
-	tfVerbose      bool
-	tfAutoApprove  bool
-	tfUpgrade      bool
-	tfPlanOut      string
-	tfCheck        bool
+	tfDryRun      bool
+	tfVerbose     bool
+	tfAutoApprove bool
+	tfUpgrade     bool
+	tfPlanOut     string
+	tfCheck       bool
 )
 
 // terraformCmd represents the terraform command group
@@ -225,8 +225,6 @@ func init() {
 	tfFmtCmd.Flags().BoolVar(&tfCheck, "check", false, "Check formatting without changing")
 
 	// Persistent flags
-	terraformCmd.PersistentFlags().StringVarP(&tfOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	terraformCmd.PersistentFlags().BoolVar(&tfDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	terraformCmd.PersistentFlags().BoolVarP(&tfVerbose, "verbose", "v", false,
@@ -238,17 +236,12 @@ func newTfHelper() *terraform.Helper {
 }
 
 func runTfStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newTfHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(tfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -325,20 +318,15 @@ func runTfFmt(cmd *cobra.Command, args []string) error {
 }
 
 func runTfWorkspaces(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newTfHelper()
 	workspaces, err := helper.ListWorkspaces()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(tfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(workspaces)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(workspaces)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Workspaces"))
@@ -370,20 +358,15 @@ func runTfSelect(cmd *cobra.Command, args []string) error {
 }
 
 func runTfOutputs(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newTfHelper()
 	outputs, err := helper.GetOutputs()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(tfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(outputs)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(outputs)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Outputs"))
@@ -406,20 +389,15 @@ func runTfOutputs(cmd *cobra.Command, args []string) error {
 }
 
 func runTfState(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newTfHelper()
 	resources, err := helper.GetState()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(tfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(resources)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(resources)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("State Resources"))

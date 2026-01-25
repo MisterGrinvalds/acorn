@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/components/ide/vscode"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	vscodeOutputFormat string
-	vscodeDryRun       bool
-	vscodeVerbose      bool
+	vscodeDryRun  bool
+	vscodeVerbose bool
 )
 
 // vscodeCmd represents the vscode command group
@@ -208,8 +208,6 @@ func init() {
 	vscodeConfigCmd.AddCommand(vscodeConfigPathCmd)
 
 	// Persistent flags
-	vscodeCmd.PersistentFlags().StringVarP(&vscodeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	vscodeCmd.PersistentFlags().BoolVar(&vscodeDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	vscodeCmd.PersistentFlags().BoolVarP(&vscodeVerbose, "verbose", "v", false,
@@ -217,20 +215,15 @@ func init() {
 }
 
 func runVscodeWorkspaces(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := vscode.NewHelper(vscodeVerbose, vscodeDryRun)
 	workspaces, err := helper.ListWorkspaces()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(vscodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(workspaces)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(workspaces)
 	}
 
 	if len(workspaces) == 0 {
@@ -289,6 +282,7 @@ func runVscodeProjectNew(cmd *cobra.Command, args []string) error {
 }
 
 func runVscodeExtList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	if !vscode.IsInstalled() {
 		return fmt.Errorf("VS Code is not installed")
 	}
@@ -299,14 +293,8 @@ func runVscodeExtList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(vscodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(extensions)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(extensions)
 	}
 
 	// Table format
@@ -407,17 +395,12 @@ func runVscodeConfigSync(cmd *cobra.Command, args []string) error {
 }
 
 func runVscodeConfigPath(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := vscode.NewHelper(vscodeVerbose, vscodeDryRun)
 	paths := helper.GetConfigPaths()
 
-	format, err := output.ParseFormat(vscodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(paths)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(paths)
 	}
 
 	// Table format

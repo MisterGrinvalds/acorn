@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/kubernetes"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	k8sOutputFormat string
-	k8sVerbose      bool
-	k8sDryRun       bool
+	k8sVerbose bool
+	k8sDryRun  bool
 )
 
 // k8sCmd represents the kubernetes command group
@@ -128,9 +128,7 @@ func init() {
 	k8sCmd.AddCommand(k8sAllCmd)
 	k8sCmd.AddCommand(k8sCleanCmd)
 
-	// Persistent flags
-	k8sCmd.PersistentFlags().StringVarP(&k8sOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	k8sCmd.PersistentFlags().BoolVarP(&k8sVerbose, "verbose", "v", false,
 		"Show verbose output")
 	k8sCmd.PersistentFlags().BoolVar(&k8sDryRun, "dry-run", false,
@@ -138,6 +136,7 @@ func init() {
 }
 
 func runK8sInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := kubernetes.NewHelper(k8sVerbose, k8sDryRun)
 
 	if !helper.IsKubectlInstalled() {
@@ -149,14 +148,8 @@ func runK8sInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k8sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	// Table format
@@ -168,6 +161,7 @@ func runK8sInfo(cmd *cobra.Command, args []string) error {
 }
 
 func runK8sContext(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := kubernetes.NewHelper(k8sVerbose, k8sDryRun)
 
 	if !helper.IsKubectlInstalled() {
@@ -181,14 +175,8 @@ func runK8sContext(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		format, err := output.ParseFormat(k8sOutputFormat)
-		if err != nil {
-			return err
-		}
-
-		if format != output.FormatTable {
-			printer := output.NewPrinter(os.Stdout, format)
-			return printer.Print(map[string]interface{}{"contexts": contexts})
+		if ioHelper.IsStructured() {
+			return ioHelper.WriteOutput(map[string]interface{}{"contexts": contexts})
 		}
 
 		// Table format
@@ -208,6 +196,7 @@ func runK8sContext(cmd *cobra.Command, args []string) error {
 }
 
 func runK8sNamespace(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := kubernetes.NewHelper(k8sVerbose, k8sDryRun)
 
 	if !helper.IsKubectlInstalled() {
@@ -221,14 +210,8 @@ func runK8sNamespace(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		format, err := output.ParseFormat(k8sOutputFormat)
-		if err != nil {
-			return err
-		}
-
-		if format != output.FormatTable {
-			printer := output.NewPrinter(os.Stdout, format)
-			return printer.Print(map[string]interface{}{"namespaces": namespaces})
+		if ioHelper.IsStructured() {
+			return ioHelper.WriteOutput(map[string]interface{}{"namespaces": namespaces})
 		}
 
 		// Table format
@@ -244,6 +227,7 @@ func runK8sNamespace(cmd *cobra.Command, args []string) error {
 }
 
 func runK8sPods(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := kubernetes.NewHelper(k8sVerbose, k8sDryRun)
 
 	if !helper.IsKubectlInstalled() {
@@ -260,14 +244,8 @@ func runK8sPods(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(k8sOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"pods": pods})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"pods": pods})
 	}
 
 	// Table format

@@ -5,20 +5,20 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/postgres"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	pgOutputFormat string
-	pgDryRun       bool
-	pgVerbose      bool
-	pgHost         string
-	pgPort         string
-	pgUser         string
-	pgUseDocker    bool
-	pgPassword     string
-	pgOutputPath   string
+	pgDryRun     bool
+	pgVerbose    bool
+	pgHost       string
+	pgPort       string
+	pgUser       string
+	pgUseDocker  bool
+	pgPassword   string
+	pgOutputPath string
 )
 
 // postgresCmd represents the postgres command group
@@ -189,8 +189,6 @@ func init() {
 	postgresCmd.PersistentFlags().StringVarP(&pgUser, "user", "U", "postgres", "Database user")
 
 	// Output flags
-	postgresCmd.PersistentFlags().StringVarP(&pgOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	postgresCmd.PersistentFlags().BoolVar(&pgDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	postgresCmd.PersistentFlags().BoolVarP(&pgVerbose, "verbose", "v", false,
@@ -202,17 +200,12 @@ func newPgHelper() *postgres.Helper {
 }
 
 func runPgStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newPgHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(pgOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -285,20 +278,15 @@ func runPgConnect(cmd *cobra.Command, args []string) error {
 }
 
 func runPgDatabases(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := newPgHelper()
 	databases, err := helper.ListDatabases(pgHost, pgPort, pgUser)
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(pgOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(databases)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(databases)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Databases"))

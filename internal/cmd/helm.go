@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/helm"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	helmOutputFormat  string
 	helmVerbose       bool
 	helmDryRun        bool
 	helmNamespace     string
@@ -292,9 +292,7 @@ func init() {
 	helmCmd.AddCommand(helmCreateCmd)
 	helmCmd.AddCommand(helmPluginsCmd)
 
-	// Persistent flags
-	helmCmd.PersistentFlags().StringVarP(&helmOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	helmCmd.PersistentFlags().BoolVarP(&helmVerbose, "verbose", "v", false,
 		"Show verbose output")
 	helmCmd.PersistentFlags().BoolVar(&helmDryRun, "dry-run", false,
@@ -317,17 +315,12 @@ func init() {
 }
 
 func runHelmStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed: %v\n", status.Installed)
@@ -342,6 +335,7 @@ func runHelmStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runHelmReleases(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 
 	if !helper.IsInstalled() {
@@ -353,14 +347,8 @@ func runHelmReleases(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"releases": releases})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"releases": releases})
 	}
 
 	if len(releases) == 0 {
@@ -408,6 +396,7 @@ func runHelmValues(cmd *cobra.Command, args []string) error {
 }
 
 func runHelmHistory(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 
 	if !helper.IsInstalled() {
@@ -419,14 +408,8 @@ func runHelmHistory(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"history": history})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"history": history})
 	}
 
 	fmt.Fprintf(os.Stdout, "%-10s %-25s %-12s %-30s\n", "REVISION", "UPDATED", "STATUS", "CHART")
@@ -492,6 +475,7 @@ func runHelmRollback(cmd *cobra.Command, args []string) error {
 }
 
 func runHelmRepos(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 
 	if !helper.IsInstalled() {
@@ -503,14 +487,8 @@ func runHelmRepos(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"repositories": repos})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"repositories": repos})
 	}
 
 	if len(repos) == 0 {
@@ -552,6 +530,7 @@ func runHelmRepoUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func runHelmSearch(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 
 	if !helper.IsInstalled() {
@@ -568,14 +547,8 @@ func runHelmSearch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"charts": charts})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"charts": charts})
 	}
 
 	if len(charts) == 0 {
@@ -646,6 +619,7 @@ func runHelmCreate(cmd *cobra.Command, args []string) error {
 }
 
 func runHelmPlugins(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := helm.NewHelper(helmVerbose, helmDryRun)
 
 	if !helper.IsInstalled() {
@@ -657,14 +631,8 @@ func runHelmPlugins(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(helmOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"plugins": plugins})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"plugins": plugins})
 	}
 
 	if len(plugins) == 0 {

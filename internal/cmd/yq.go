@@ -2,20 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/yq"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	yqOutputFormat string
-	yqVerbose      bool
-	yqInPlace      bool
-	yqInputFormat  string
-	yqOutFormat    string
+	yqVerbose     bool
+	yqInPlace     bool
+	yqInputFormat string
+	yqOutFormat   string
 )
 
 // yqCmd represents the yq command group
@@ -260,9 +259,7 @@ func init() {
 	yqDocsCmd.AddCommand(yqDocsGetCmd)
 	yqDocsCmd.AddCommand(yqDocsSplitCmd)
 
-	// Persistent flags
-	yqCmd.PersistentFlags().StringVarP(&yqOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	yqCmd.PersistentFlags().BoolVarP(&yqVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -279,25 +276,29 @@ func init() {
 		"Output format (yaml|json|xml|toml|csv|tsv|props)")
 }
 
-func getYqInput(args []string, argIndex int) ([]byte, error) {
+func getYqInput(cmd *cobra.Command, args []string, argIndex int) ([]byte, error) {
+	ioHelper := ioutils.IO(cmd)
+
+	// Use positional file argument if provided
 	if len(args) > argIndex {
 		return os.ReadFile(args[argIndex])
 	}
-	return io.ReadAll(os.Stdin)
+
+	// Check for --input-file flag or piped stdin
+	if ioHelper.HasInput() {
+		return ioHelper.ReadRaw()
+	}
+
+	return nil, fmt.Errorf("no input provided: specify a file or pipe input")
 }
 
 func runYqStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := yq.NewHelper(yqVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(yqOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed: %v\n", status.Installed)
@@ -325,7 +326,7 @@ func runYqFilter(cmd *cobra.Command, args []string) error {
 		return helper.EditInPlace(args[1], expression)
 	}
 
-	input, err := getYqInput(args, 1)
+	input, err := getYqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -362,7 +363,12 @@ func runYqValidate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid YAML")
 	}
 
-	input, err := io.ReadAll(os.Stdin)
+	ioHelper := ioutils.IO(cmd)
+	if !ioHelper.HasInput() {
+		return fmt.Errorf("no input provided: specify a file or pipe input")
+	}
+
+	input, err := ioHelper.ReadRaw()
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -382,7 +388,7 @@ func runYqFormat(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("yq is not installed")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -407,7 +413,7 @@ func runYqConvert(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("yq is not installed")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -453,7 +459,7 @@ func runYqGet(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[0]
-	input, err := getYqInput(args, 1)
+	input, err := getYqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -487,7 +493,7 @@ func runYqSet(cmd *cobra.Command, args []string) error {
 		return helper.EditInPlace(args[2], expression)
 	}
 
-	input, err := getYqInput(args, 2)
+	input, err := getYqInput(cmd, args, 2)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -520,7 +526,7 @@ func runYqDelete(cmd *cobra.Command, args []string) error {
 		return helper.EditInPlace(args[1], expression)
 	}
 
-	input, err := getYqInput(args, 1)
+	input, err := getYqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -545,7 +551,7 @@ func runYqKeys(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("yq is not installed")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -573,7 +579,7 @@ func runYqSort(cmd *cobra.Command, args []string) error {
 		return helper.EditInPlace(args[0], "sort_keys(.)")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -598,7 +604,7 @@ func runYqDocsCount(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("yq is not installed")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -624,7 +630,7 @@ func runYqDocsGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid index: %s", args[0])
 	}
 
-	input, err := getYqInput(args, 1)
+	input, err := getYqInput(cmd, args, 1)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
@@ -649,7 +655,7 @@ func runYqDocsSplit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("yq is not installed")
 	}
 
-	input, err := getYqInput(args, 0)
+	input, err := getYqInput(cmd, args, 0)
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}

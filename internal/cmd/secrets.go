@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/components/data/secrets"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	secretsOutputFormat string
-	secretsVerbose      bool
+	secretsVerbose bool
 )
 
 // secretsCmd represents the secrets command group
@@ -143,8 +143,6 @@ func init() {
 	secretsCmd.AddCommand(secretsPathCmd)
 
 	// Persistent flags
-	secretsCmd.PersistentFlags().StringVarP(&secretsOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	secretsCmd.PersistentFlags().BoolVarP(&secretsVerbose, "verbose", "v", false,
 		"Show verbose output")
 }
@@ -156,14 +154,9 @@ func runSecretsStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(secretsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -195,14 +188,9 @@ func runSecretsList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(secretsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string][]string{"keys": keys})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string][]string{"keys": keys})
 	}
 
 	// Table format
@@ -240,10 +228,7 @@ func runSecretsLoad(cmd *cobra.Command, args []string) error {
 func runSecretsCheck(cmd *cobra.Command, args []string) error {
 	helper := secrets.NewHelper(secretsVerbose)
 
-	format, err := output.ParseFormat(secretsOutputFormat)
-	if err != nil {
-		return err
-	}
+	ioHelper := ioutils.IO(cmd)
 
 	// Check specific credential if provided
 	if len(args) > 0 {
@@ -268,9 +253,8 @@ func runSecretsCheck(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("unknown credential: %s", args[0])
 		}
 
-		if format != output.FormatTable {
-			printer := output.NewPrinter(os.Stdout, format)
-			return printer.Print(cred)
+		if ioHelper.IsStructured() {
+			return ioHelper.WriteOutput(cred)
 		}
 
 		if cred.Available {
@@ -285,9 +269,8 @@ func runSecretsCheck(cmd *cobra.Command, args []string) error {
 	// Check all credentials
 	check := helper.CheckAllCredentials()
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(check)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(check)
 	}
 
 	// Table format
@@ -312,14 +295,9 @@ func runSecretsValidate(cmd *cobra.Command, args []string) error {
 	helper := secrets.NewHelper(secretsVerbose)
 	check := helper.ValidateSecrets()
 
-	format, err := output.ParseFormat(secretsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(check)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(check)
 	}
 
 	// Table format

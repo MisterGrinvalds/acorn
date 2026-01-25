@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/vcs/github"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	ghOutputFormat string
-	ghVerbose      bool
-	ghDryRun       bool
+	ghVerbose bool
+	ghDryRun  bool
 )
 
 // ghCmd represents the github command group
@@ -196,8 +196,6 @@ func init() {
 	ghRunCmd.AddCommand(ghRunRerunCmd)
 
 	// Persistent flags
-	ghCmd.PersistentFlags().StringVarP(&ghOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	ghCmd.PersistentFlags().BoolVarP(&ghVerbose, "verbose", "v", false,
 		"Show verbose output")
 	ghCmd.PersistentFlags().BoolVar(&ghDryRun, "dry-run", false,
@@ -208,14 +206,9 @@ func runGhStatus(cmd *cobra.Command, args []string) error {
 	helper := github.NewHelper(ghVerbose, ghDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(ghOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format

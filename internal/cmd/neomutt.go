@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/components/mail/neomutt"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	neomuttOutputFormat string
-	neomuttDryRun       bool
-	neomuttVerbose      bool
+	neomuttDryRun  bool
+	neomuttVerbose bool
 )
 
 // neomuttCmd represents the neomutt command group
@@ -262,8 +262,6 @@ func init() {
 	neomuttAccountAddCmd.AddCommand(neomuttAccountAddMicrosoftCmd)
 
 	// Persistent flags
-	neomuttCmd.PersistentFlags().StringVarP(&neomuttOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	neomuttCmd.PersistentFlags().BoolVar(&neomuttDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	neomuttCmd.PersistentFlags().BoolVarP(&neomuttVerbose, "verbose", "v", false,
@@ -278,14 +276,9 @@ func runNeomuttStatus(cmd *cobra.Command, args []string) error {
 	helper := newNeomuttHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(neomuttOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -340,14 +333,9 @@ func runNeomuttAccounts(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(neomuttOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(accounts)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(accounts)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Email Accounts"))
@@ -382,14 +370,9 @@ func runNeomuttTokensStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(neomuttOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(tokens)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(tokens)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("OAuth2 Token Status"))
@@ -439,14 +422,9 @@ func runNeomuttCacheInfo(cmd *cobra.Command, args []string) error {
 	helper := newNeomuttHelper()
 	info := helper.GetCacheInfo()
 
-	format, err := output.ParseFormat(neomuttOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("NeoMutt Cache"))

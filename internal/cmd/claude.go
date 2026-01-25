@@ -6,17 +6,17 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ai/claude"
-	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
+	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	claudeOutputFormat string
-	claudeDryRun       bool
-	claudeVerbose      bool
+	claudeDryRun  bool
+	claudeVerbose bool
 )
 
 // claudeCmd represents the claude command group
@@ -361,9 +361,7 @@ func init() {
 	// Aggregate subcommands
 	claudeAggregateCmd.AddCommand(claudeAggregateListCmd)
 
-	// Persistent flags
-	claudeCmd.PersistentFlags().StringVarP(&claudeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Persistent flags (output format is inherited from root command)
 	claudeCmd.PersistentFlags().BoolVar(&claudeDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	claudeCmd.PersistentFlags().BoolVarP(&claudeVerbose, "verbose", "v", false,
@@ -372,20 +370,15 @@ func init() {
 
 // runClaudeInfo displays Claude Code information
 func runClaudeInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	info, err := helper.GetInfo()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	// Table format
@@ -425,20 +418,15 @@ func printFileStatus(name string, exists bool) {
 // Stats command handlers
 
 func runClaudeStats(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	summary, err := helper.GetStatsSummary()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(summary)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(summary)
 	}
 
 	// Table format
@@ -467,20 +455,15 @@ func runClaudeStats(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeStatsTokens(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	usage, err := helper.GetTokenUsage()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(usage)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(usage)
 	}
 
 	// Table format
@@ -505,6 +488,7 @@ func runClaudeStatsTokens(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeStatsDaily(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	days := 7
 	if len(args) > 0 {
 		var err error
@@ -520,14 +504,8 @@ func runClaudeStatsDaily(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(usage)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(usage)
 	}
 
 	// Table format
@@ -545,20 +523,15 @@ func runClaudeStatsDaily(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudePermissions(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	perms, err := helper.GetPermissions()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(perms)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(perms)
 	}
 
 	// Table format
@@ -625,6 +598,7 @@ func runClaudePermissionsRemove(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeSettings(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	typeArg := ""
 	if len(args) > 0 {
 		typeArg = args[0]
@@ -643,14 +617,8 @@ func runClaudeSettings(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(settings)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(settings)
 	}
 
 	// Table format - pretty print JSON
@@ -677,20 +645,15 @@ func runClaudeSettingsEdit(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeProjects(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	projects, err := helper.GetProjects()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(projects)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(projects)
 	}
 
 	// Table format
@@ -710,20 +673,15 @@ func runClaudeProjects(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeMcp(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	mcpView, err := helper.GetMCPServers()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(mcpView)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(mcpView)
 	}
 
 	// Table format
@@ -764,20 +722,15 @@ func runClaudeMcpAdd(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeCommands(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	commands, err := helper.GetCommands()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(commands)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(commands)
 	}
 
 	// Table format
@@ -806,6 +759,7 @@ func runClaudeCommands(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeAggregate(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	searchDir := os.Getenv("HOME") + "/Repos"
 	if len(args) > 0 {
 		searchDir = args[0]
@@ -817,14 +771,8 @@ func runClaudeAggregate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -859,20 +807,15 @@ func runClaudeAggregate(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeAggregateList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := claude.NewHelper(claudeVerbose, claudeDryRun)
 	result, err := helper.List()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -905,6 +848,7 @@ func runClaudeAggregateList(cmd *cobra.Command, args []string) error {
 }
 
 func runClaudeClear(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	what := "cache"
 	if len(args) > 0 {
 		what = args[0]
@@ -916,14 +860,8 @@ func runClaudeClear(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -1009,14 +947,9 @@ func runClaudeSync(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output results
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -1086,14 +1019,9 @@ func runClaudeSyncStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output results
-	format, err := output.ParseFormat(claudeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format

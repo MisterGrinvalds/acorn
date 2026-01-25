@@ -6,14 +6,14 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	ghosttyOutputFormat string
-	ghosttyDryRun       bool
-	ghosttyVerbose      bool
+	ghosttyDryRun  bool
+	ghosttyVerbose bool
 )
 
 // ghosttyCmd represents the ghostty command group
@@ -155,8 +155,6 @@ func init() {
 	ghosttyCmd.AddCommand(ghosttyConfigCmd)
 
 	// Persistent flags
-	ghosttyCmd.PersistentFlags().StringVarP(&ghosttyOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	ghosttyCmd.PersistentFlags().BoolVar(&ghosttyDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	ghosttyCmd.PersistentFlags().BoolVarP(&ghosttyVerbose, "verbose", "v", false,
@@ -164,17 +162,12 @@ func init() {
 }
 
 func runGhosttyInfo(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := ghostty.NewHelper(ghosttyVerbose)
 	info := helper.GetInfo()
 
-	format, err := output.ParseFormat(ghosttyOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	// Table format
@@ -209,20 +202,15 @@ func runGhosttyInfo(cmd *cobra.Command, args []string) error {
 }
 
 func runGhosttyTheme(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := ghostty.NewHelper(ghosttyVerbose)
 
 	if len(args) == 0 {
 		// List available themes
 		themes := helper.GetAvailableThemes()
 
-		format, err := output.ParseFormat(ghosttyOutputFormat)
-		if err != nil {
-			return err
-		}
-
-		if format != output.FormatTable {
-			printer := output.NewPrinter(os.Stdout, format)
-			return printer.Print(map[string][]string{"themes": themes})
+		if ioHelper.IsStructured() {
+			return ioHelper.WriteOutput(map[string][]string{"themes": themes})
 		}
 
 		fmt.Fprintf(os.Stdout, "%s\n", output.Info("Available Themes"))
@@ -282,6 +270,7 @@ func runGhosttyBackup(cmd *cobra.Command, args []string) error {
 }
 
 func runGhosttyBackups(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := ghostty.NewHelper(ghosttyVerbose)
 
 	backups, err := helper.ListBackups()
@@ -289,14 +278,8 @@ func runGhosttyBackups(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(ghosttyOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"backups": backups})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"backups": backups})
 	}
 
 	if len(backups) == 0 {

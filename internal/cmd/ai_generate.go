@@ -9,15 +9,15 @@ import (
 	"strconv"
 	"strings"
 
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	aiGenerateOutputFormat string
-	aiGenerateList         bool
-	aiGenerateDryRun       bool
-	aiGenerateVerbose      bool
+	aiGenerateList    bool
+	aiGenerateDryRun  bool
+	aiGenerateVerbose bool
 )
 
 // GenerateResult contains the results of config generation.
@@ -69,8 +69,6 @@ Examples:
 func init() {
 	aiCmd.AddCommand(aiGenerateCmd)
 
-	aiGenerateCmd.Flags().StringVarP(&aiGenerateOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	aiGenerateCmd.Flags().BoolVarP(&aiGenerateList, "list", "l", false,
 		"Show counts without generating")
 	aiGenerateCmd.Flags().BoolVar(&aiGenerateDryRun, "dry-run", false,
@@ -139,7 +137,7 @@ func runAIGenerate(cmd *cobra.Command, args []string) error {
 			})
 		}
 
-		return outputGenerateResult(result, aiGenerateList)
+		return outputGenerateResult(cmd, result, aiGenerateList)
 	}
 
 	// Run generation script
@@ -205,18 +203,14 @@ func runAIGenerate(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	return outputGenerateResult(result, false)
+	return outputGenerateResult(cmd, result, false)
 }
 
-func outputGenerateResult(result GenerateResult, listOnly bool) error {
-	format, err := output.ParseFormat(aiGenerateOutputFormat)
-	if err != nil {
-		return err
-	}
+func outputGenerateResult(cmd *cobra.Command, result GenerateResult, listOnly bool) error {
+	ioHelper := ioutils.IO(cmd)
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format

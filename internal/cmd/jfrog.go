@@ -5,18 +5,18 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/artifacts/jfrog"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	jfrogOutputFormat string
-	jfrogDryRun       bool
-	jfrogVerbose      bool
-	jfrogRecursive    bool
-	jfrogFlat         bool
-	jfrogQuiet        bool
-	jfrogServerID     string
+	jfrogDryRun    bool
+	jfrogVerbose   bool
+	jfrogRecursive bool
+	jfrogFlat      bool
+	jfrogQuiet     bool
+	jfrogServerID  string
 )
 
 // jfrogCmd represents the jfrog command group
@@ -245,8 +245,6 @@ func init() {
 	jfrogDeleteCmd.Flags().BoolVar(&jfrogQuiet, "quiet", false, "Skip confirmation")
 
 	// Persistent flags
-	jfrogCmd.PersistentFlags().StringVarP(&jfrogOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	jfrogCmd.PersistentFlags().BoolVar(&jfrogDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	jfrogCmd.PersistentFlags().BoolVarP(&jfrogVerbose, "verbose", "v", false,
@@ -261,14 +259,9 @@ func runJfrogStatus(cmd *cobra.Command, args []string) error {
 	helper := newJfrogHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(jfrogOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -320,14 +313,9 @@ func runJfrogServersList(cmd *cobra.Command, args []string) error {
 	helper := newJfrogHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(jfrogOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status.Servers)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status.Servers)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Configured Servers"))
@@ -393,14 +381,9 @@ func runJfrogSearch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(jfrogOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(artifacts)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(artifacts)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Search Results"))

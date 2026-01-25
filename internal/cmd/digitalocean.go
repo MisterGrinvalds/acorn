@@ -6,15 +6,15 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/digitalocean"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	doOutputFormat string
-	doDryRun       bool
-	doVerbose      bool
-	doContext      string
+	doDryRun  bool
+	doVerbose bool
+	doContext string
 )
 
 // doCmd represents the digitalocean command group
@@ -246,8 +246,6 @@ func init() {
 	doDBCmd.AddCommand(doDBListCmd)
 
 	// Persistent flags
-	doCmd.PersistentFlags().StringVarP(&doOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	doCmd.PersistentFlags().BoolVar(&doDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	doCmd.PersistentFlags().BoolVarP(&doVerbose, "verbose", "v", false,
@@ -271,14 +269,9 @@ func runDoStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -321,14 +314,9 @@ func runDoWhoami(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(account)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(account)
 	}
 
 	fmt.Fprintf(os.Stdout, "Email:            %s\n", account.Email)
@@ -361,14 +349,9 @@ func runDoOverview(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(overview)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(overview)
 	}
 
 	// Table format
@@ -454,14 +437,9 @@ func runDoK8sList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(clusters)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(clusters)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("DigitalOcean Kubernetes Clusters"))
@@ -488,14 +466,9 @@ func runDoAppList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(apps)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(apps)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("DigitalOcean App Platform Apps"))
@@ -517,14 +490,9 @@ func runDoDBList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(doOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(databases)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(databases)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("DigitalOcean Managed Databases"))

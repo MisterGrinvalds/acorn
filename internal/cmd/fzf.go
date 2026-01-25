@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/fzf"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	fzfOutputFormat string
-	fzfVerbose      bool
+	fzfVerbose bool
 )
 
 // fzfCmd represents the fzf command group
@@ -92,8 +92,6 @@ func init() {
 	fzfCmd.AddCommand(fzfThemeCmd)
 
 	// Persistent flags
-	fzfCmd.PersistentFlags().StringVarP(&fzfOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	fzfCmd.PersistentFlags().BoolVarP(&fzfVerbose, "verbose", "v", false,
 		"Show verbose output")
 }
@@ -102,14 +100,9 @@ func runFzfStatus(cmd *cobra.Command, args []string) error {
 	helper := fzf.NewHelper(fzfVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(fzfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -141,14 +134,9 @@ func runFzfConfig(cmd *cobra.Command, args []string) error {
 	helper := fzf.NewHelper(fzfVerbose)
 	config := helper.GetConfig()
 
-	format, err := output.ParseFormat(fzfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(config)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(config)
 	}
 
 	// Table format
@@ -180,14 +168,9 @@ func runFzfFunctions(cmd *cobra.Command, args []string) error {
 	helper := fzf.NewHelper(fzfVerbose)
 	functions := helper.GetAvailableFunctions()
 
-	format, err := output.ParseFormat(fzfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string][]string{"functions": functions})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string][]string{"functions": functions})
 	}
 
 	// Table format

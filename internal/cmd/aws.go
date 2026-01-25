@@ -6,16 +6,16 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/aws"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	awsOutputFormat string
-	awsDryRun       bool
-	awsVerbose      bool
-	awsProfile      string
-	awsRegion       string
+	awsDryRun  bool
+	awsVerbose bool
+	awsProfile string
+	awsRegion  string
 )
 
 // awsCmd represents the aws command group
@@ -283,8 +283,6 @@ func init() {
 	awsSSMCmd.AddCommand(awsSSMConnectCmd)
 
 	// Persistent flags
-	awsCmd.PersistentFlags().StringVarP(&awsOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	awsCmd.PersistentFlags().BoolVar(&awsDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	awsCmd.PersistentFlags().BoolVarP(&awsVerbose, "verbose", "v", false,
@@ -313,14 +311,9 @@ func runAwsStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -368,14 +361,9 @@ func runAwsWhoami(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(identity)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(identity)
 	}
 
 	fmt.Fprintf(os.Stdout, "Account: %s\n", identity.Account)
@@ -391,14 +379,9 @@ func runAwsProfiles(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(profiles)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(profiles)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("AWS Profiles"))
@@ -420,14 +403,9 @@ func runAwsRegions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(regions)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(regions)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("AWS Regions"))
@@ -445,14 +423,9 @@ func runAwsOverview(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(overview)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(overview)
 	}
 
 	// Table format
@@ -548,14 +521,9 @@ func runAwsS3List(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(buckets)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(buckets)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("S3 Buckets"))
@@ -577,14 +545,9 @@ func runAwsLambdaList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(functions)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(functions)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Lambda Functions"))
@@ -606,14 +569,9 @@ func runAwsEKSList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(awsOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(clusters)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(clusters)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("EKS Clusters"))

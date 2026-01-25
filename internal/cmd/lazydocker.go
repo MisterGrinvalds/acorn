@@ -5,14 +5,13 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/lazydocker"
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
 )
 
 var (
-	lazydockerOutputFormat string
-	lazydockerVerbose      bool
-	lazydockerConfigFile   string
+	lazydockerVerbose    bool
+	lazydockerConfigFile string
 )
 
 // lazydockerCmd represents the lazydocker command group
@@ -94,8 +93,6 @@ func init() {
 	lazydockerCmd.AddCommand(lazydockerConfigCmd)
 
 	// Persistent flags
-	lazydockerCmd.PersistentFlags().StringVarP(&lazydockerOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	lazydockerCmd.PersistentFlags().BoolVarP(&lazydockerVerbose, "verbose", "v", false,
 		"Show verbose output")
 
@@ -107,17 +104,12 @@ func init() {
 }
 
 func runLazydockerStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := lazydocker.NewHelper(lazydockerVerbose)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(lazydockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	fmt.Fprintf(os.Stdout, "Installed:      %v\n", status.Installed)
@@ -150,16 +142,11 @@ func runLazydockerLaunch(cmd *cobra.Command, args []string) error {
 }
 
 func runLazydockerKeys(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := lazydocker.NewHelper(lazydockerVerbose)
 
-	format, err := output.ParseFormat(lazydockerOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]any{"keybindings": helper.GetKeybindingsList()})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]any{"keybindings": helper.GetKeybindingsList()})
 	}
 
 	fmt.Print(helper.GetKeybindings())

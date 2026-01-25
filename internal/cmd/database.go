@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/database"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	dbOutputFormat string
-	dbDryRun       bool
-	dbVerbose      bool
+	dbDryRun  bool
+	dbVerbose bool
 )
 
 // dbCmd represents the database command group
@@ -141,8 +141,6 @@ func init() {
 	dbCmd.AddCommand(dbListCmd)
 
 	// Persistent flags
-	dbCmd.PersistentFlags().StringVarP(&dbOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	dbCmd.PersistentFlags().BoolVar(&dbDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	dbCmd.PersistentFlags().BoolVarP(&dbVerbose, "verbose", "v", false,
@@ -150,17 +148,12 @@ func init() {
 }
 
 func runDbStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := database.NewHelper(dbVerbose, dbDryRun)
 	status := helper.GetAllStatus()
 
-	format, err := output.ParseFormat(dbOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -256,17 +249,12 @@ func runDbStopAll(cmd *cobra.Command, args []string) error {
 }
 
 func runDbList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	helper := database.NewHelper(dbVerbose, dbDryRun)
 	services := helper.GetSupportedServices()
 
-	format, err := output.ParseFormat(dbOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string][]string{"services": services})
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string][]string{"services": services})
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Supported Database Services"))

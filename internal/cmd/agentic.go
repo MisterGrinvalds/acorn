@@ -8,11 +8,10 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/agentic"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
-
-var agenticOutputFormat string
 
 // agenticCmd represents the agentic command group
 var agenticCmd = &cobra.Command{
@@ -95,12 +94,10 @@ func init() {
 	agenticCmd.AddCommand(agenticValidateCmd)
 	agenticCmd.AddCommand(agenticPatternsCmd)
 
-	// Output format flag
-	agenticCmd.PersistentFlags().StringVarP(&agenticOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 }
 
 func runAgenticAudit(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	// Find the internal/cmd directory
 	cmdDir, err := findCmdDir()
 	if err != nil {
@@ -113,14 +110,8 @@ func runAgenticAudit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("audit failed: %w", err)
 	}
 
-	format, err := output.ParseFormat(agenticOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -172,6 +163,7 @@ func runAgenticAudit(cmd *cobra.Command, args []string) error {
 }
 
 func runAgenticValidate(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	filePath := args[0]
 
 	// Make path absolute if relative
@@ -195,14 +187,8 @@ func runAgenticValidate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	format, err := output.ParseFormat(agenticOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format - detailed view
@@ -287,16 +273,11 @@ func runAgenticValidate(cmd *cobra.Command, args []string) error {
 }
 
 func runAgenticPatterns(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	patterns := agentic.GetPatterns()
 
-	format, err := output.ParseFormat(agenticOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(patterns)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(patterns)
 	}
 
 	// Table format - show each pattern

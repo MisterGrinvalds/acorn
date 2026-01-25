@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/components/programming/python"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	pythonOutputFormat string
-	pythonDryRun       bool
-	pythonVerbose      bool
+	pythonDryRun  bool
+	pythonVerbose bool
 )
 
 // pythonCmd represents the python command group
@@ -232,8 +232,6 @@ func init() {
 	pythonSetupCmd.AddCommand(pythonSetupDevtoolsCmd)
 
 	// Persistent flags
-	pythonCmd.PersistentFlags().StringVarP(&pythonOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	pythonCmd.PersistentFlags().BoolVar(&pythonDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	pythonCmd.PersistentFlags().BoolVarP(&pythonVerbose, "verbose", "v", false,
@@ -253,14 +251,9 @@ func runPythonVenvNew(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(pythonOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s Virtual environment created!\n", output.Success("✓"))
@@ -284,14 +277,9 @@ func runPythonVenvList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(pythonOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(venvs)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(venvs)
 	}
 
 	if len(venvs) == 0 {
@@ -386,14 +374,9 @@ func runPythonEnv(cmd *cobra.Command, args []string) error {
 	helper := python.NewHelper(pythonVerbose, pythonDryRun)
 	info := helper.GetEnvInfo()
 
-	format, err := output.ParseFormat(pythonOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n\n", output.Info("Python Environment"))

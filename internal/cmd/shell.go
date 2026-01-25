@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	shellOutputFormat string
-	shellDryRun       bool
-	shellVerbose      bool
+	shellDryRun  bool
+	shellVerbose bool
 )
 
 // shellCmd represents the shell command group
@@ -173,8 +173,6 @@ func init() {
 	shellCmd.AddCommand(shellListCmd)
 
 	// Persistent flags
-	shellCmd.PersistentFlags().StringVarP(&shellOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	shellCmd.PersistentFlags().BoolVar(&shellDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	shellCmd.PersistentFlags().BoolVarP(&shellVerbose, "verbose", "v", false,
@@ -189,20 +187,15 @@ func getShellManager() *shell.Manager {
 }
 
 func runShellStatus(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
 	status, err := manager.GetStatus()
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -243,14 +236,11 @@ func runShellStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runShellGenerate(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
 
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
-
 	var result *shell.GenerateResult
+	var err error
 
 	if len(args) == 0 {
 		// Generate all components + entrypoint
@@ -265,9 +255,8 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	// JSON/YAML output - return structured result
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format - human readable output
@@ -329,12 +318,8 @@ func runShellGenerate(cmd *cobra.Command, args []string) error {
 }
 
 func runShellInject(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
-
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
 
 	result, err := manager.Inject()
 	if err != nil {
@@ -342,9 +327,8 @@ func runShellInject(cmd *cobra.Command, args []string) error {
 	}
 
 	// JSON/YAML output
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -365,12 +349,8 @@ func runShellInject(cmd *cobra.Command, args []string) error {
 }
 
 func runShellEject(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
-
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
 
 	result, err := manager.Eject()
 	if err != nil {
@@ -378,9 +358,8 @@ func runShellEject(cmd *cobra.Command, args []string) error {
 	}
 
 	// JSON/YAML output
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(result)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(result)
 	}
 
 	// Table format
@@ -403,12 +382,8 @@ type InstallResult struct {
 }
 
 func runShellInstall(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
-
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
 
 	// Generate all
 	genResult, err := manager.GenerateAll()
@@ -428,9 +403,8 @@ func runShellInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// JSON/YAML output
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(installResult)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(installResult)
 	}
 
 	// Table format
@@ -497,12 +471,8 @@ type UninstallResult struct {
 }
 
 func runShellUninstall(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
-
-	format, err := output.ParseFormat(shellOutputFormat)
-	if err != nil {
-		return err
-	}
 
 	result, err := manager.Eject()
 	if err != nil {
@@ -517,9 +487,8 @@ func runShellUninstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// JSON/YAML output
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(uninstallResult)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(uninstallResult)
 	}
 
 	// Table format
@@ -537,13 +506,9 @@ func runShellUninstall(cmd *cobra.Command, args []string) error {
 }
 
 func runShellList(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
 	manager := getShellManager()
 	status, err := manager.GetStatus()
-	if err != nil {
-		return err
-	}
-
-	format, err := output.ParseFormat(shellOutputFormat)
 	if err != nil {
 		return err
 	}
@@ -557,9 +522,8 @@ func runShellList(cmd *cobra.Command, args []string) error {
 		components = append(components, ComponentInfo{Name: c})
 	}
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(components)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(components)
 	}
 
 	// Table format

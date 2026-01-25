@@ -5,15 +5,15 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/programming/node"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	nodeOutputFormat string
-	nodeVerbose      bool
-	nodeDryRun       bool
-	nodeForce        bool
+	nodeVerbose bool
+	nodeDryRun  bool
+	nodeForce   bool
 )
 
 // nodeCmd represents the node command group
@@ -225,24 +225,18 @@ func init() {
 	pnpmCmd.AddCommand(pnpmInstallCmd)
 
 	// Node persistent flags
-	nodeCmd.PersistentFlags().StringVarP(&nodeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	nodeCmd.PersistentFlags().BoolVarP(&nodeVerbose, "verbose", "v", false,
 		"Show verbose output")
 	nodeCmd.PersistentFlags().BoolVar(&nodeDryRun, "dry-run", false,
 		"Show what would be done without executing")
 
 	// NVM persistent flags
-	nvmCmd.PersistentFlags().StringVarP(&nodeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	nvmCmd.PersistentFlags().BoolVarP(&nodeVerbose, "verbose", "v", false,
 		"Show verbose output")
 	nvmCmd.PersistentFlags().BoolVar(&nodeDryRun, "dry-run", false,
 		"Show what would be done without executing")
 
 	// pnpm persistent flags
-	pnpmCmd.PersistentFlags().StringVarP(&nodeOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	pnpmCmd.PersistentFlags().BoolVarP(&nodeVerbose, "verbose", "v", false,
 		"Show verbose output")
 	pnpmCmd.PersistentFlags().BoolVar(&nodeDryRun, "dry-run", false,
@@ -261,14 +255,9 @@ func runNodeStatus(cmd *cobra.Command, args []string) error {
 	helper := node.NewHelper(nodeVerbose, nodeDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -316,14 +305,9 @@ func runNodeDetect(cmd *cobra.Command, args []string) error {
 	helper := node.NewHelper(nodeVerbose, nodeDryRun)
 	pm := helper.DetectPackageManager()
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(pm)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(pm)
 	}
 
 	fmt.Fprintf(os.Stdout, "Package manager: %s\n", pm.Name)
@@ -361,14 +345,9 @@ func runNodeFind(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"node_modules": modules})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"node_modules": modules})
 	}
 
 	if len(modules) == 0 {
@@ -445,14 +424,9 @@ func runNodeCache(cmd *cobra.Command, args []string) error {
 	cacheDir := helper.GetNpmCacheDir()
 	cacheSize := helper.GetNpmCacheSize()
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]string{
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]string{
 			"cache_dir":  cacheDir,
 			"cache_size": cacheSize,
 		})
@@ -468,11 +442,6 @@ func runNvmStatus(cmd *cobra.Command, args []string) error {
 	helper := node.NewHelper(nodeVerbose, nodeDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
 	nvmStatus := map[string]interface{}{
 		"installed":      status.NvmInstalled,
 		"nvm_dir":        status.NvmDir,
@@ -480,9 +449,9 @@ func runNvmStatus(cmd *cobra.Command, args []string) error {
 		"node_installed": status.NodeInstalled,
 	}
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(nvmStatus)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(nvmStatus)
 	}
 
 	// Table format
@@ -516,14 +485,9 @@ func runNvmList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{
 			"versions":        versions,
 			"current_version": helper.GetCurrentNodeVersion(),
 		})
@@ -569,20 +533,15 @@ func runPnpmStatus(cmd *cobra.Command, args []string) error {
 	helper := node.NewHelper(nodeVerbose, nodeDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(nodeOutputFormat)
-	if err != nil {
-		return err
-	}
-
 	pnpmStatus := map[string]interface{}{
-		"installed":  status.PnpmInstalled,
-		"version":    status.PnpmVersion,
-		"pnpm_home":  status.PnpmHome,
+		"installed": status.PnpmInstalled,
+		"version":   status.PnpmVersion,
+		"pnpm_home": status.PnpmHome,
 	}
 
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(pnpmStatus)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(pnpmStatus)
 	}
 
 	// Table format

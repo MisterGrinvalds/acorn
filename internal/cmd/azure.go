@@ -6,12 +6,12 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/azure"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	azureOutputFormat string
 	azureDryRun       bool
 	azureVerbose      bool
 	azureSubscription string
@@ -257,8 +257,6 @@ func init() {
 	azureRGCmd.AddCommand(azureRGListCmd)
 
 	// Persistent flags
-	azureCmd.PersistentFlags().StringVarP(&azureOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	azureCmd.PersistentFlags().BoolVar(&azureDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	azureCmd.PersistentFlags().BoolVarP(&azureVerbose, "verbose", "v", false,
@@ -282,14 +280,9 @@ func runAzureStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -335,14 +328,9 @@ func runAzureWhoami(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(account)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(account)
 	}
 
 	fmt.Fprintf(os.Stdout, "Subscription: %s\n", account.SubscriptionName)
@@ -359,14 +347,9 @@ func runAzureSubscriptions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(subscriptions)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(subscriptions)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Azure Subscriptions"))
@@ -401,14 +384,9 @@ func runAzureOverview(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(overview)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(overview)
 	}
 
 	// Table format
@@ -494,14 +472,9 @@ func runAzureStorageList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(accounts)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(accounts)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Azure Storage Accounts"))
@@ -523,14 +496,9 @@ func runAzureAKSList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(clusters)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(clusters)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Azure AKS Clusters"))
@@ -557,14 +525,9 @@ func runAzureRGList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(azureOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(groups)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(groups)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Azure Resource Groups"))

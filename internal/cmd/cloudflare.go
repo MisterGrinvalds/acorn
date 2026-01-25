@@ -6,14 +6,14 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/cloudflare"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	cfOutputFormat string
-	cfDryRun       bool
-	cfVerbose      bool
+	cfDryRun  bool
+	cfVerbose bool
 )
 
 // cfCmd represents the cloudflare command group
@@ -354,8 +354,6 @@ func init() {
 	cfInitCmd.AddCommand(cfInitPagesCmd)
 
 	// Persistent flags
-	cfCmd.PersistentFlags().StringVarP(&cfOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	cfCmd.PersistentFlags().BoolVar(&cfDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	cfCmd.PersistentFlags().BoolVarP(&cfVerbose, "verbose", "v", false,
@@ -369,14 +367,9 @@ func runCfStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(cfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -481,14 +474,9 @@ func runCfOverview(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(cfOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(overview)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(overview)
 	}
 
 	// Table format

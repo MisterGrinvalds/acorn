@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ai/ollama"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	ollamaOutputFormat string
-	ollamaVerbose      bool
-	ollamaDryRun       bool
+	ollamaVerbose bool
+	ollamaDryRun  bool
 )
 
 // ollamaCmd represents the ollama command group
@@ -178,8 +178,6 @@ func init() {
 	ollamaCmd.AddCommand(ollamaExamplesCmd)
 
 	// Persistent flags
-	ollamaCmd.PersistentFlags().StringVarP(&ollamaOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	ollamaCmd.PersistentFlags().BoolVarP(&ollamaVerbose, "verbose", "v", false,
 		"Show verbose output")
 	ollamaCmd.PersistentFlags().BoolVar(&ollamaDryRun, "dry-run", false,
@@ -190,14 +188,9 @@ func runOllamaStatus(cmd *cobra.Command, args []string) error {
 	helper := ollama.NewHelper(ollamaVerbose, ollamaDryRun)
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(ollamaOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -246,14 +239,9 @@ func runOllamaModels(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(ollamaOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"models": models})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"models": models})
 	}
 
 	if len(models) == 0 {

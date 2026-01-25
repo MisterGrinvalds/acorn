@@ -67,8 +67,7 @@ func init() {
 
 	reviewCmd.Flags().BoolVar(&reviewAll, "all", false,
 		"Review all components")
-	reviewCmd.Flags().StringVarP(&outputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
+	// Output format is inherited from root command
 }
 
 func runReview(cmd *cobra.Command, args []string) error {

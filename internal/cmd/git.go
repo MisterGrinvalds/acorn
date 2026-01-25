@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	gitOutputFormat string
-	gitVerbose      bool
-	gitDryRun       bool
+	gitVerbose bool
+	gitDryRun  bool
 )
 
 // gitCmd represents the git command group
@@ -108,8 +108,6 @@ func init() {
 	gitCmd.AddCommand(gitReposDirCmd)
 
 	// Persistent flags
-	gitCmd.PersistentFlags().StringVarP(&gitOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	gitCmd.PersistentFlags().BoolVarP(&gitVerbose, "verbose", "v", false,
 		"Show verbose output")
 	gitCmd.PersistentFlags().BoolVar(&gitDryRun, "dry-run", false,
@@ -120,14 +118,9 @@ func runGitInfo(cmd *cobra.Command, args []string) error {
 	helper := git.NewHelper(gitVerbose)
 	info := helper.GetInfo()
 
-	format, err := output.ParseFormat(gitOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(info)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(info)
 	}
 
 	// Table format
@@ -165,14 +158,9 @@ func runGitContributors(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(gitOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string]interface{}{"contributors": contributors})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string]interface{}{"contributors": contributors})
 	}
 
 	// Table format
@@ -193,14 +181,9 @@ func runGitFind(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(gitOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(map[string][]string{"commits": commits})
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(map[string][]string{"commits": commits})
 	}
 
 	// Table format

@@ -5,16 +5,16 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/infisical"
+	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
 )
 
 var (
-	infisicalOutputFormat string
-	infisicalDryRun       bool
-	infisicalVerbose      bool
-	infisicalEnv          string
-	infisicalFormat       string
+	infisicalDryRun  bool
+	infisicalVerbose bool
+	infisicalEnv     string
+	infisicalFormat  string
 )
 
 // infisicalCmd represents the infisical command group
@@ -182,8 +182,6 @@ func init() {
 	infisicalExportCmd.Flags().StringVar(&infisicalFormat, "format", "dotenv", "Export format (dotenv|json|yaml|csv)")
 
 	// Persistent flags
-	infisicalCmd.PersistentFlags().StringVarP(&infisicalOutputFormat, "output", "o", "table",
-		"Output format (table|json|yaml)")
 	infisicalCmd.PersistentFlags().BoolVar(&infisicalDryRun, "dry-run", false,
 		"Show what would be done without executing")
 	infisicalCmd.PersistentFlags().BoolVarP(&infisicalVerbose, "verbose", "v", false,
@@ -198,14 +196,9 @@ func runInfisicalStatus(cmd *cobra.Command, args []string) error {
 	helper := newInfisicalHelper()
 	status := helper.GetStatus()
 
-	format, err := output.ParseFormat(infisicalOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(status)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(status)
 	}
 
 	// Table format
@@ -274,14 +267,9 @@ func runInfisicalSecrets(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := output.ParseFormat(infisicalOutputFormat)
-	if err != nil {
-		return err
-	}
-
-	if format != output.FormatTable {
-		printer := output.NewPrinter(os.Stdout, format)
-		return printer.Print(secrets)
+	ioHelper := ioutils.IO(cmd)
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(secrets)
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", output.Info("Secrets"))
