@@ -12,15 +12,17 @@ import (
 	_ "github.com/mistergrinvalds/acorn/internal/components/vcs/git"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	"github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	cfgFile string
-	debug   bool
-	cfg     *config.Config
+	cfgFile  string
+	debug    bool
+	cfg      *config.Config
+	ioConfig = io.NewIOConfig()
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -60,6 +62,14 @@ func init() {
 		"config file (default is $XDG_CONFIG_HOME/acorn/config.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false,
 		"enable debug output")
+
+	// Bind I/O flags to root command (inherited by all subcommands)
+	io.BindFlags(rootCmd, ioConfig)
+
+	// Set up I/O middleware for structured input/output
+	preRun, postRun := io.Middleware(ioConfig)
+	rootCmd.PersistentPreRunE = preRun
+	rootCmd.PersistentPostRunE = postRun
 
 	// Bind flags to viper
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
