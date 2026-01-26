@@ -12,6 +12,7 @@ import (
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // componentCmd represents the component command group
@@ -104,6 +105,29 @@ Examples:
 	RunE:              runComponentInfo,
 }
 
+// componentShowCmd shows specific component resources
+var componentShowCmd = &cobra.Command{
+	Use:   "show <component> [resource]",
+	Short: "Show component resources",
+	Long: `Show specific resources for a component.
+
+Resources:
+  aliases    - Show shell aliases
+  functions  - Show shell functions
+  files      - Show generated config files
+  env        - Show environment variables
+  config     - Show raw config.yaml content
+  all        - Show everything (default)
+
+Examples:
+  acorn component show docker
+  acorn component show docker aliases
+  acorn component show git functions --output json`,
+	Args:              cobra.RangeArgs(1, 2),
+	ValidArgsFunction: completeComponentShow,
+	RunE:              runComponentShow,
+}
+
 func init() {
 	rootCmd.AddCommand(componentCmd)
 
@@ -112,6 +136,7 @@ func init() {
 	componentCmd.AddCommand(componentStatusCmd)
 	componentCmd.AddCommand(componentValidateCmd)
 	componentCmd.AddCommand(componentInfoCmd)
+	componentCmd.AddCommand(componentShowCmd)
 
 	// Output format is inherited from root command
 }
@@ -446,4 +471,311 @@ func completeComponentNames(cmd *cobra.Command, args []string, toComplete string
 func commandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
+}
+
+// SaplingComponent represents a component from .sapling/config
+type SaplingComponent struct {
+	Name            string                       `yaml:"name"`
+	Description     string                       `yaml:"description"`
+	Version         string                       `yaml:"version"`
+	Env             map[string]string            `yaml:"env"`
+	Aliases         map[string]string            `yaml:"aliases"`
+	ShellFunctions  map[string]string            `yaml:"shell_functions"`
+	ConfigFiles     []string                     `yaml:"config_files"`
+	Install         map[string]interface{}       `yaml:"install"`
+}
+
+// getSaplingConfigRoot returns the .sapling/config directory
+func getSaplingConfigRoot() (string, error) {
+	saplingRoot, err := getSaplingRoot()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(saplingRoot, "config"), nil
+}
+
+// loadSaplingComponent loads a component from .sapling/config
+func loadSaplingComponent(name string) (*SaplingComponent, error) {
+	saplingConfigRoot, err := getSaplingConfigRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	configPath := filepath.Join(saplingConfigRoot, name, "config.yaml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config.yaml for %s: %w", name, err)
+	}
+
+	var comp SaplingComponent
+	if err := yaml.Unmarshal(data, &comp); err != nil {
+		return nil, fmt.Errorf("failed to parse config.yaml for %s: %w", name, err)
+	}
+
+	return &comp, nil
+}
+
+// listSaplingComponents returns all component names from .sapling/config
+func listSaplingComponents() ([]string, error) {
+	saplingConfigRoot, err := getSaplingConfigRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := os.ReadDir(saplingConfigRoot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read .sapling/config: %w", err)
+	}
+
+	var components []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(entry.Name(), ".") || entry.Name() == "shared" {
+			continue
+		}
+		// Check if config.yaml exists
+		configPath := filepath.Join(saplingConfigRoot, entry.Name(), "config.yaml")
+		if _, err := os.Stat(configPath); err == nil {
+			components = append(components, entry.Name())
+		}
+	}
+
+	return components, nil
+}
+
+// completeComponentShow provides completion for show command
+func completeComponentShow(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) == 0 {
+		// Complete component names
+		components, err := listSaplingComponents()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return components, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	if len(args) == 1 {
+		// Complete resource types
+		resources := []string{"aliases", "functions", "files", "env", "config", "all"}
+		return resources, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
+// runComponentShow executes the show command
+func runComponentShow(cmd *cobra.Command, args []string) error {
+	ioHelper := ioutils.IO(cmd)
+	componentName := args[0]
+
+	resource := "all"
+	if len(args) == 2 {
+		resource = args[1]
+	}
+
+	comp, err := loadSaplingComponent(componentName)
+	if err != nil {
+		return err
+	}
+
+	switch resource {
+	case "aliases":
+		return showAliases(comp, ioHelper)
+	case "functions":
+		return showFunctions(comp, ioHelper)
+	case "files":
+		return showFiles(comp, ioHelper)
+	case "env":
+		return showEnv(comp, ioHelper)
+	case "config":
+		return showConfig(componentName, ioHelper)
+	case "all":
+		return showAll(comp, componentName, ioHelper)
+	default:
+		return fmt.Errorf("unknown resource type: %s", resource)
+	}
+}
+
+// showAliases displays component aliases
+func showAliases(comp *SaplingComponent, ioHelper *ioutils.CommandIO) error {
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp.Aliases)
+	}
+
+	if len(comp.Aliases) == 0 {
+		fmt.Fprintln(os.Stdout, "No aliases defined")
+		return nil
+	}
+
+	table := output.NewTable("ALIAS", "COMMAND")
+	for alias, command := range comp.Aliases {
+		table.AddRow(alias, command)
+	}
+	table.Render(os.Stdout)
+	fmt.Fprintf(os.Stdout, "\nTotal: %d aliases\n", len(comp.Aliases))
+	return nil
+}
+
+// showFunctions displays component functions
+func showFunctions(comp *SaplingComponent, ioHelper *ioutils.CommandIO) error {
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp.ShellFunctions)
+	}
+
+	if len(comp.ShellFunctions) == 0 {
+		fmt.Fprintln(os.Stdout, "No functions defined")
+		return nil
+	}
+
+	table := output.NewTable("FUNCTION", "PREVIEW")
+	for name, script := range comp.ShellFunctions {
+		// Show first line of script as preview
+		lines := strings.Split(strings.TrimSpace(script), "\n")
+		preview := lines[0]
+		if len(preview) > 60 {
+			preview = preview[:57] + "..."
+		}
+		table.AddRow(name, preview)
+	}
+	table.Render(os.Stdout)
+	fmt.Fprintf(os.Stdout, "\nTotal: %d functions\n", len(comp.ShellFunctions))
+	return nil
+}
+
+// showFiles displays component config files
+func showFiles(comp *SaplingComponent, ioHelper *ioutils.CommandIO) error {
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp.ConfigFiles)
+	}
+
+	if len(comp.ConfigFiles) == 0 {
+		fmt.Fprintln(os.Stdout, "No config files defined")
+		return nil
+	}
+
+	table := output.NewTable("FILE")
+	for _, file := range comp.ConfigFiles {
+		table.AddRow(file)
+	}
+	table.Render(os.Stdout)
+	fmt.Fprintf(os.Stdout, "\nTotal: %d files\n", len(comp.ConfigFiles))
+	return nil
+}
+
+// showEnv displays component environment variables
+func showEnv(comp *SaplingComponent, ioHelper *ioutils.CommandIO) error {
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp.Env)
+	}
+
+	if len(comp.Env) == 0 {
+		fmt.Fprintln(os.Stdout, "No environment variables defined")
+		return nil
+	}
+
+	table := output.NewTable("VARIABLE", "VALUE")
+	for name, value := range comp.Env {
+		table.AddRow(name, value)
+	}
+	table.Render(os.Stdout)
+	fmt.Fprintf(os.Stdout, "\nTotal: %d variables\n", len(comp.Env))
+	return nil
+}
+
+// showConfig displays raw config.yaml content
+func showConfig(componentName string, ioHelper *ioutils.CommandIO) error {
+	saplingConfigRoot, err := getSaplingConfigRoot()
+	if err != nil {
+		return err
+	}
+
+	configPath := filepath.Join(saplingConfigRoot, componentName, "config.yaml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read config.yaml: %w", err)
+	}
+
+	if ioHelper.IsStructured() {
+		// For structured output, parse and output as structured data
+		var config map[string]interface{}
+		if err := yaml.Unmarshal(data, &config); err != nil {
+			return err
+		}
+		return ioHelper.WriteOutput(config)
+	}
+
+	fmt.Fprint(os.Stdout, string(data))
+	return nil
+}
+
+// showAll displays all component information
+func showAll(comp *SaplingComponent, componentName string, ioHelper *ioutils.CommandIO) error {
+	if ioHelper.IsStructured() {
+		return ioHelper.WriteOutput(comp)
+	}
+
+	// Header
+	fmt.Fprintf(os.Stdout, "%s\n", output.Info(componentName))
+	fmt.Fprintf(os.Stdout, "%s\n\n", strings.Repeat("=", len(componentName)))
+
+	if comp.Description != "" {
+		fmt.Fprintf(os.Stdout, "Description: %s\n", comp.Description)
+	}
+	if comp.Version != "" {
+		fmt.Fprintf(os.Stdout, "Version:     %s\n", comp.Version)
+	}
+	fmt.Fprintln(os.Stdout)
+
+	// Environment variables
+	if len(comp.Env) > 0 {
+		fmt.Fprintln(os.Stdout, output.Info("Environment Variables:"))
+		table := output.NewTable("VARIABLE", "VALUE")
+		for name, value := range comp.Env {
+			table.AddRow(name, value)
+		}
+		table.Render(os.Stdout)
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Aliases
+	if len(comp.Aliases) > 0 {
+		fmt.Fprintln(os.Stdout, output.Info("Aliases:"))
+		table := output.NewTable("ALIAS", "COMMAND")
+		for alias, command := range comp.Aliases {
+			table.AddRow(alias, command)
+		}
+		table.Render(os.Stdout)
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Functions
+	if len(comp.ShellFunctions) > 0 {
+		fmt.Fprintln(os.Stdout, output.Info("Shell Functions:"))
+		table := output.NewTable("FUNCTION", "PREVIEW")
+		for name, script := range comp.ShellFunctions {
+			lines := strings.Split(strings.TrimSpace(script), "\n")
+			preview := lines[0]
+			if len(preview) > 60 {
+				preview = preview[:57] + "..."
+			}
+			table.AddRow(name, preview)
+		}
+		table.Render(os.Stdout)
+		fmt.Fprintln(os.Stdout)
+	}
+
+	// Config files
+	if len(comp.ConfigFiles) > 0 {
+		fmt.Fprintln(os.Stdout, output.Info("Config Files:"))
+		table := output.NewTable("FILE")
+		for _, file := range comp.ConfigFiles {
+			table.AddRow(file)
+		}
+		table.Render(os.Stdout)
+		fmt.Fprintln(os.Stdout)
+	}
+
+	return nil
 }

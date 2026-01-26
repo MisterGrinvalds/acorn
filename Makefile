@@ -3,10 +3,12 @@
 # Modular Makefile for dotfiles, development tools, and testing
 #
 # Usage:
-#   make help          Show all available targets
-#   make status        Show environment status
-#   make test          Run quick tests
-#   make acorn-build   Build the acorn CLI
+#   make help             Show all available targets
+#   make status           Show environment status
+#   make test             Run quick tests
+#   make acorn-build      Build the acorn CLI
+#   make docker-status    Show Docker status
+#   make kubernetes-status Show Kubernetes status
 #
 # Structure:
 #   makefiles/core.mk      - Variables and setup
@@ -22,6 +24,11 @@
 #   makefiles/brew.mk      - Homebrew packages
 #   makefiles/claude.mk    - Claude Code integration
 #   makefiles/status.mk    - Status overview
+#
+# Component makefiles (per-tool):
+#   makefiles/docker.mk, kubernetes.mk, helm.mk, k9s.mk, argocd.mk,
+#   git.mk, github.mk, fzf.mk, tmux.mk, jq.mk, yq.mk, neovim.mk,
+#   terraform.mk, aws.mk, cloudflare.mk
 
 # Include all component makefiles
 include makefiles/core.mk
@@ -37,6 +44,23 @@ include makefiles/acorn.mk
 include makefiles/brew.mk
 include makefiles/claude.mk
 include makefiles/status.mk
+
+# Component-specific makefiles
+-include makefiles/docker.mk
+-include makefiles/kubernetes.mk
+-include makefiles/helm.mk
+-include makefiles/k9s.mk
+-include makefiles/argocd.mk
+-include makefiles/git.mk
+-include makefiles/github.mk
+-include makefiles/fzf.mk
+-include makefiles/tmux.mk
+-include makefiles/jq.mk
+-include makefiles/yq.mk
+-include makefiles/neovim.mk
+-include makefiles/terraform.mk
+-include makefiles/aws.mk
+-include makefiles/cloudflare.mk
 
 # Default target
 .DEFAULT_GOAL := help
