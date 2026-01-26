@@ -45,6 +45,7 @@ var componentOrder = []string{
 	"tailscale",
 	"pulumi",
 	"terraform",
+	"vault",
 
 	// Containers
 	"docker",
