@@ -56,6 +56,9 @@ var componentOrder = []string{
 	"huggingface",
 	"ollama",
 
+	// Data and API tools
+	"posting",
+
 	// Utilities
 	"tools",
 	"secrets",
