@@ -28,7 +28,7 @@
 # Component makefiles (per-tool):
 #   makefiles/docker.mk, kubernetes.mk, helm.mk, k9s.mk, argocd.mk,
 #   git.mk, github.mk, fzf.mk, tmux.mk, jq.mk, yq.mk, neovim.mk,
-#   terraform.mk, aws.mk, cloudflare.mk
+#   terraform.mk, aws.mk, cloudflare.mk, vault.mk
 
 # Include all component makefiles
 include makefiles/core.mk
@@ -61,6 +61,7 @@ include makefiles/status.mk
 -include makefiles/terraform.mk
 -include makefiles/aws.mk
 -include makefiles/cloudflare.mk
+-include makefiles/vault.mk
 
 # Default target
 .DEFAULT_GOAL := help

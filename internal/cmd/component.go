@@ -478,6 +478,7 @@ type SaplingComponent struct {
 	Name            string                       `yaml:"name"`
 	Description     string                       `yaml:"description"`
 	Version         string                       `yaml:"version"`
+	Category        string                       `yaml:"category"`
 	Env             map[string]string            `yaml:"env"`
 	Aliases         map[string]string            `yaml:"aliases"`
 	ShellFunctions  map[string]string            `yaml:"shell_functions"`
@@ -725,6 +726,9 @@ func showAll(comp *SaplingComponent, componentName string, ioHelper *ioutils.Com
 	}
 	if comp.Version != "" {
 		fmt.Fprintf(os.Stdout, "Version:     %s\n", comp.Version)
+	}
+	if comp.Category != "" {
+		fmt.Fprintf(os.Stdout, "Category:    %s\n", comp.Category)
 	}
 	fmt.Fprintln(os.Stdout)
 
