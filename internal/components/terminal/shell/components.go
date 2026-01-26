@@ -46,6 +46,11 @@ var componentOrder = []string{
 	"pulumi",
 	"terraform",
 
+	// Containers
+	"docker",
+	"docker-compose",
+	"lazydocker",
+
 	// AI and ML
 	"claude",
 	"huggingface",

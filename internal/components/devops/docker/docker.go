@@ -508,3 +508,186 @@ func (h *Helper) InspectContainer(container string) (map[string]interface{}, err
 
 	return result[0], nil
 }
+
+// ComposeStatus represents Docker Compose status.
+type ComposeStatus struct {
+	Installed    bool   `json:"installed" yaml:"installed"`
+	Version      string `json:"version,omitempty" yaml:"version,omitempty"`
+	ProjectName  string `json:"project_name,omitempty" yaml:"project_name,omitempty"`
+	ComposeFile  string `json:"compose_file,omitempty" yaml:"compose_file,omitempty"`
+	ServiceCount int    `json:"service_count" yaml:"service_count"`
+}
+
+// ComposeService represents a Docker Compose service.
+type ComposeService struct {
+	Name   string `json:"name" yaml:"name"`
+	Status string `json:"status" yaml:"status"`
+	Ports  string `json:"ports,omitempty" yaml:"ports,omitempty"`
+}
+
+// GetComposeStatus returns Docker Compose status for the current directory.
+func (h *Helper) GetComposeStatus(file string) *ComposeStatus {
+	status := &ComposeStatus{}
+
+	// Check if compose is available
+	cmd := exec.Command("docker", "compose", "version", "--short")
+	if out, err := cmd.Output(); err == nil {
+		status.Installed = true
+		status.Version = strings.TrimSpace(string(out))
+	} else {
+		return status
+	}
+
+	// Get project name and compose file
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+		status.ComposeFile = file
+	}
+	args = append(args, "config", "--format", "json")
+
+	cmd = exec.Command("docker", args...)
+	if out, err := cmd.Output(); err == nil {
+		var config map[string]interface{}
+		if json.Unmarshal(out, &config) == nil {
+			if name, ok := config["name"].(string); ok {
+				status.ProjectName = name
+			}
+			if services, ok := config["services"].(map[string]interface{}); ok {
+				status.ServiceCount = len(services)
+			}
+		}
+	}
+
+	return status
+}
+
+// GetComposeServices returns list of compose services.
+func (h *Helper) GetComposeServices(file string) ([]ComposeService, error) {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "ps", "--format", "{{.Service}}\t{{.Status}}\t{{.Ports}}")
+
+	cmd := exec.Command("docker", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get compose services: %w", err)
+	}
+
+	var services []ComposeService
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) >= 2 {
+			s := ComposeService{
+				Name:   parts[0],
+				Status: parts[1],
+			}
+			if len(parts) > 2 {
+				s.Ports = parts[2]
+			}
+			services = append(services, s)
+		}
+	}
+
+	return services, nil
+}
+
+// ComposeRestart restarts compose services.
+func (h *Helper) ComposeRestart(file string, services []string) error {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "restart")
+	args = append(args, services...)
+
+	if h.dryRun {
+		fmt.Printf("[dry-run] would run: docker %s\n", strings.Join(args, " "))
+		return nil
+	}
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ComposeBuild builds compose service images.
+func (h *Helper) ComposeBuild(file string, services []string) error {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "build")
+	args = append(args, services...)
+
+	if h.dryRun {
+		fmt.Printf("[dry-run] would run: docker %s\n", strings.Join(args, " "))
+		return nil
+	}
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ComposePull pulls compose service images.
+func (h *Helper) ComposePull(file string, services []string) error {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "pull")
+	args = append(args, services...)
+
+	if h.dryRun {
+		fmt.Printf("[dry-run] would run: docker %s\n", strings.Join(args, " "))
+		return nil
+	}
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ComposeExec executes a command in a compose service.
+func (h *Helper) ComposeExec(file, service string, command []string) error {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "exec", service)
+	args = append(args, command...)
+
+	if h.dryRun {
+		fmt.Printf("[dry-run] would run: docker %s\n", strings.Join(args, " "))
+		return nil
+	}
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ComposeConfig validates and prints compose configuration.
+func (h *Helper) ComposeConfig(file string) error {
+	args := []string{"compose"}
+	if file != "" {
+		args = append(args, "-f", file)
+	}
+	args = append(args, "config")
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
