@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,22 +23,25 @@ var (
 
 // GenerateResult contains the results of config generation.
 type GenerateResult struct {
-	Target          string         `json:"target"`
-	SharedAgents    int            `json:"shared_agents"`
-	SharedCommands  int            `json:"shared_commands"`
-	ClaudeAgents    int            `json:"claude_agents,omitempty"`
-	ClaudeCommands  int            `json:"claude_commands,omitempty"`
-	OpenCodeAgents  int            `json:"opencode_agents,omitempty"`
-	OpenCodeCommands int           `json:"opencode_commands,omitempty"`
-	Generated       bool           `json:"generated"`
-	Platforms       []PlatformInfo `json:"platforms,omitempty"`
+	Target           string         `json:"target"`
+	SharedAgents     int            `json:"shared_agents"`
+	SharedCommands   int            `json:"shared_commands"`
+	ClaudeAgents     int            `json:"claude_agents,omitempty"`
+	ClaudeCommands   int            `json:"claude_commands,omitempty"`
+	OpenCodeAgents   int            `json:"opencode_agents,omitempty"`
+	OpenCodeCommands int            `json:"opencode_commands,omitempty"`
+	Generated        bool           `json:"generated"`
+	DryRun           bool           `json:"dry_run,omitempty"`
+	Platforms        []PlatformInfo `json:"platforms,omitempty"`
+	Files            []string       `json:"files,omitempty"`
 }
 
 // PlatformInfo contains info about a generated platform.
 type PlatformInfo struct {
-	Name     string `json:"name"`
-	Agents   int    `json:"agents"`
-	Commands int    `json:"commands"`
+	Name     string   `json:"name"`
+	Agents   int      `json:"agents"`
+	Commands int      `json:"commands"`
+	Files    []string `json:"files,omitempty"`
 }
 
 // aiGenerateCmd generates platform configs from shared sources
@@ -115,9 +119,8 @@ func runAIGenerate(cmd *cobra.Command, args []string) error {
 		Generated:      false,
 	}
 
-	// If --list, just show counts
-	if aiGenerateList || aiGenerateDryRun {
-		// Count existing generated configs
+	// If --list, just show counts (no script run)
+	if aiGenerateList {
 		if target == "claude" || target == "all" {
 			result.ClaudeAgents, _ = countFiles(filepath.Join(claudeDir, "agents"), "*.md")
 			result.ClaudeCommands, _ = countFiles(filepath.Join(claudeDir, "commands"), "*.md")
@@ -137,73 +140,126 @@ func runAIGenerate(cmd *cobra.Command, args []string) error {
 			})
 		}
 
-		return outputGenerateResult(cmd, result, aiGenerateList)
+		return outputGenerateResult(cmd, result, true)
+	}
+
+	// If --dry-run, run script with ACORN_DRY_RUN=1 to get file list without writing
+	if aiGenerateDryRun {
+		result.DryRun = true
+		files, err := runGenerateScript(saplingDir, target, true)
+		if err != nil {
+			return err
+		}
+		result.Files = files
+		result.Platforms = buildPlatformInfo(files, &result)
+		return outputGenerateResult(cmd, result, false)
 	}
 
 	// Run generation script
+	files, err := runGenerateScript(saplingDir, target, false)
+	if err != nil {
+		return err
+	}
+
+	result.Generated = true
+	result.Files = files
+	result.Platforms = buildPlatformInfo(files, &result)
+
+	return outputGenerateResult(cmd, result, false)
+}
+
+// runGenerateScript executes the generate-configs.sh script and returns the list of files
+// it wrote (or would write in dry-run mode).
+func runGenerateScript(saplingDir, target string, dryRun bool) ([]string, error) {
 	scriptPath := filepath.Join(saplingDir, "scripts", "generate-configs.sh")
 	if _, err := os.Stat(scriptPath); err != nil {
-		return fmt.Errorf("generate script not found: %s", scriptPath)
+		return nil, fmt.Errorf("generate script not found: %s", scriptPath)
 	}
 
 	execCmd := exec.Command(scriptPath, target)
 	execCmd.Dir = saplingDir
 
-	if aiGenerateVerbose {
-		execCmd.Stdout = os.Stdout
-		execCmd.Stderr = os.Stderr
-		if err := execCmd.Run(); err != nil {
-			return fmt.Errorf("generation failed: %w", err)
-		}
-	} else {
-		// Capture output and parse counts
-		stdout, err := execCmd.StdoutPipe()
-		if err != nil {
-			return err
-		}
-		execCmd.Stderr = os.Stderr
+	if dryRun {
+		execCmd.Env = append(os.Environ(), "ACORN_DRY_RUN=1")
+	}
 
-		if err := execCmd.Start(); err != nil {
-			return fmt.Errorf("failed to start generation: %w", err)
-		}
+	stdout, err := execCmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	execCmd.Stderr = os.Stderr
 
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
-			line := scanner.Text()
-			// Parse "[INFO] Generated X Claude/OpenCode agents/commands"
-			if strings.Contains(line, "Generated") {
-				parseGeneratedLine(line, &result)
-			}
-		}
+	if err := execCmd.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start generation: %w", err)
+	}
 
-		if err := execCmd.Wait(); err != nil {
-			return fmt.Errorf("generation failed: %w", err)
+	var files []string
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// Parse [FILE] lines for file paths
+		if strings.Contains(line, "[FILE] would-write:") {
+			path := strings.TrimSpace(strings.SplitN(line, "would-write:", 2)[1])
+			files = append(files, path)
+		} else if strings.Contains(line, "[FILE] wrote:") {
+			path := strings.TrimSpace(strings.SplitN(line, "wrote:", 2)[1])
+			files = append(files, path)
+		}
+		// Pass through verbose output
+		if aiGenerateVerbose {
+			fmt.Fprintln(os.Stdout, line)
 		}
 	}
 
-	result.Generated = true
-
-	// Re-count after generation
-	if target == "claude" || target == "all" {
-		result.ClaudeAgents, _ = countFiles(filepath.Join(claudeDir, "agents"), "*.md")
-		result.ClaudeCommands, _ = countFiles(filepath.Join(claudeDir, "commands"), "*.md")
-		result.Platforms = append(result.Platforms, PlatformInfo{
-			Name:     "claude",
-			Agents:   result.ClaudeAgents,
-			Commands: result.ClaudeCommands,
-		})
-	}
-	if target == "opencode" || target == "all" {
-		result.OpenCodeAgents, _ = countFiles(filepath.Join(openCodeDir, "agents"), "*.md")
-		result.OpenCodeCommands, _ = countFiles(filepath.Join(openCodeDir, "commands"), "*.md")
-		result.Platforms = append(result.Platforms, PlatformInfo{
-			Name:     "opencode",
-			Agents:   result.OpenCodeAgents,
-			Commands: result.OpenCodeCommands,
-		})
+	if err := execCmd.Wait(); err != nil {
+		return nil, fmt.Errorf("generation failed: %w", err)
 	}
 
-	return outputGenerateResult(cmd, result, false)
+	sort.Strings(files)
+	return files, nil
+}
+
+// buildPlatformInfo groups file paths by platform and populates result counts.
+func buildPlatformInfo(files []string, result *GenerateResult) []PlatformInfo {
+	platformFiles := make(map[string][]string)
+	platformAgents := make(map[string]int)
+	platformCommands := make(map[string]int)
+
+	for _, f := range files {
+		parts := strings.SplitN(f, "/", 3)
+		if len(parts) < 2 {
+			continue
+		}
+		platform := parts[0] // "claude" or "opencode"
+		kind := parts[1]     // "agents" or "commands"
+
+		platformFiles[platform] = append(platformFiles[platform], f)
+		switch kind {
+		case "agents":
+			platformAgents[platform]++
+		case "commands":
+			platformCommands[platform]++
+		}
+	}
+
+	// Set result counts
+	result.ClaudeAgents = platformAgents["claude"]
+	result.ClaudeCommands = platformCommands["claude"]
+	result.OpenCodeAgents = platformAgents["opencode"]
+	result.OpenCodeCommands = platformCommands["opencode"]
+
+	var platforms []PlatformInfo
+	for _, name := range []string{"claude", "opencode"} {
+		if f, ok := platformFiles[name]; ok {
+			platforms = append(platforms, PlatformInfo{
+				Name:     name,
+				Agents:   platformAgents[name],
+				Commands: platformCommands[name],
+				Files:    f,
+			})
+		}
+	}
+	return platforms
 }
 
 func outputGenerateResult(cmd *cobra.Command, result GenerateResult, listOnly bool) error {
@@ -216,6 +272,8 @@ func outputGenerateResult(cmd *cobra.Command, result GenerateResult, listOnly bo
 	// Table format
 	if listOnly {
 		fmt.Fprintln(os.Stdout, output.Info("Shared Configuration (Source of Truth)"))
+	} else if result.DryRun {
+		fmt.Fprintln(os.Stdout, output.Warning("Dry Run — would generate:"))
 	} else {
 		fmt.Fprintln(os.Stdout, output.Success("Generation Complete"))
 	}
@@ -245,10 +303,21 @@ func outputGenerateResult(cmd *cobra.Command, result GenerateResult, listOnly bo
 		table2.Render(os.Stdout)
 	}
 
-	if !listOnly {
-		fmt.Fprintln(os.Stdout)
-		fmt.Fprintf(os.Stdout, "Generated configs include: %s\n",
-			output.Info("# Generated by acorn - DO NOT EDIT"))
+	// Print file list for dry-run and normal generation
+	if !listOnly && len(result.Platforms) > 0 {
+		for _, p := range result.Platforms {
+			if len(p.Files) > 0 {
+				fmt.Fprintln(os.Stdout)
+				if result.DryRun {
+					fmt.Fprintf(os.Stdout, "  %s files in scope:\n", output.Info(p.Name))
+				} else {
+					fmt.Fprintf(os.Stdout, "  %s files changed:\n", output.Info(p.Name))
+				}
+				for _, f := range p.Files {
+					fmt.Fprintf(os.Stdout, "    %s\n", f)
+				}
+			}
+		}
 	}
 
 	return nil
