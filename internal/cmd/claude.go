@@ -8,6 +8,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/ai/claude"
 	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -340,6 +341,7 @@ func init() {
 	claudeCmd.AddCommand(claudeAggregateCmd)
 	claudeCmd.AddCommand(claudeClearCmd)
 	claudeCmd.AddCommand(claudeHelpCmd)
+	claudeCmd.AddCommand(configcmd.NewConfigRouter("claude"))
 
 	// Sync subcommands
 	claudeSyncCmd.AddCommand(claudeSyncStatusCmd)

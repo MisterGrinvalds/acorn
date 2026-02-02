@@ -1,5 +1,8 @@
 // Package configcmd provides a universal config subcommand router for any component
-// that has a `files:` block in its .sapling/config/<component>/config.yaml.
+// with a .sapling/config/<component>/config.yaml.
+//
+// Components with a `files:` block get full path/source/generate/show functionality.
+// Components without a `files:` block still get source info (config.yaml location).
 //
 // Usage:
 //
@@ -20,7 +23,7 @@ import (
 )
 
 // NewConfigRouter returns a `config` cobra.Command with universal subcommands
-// for any component that declares a `files:` block.
+// for managing a component's acorn-managed configuration.
 func NewConfigRouter(component string) *cobra.Command {
 	configCmd := &cobra.Command{
 		Use:   "config",
@@ -88,27 +91,26 @@ Examples:
 	return configCmd
 }
 
+// componentConfigPath returns the path to a component's config.yaml.
+func componentConfigPath(component string) string {
+	root, _ := config.SaplingRoot()
+	return filepath.Join(root, "config", component, "config.yaml")
+}
+
 // loadComponentFiles loads and parses the files: block from a component's config.yaml.
-func loadComponentFiles(component string) ([]config.FileConfig, string, error) {
+// Returns nil files (not an error) if the component has no files: block.
+func loadComponentFiles(component string) ([]config.FileConfig, error) {
 	configData, err := config.GetComponentConfig(component)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to load config for %s: %w", component, err)
+		return nil, fmt.Errorf("failed to load config for %s: %w", component, err)
 	}
 
 	var base config.BaseConfig
 	if err := yaml.Unmarshal(configData, &base); err != nil {
-		return nil, "", fmt.Errorf("failed to parse config for %s: %w", component, err)
+		return nil, fmt.Errorf("failed to parse config for %s: %w", component, err)
 	}
 
-	if len(base.Files) == 0 {
-		return nil, "", fmt.Errorf("component %s has no files: block in config.yaml", component)
-	}
-
-	// Resolve the config.yaml path for display
-	configDir, _ := config.SaplingRoot()
-	configPath := filepath.Join(configDir, "config", component, "config.yaml")
-
-	return base.Files, configPath, nil
+	return base.Files, nil
 }
 
 // -- path subcommand --
@@ -124,9 +126,18 @@ type PathInfo struct {
 func runConfigPath(component string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ioHelper := ioutils.IO(cmd)
-		files, _, err := loadComponentFiles(component)
+		files, err := loadComponentFiles(component)
 		if err != nil {
 			return err
+		}
+
+		if len(files) == 0 {
+			if ioHelper.IsStructured() {
+				return ioHelper.WriteOutput([]PathInfo{})
+			}
+			fmt.Fprintf(os.Stdout, "%s has no managed config files (no files: block in config.yaml)\n",
+				output.Info(component))
+			return nil
 		}
 
 		genDir, _ := config.GeneratedDir()
@@ -170,6 +181,7 @@ func runConfigPath(component string) func(*cobra.Command, []string) error {
 type SourceInfo struct {
 	Component    string     `json:"component" yaml:"component"`
 	ConfigPath   string     `json:"config_path" yaml:"config_path"`
+	HasFiles     bool       `json:"has_files" yaml:"has_files"`
 	GeneratedDir string     `json:"generated_dir" yaml:"generated_dir"`
 	Files        []FileLink `json:"files" yaml:"files"`
 }
@@ -186,16 +198,20 @@ type FileLink struct {
 func runConfigSource(component string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ioHelper := ioutils.IO(cmd)
-		files, configPath, err := loadComponentFiles(component)
-		if err != nil {
-			return err
-		}
 
+		configPath := componentConfigPath(component)
 		genDir, _ := config.GeneratedDir()
+
+		files, err := loadComponentFiles(component)
+		if err != nil {
+			// Config.yaml doesn't exist or can't be parsed — still show what we can
+			files = nil
+		}
 
 		info := SourceInfo{
 			Component:    component,
 			ConfigPath:   configPath,
+			HasFiles:     len(files) > 0,
 			GeneratedDir: genDir,
 			Files:        make([]FileLink, 0, len(files)),
 		}
@@ -212,17 +228,14 @@ func runConfigSource(component string) func(*cobra.Command, []string) error {
 				GeneratedPath: genPath,
 			}
 
-			// Check if generated file exists
 			if genPath != "" {
-				if _, err := os.Stat(genPath); err == nil {
+				if _, statErr := os.Stat(genPath); statErr == nil {
 					link.GeneratedExists = true
 				}
 			}
 
-			// Check symlink status at target
-			if linkDest, err := os.Readlink(expanded); err == nil {
+			if linkDest, linkErr := os.Readlink(expanded); linkErr == nil {
 				link.SymlinkExists = true
-				// Check if it points to the generated file
 				if genPath != "" {
 					absLink, _ := filepath.Abs(linkDest)
 					absGen, _ := filepath.Abs(genPath)
@@ -240,8 +253,14 @@ func runConfigSource(component string) func(*cobra.Command, []string) error {
 		fmt.Fprintf(os.Stdout, "%s\n\n", output.Info(component+" Configuration Source"))
 		fmt.Fprintf(os.Stdout, "  Component:      %s\n", info.Component)
 		fmt.Fprintf(os.Stdout, "  Config YAML:    %s\n", info.ConfigPath)
-		fmt.Fprintf(os.Stdout, "  Generated dir:  %s\n\n", info.GeneratedDir)
+		fmt.Fprintf(os.Stdout, "  Generated dir:  %s\n", info.GeneratedDir)
 
+		if !info.HasFiles {
+			fmt.Fprintf(os.Stdout, "\n  %s\n", output.Warning("No files: block defined"))
+			return nil
+		}
+
+		fmt.Fprintln(os.Stdout)
 		for _, fl := range info.Files {
 			fmt.Fprintf(os.Stdout, "  Target: %s\n", fl.Target)
 			if fl.GeneratedPath != "" {
@@ -273,9 +292,18 @@ func runConfigSource(component string) func(*cobra.Command, []string) error {
 func runConfigGenerate(component string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ioHelper := ioutils.IO(cmd)
-		files, _, err := loadComponentFiles(component)
+		files, err := loadComponentFiles(component)
 		if err != nil {
 			return err
+		}
+
+		if len(files) == 0 {
+			if ioHelper.IsStructured() {
+				return ioHelper.WriteOutput([]*configfile.GeneratedFile{})
+			}
+			fmt.Fprintf(os.Stdout, "%s has no files: block — nothing to generate\n",
+				output.Info(component))
+			return nil
 		}
 
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
@@ -283,9 +311,9 @@ func runConfigGenerate(component string) func(*cobra.Command, []string) error {
 
 		results := make([]*configfile.GeneratedFile, 0, len(files))
 		for _, f := range files {
-			result, err := manager.GenerateFileForComponent(component, f)
-			if err != nil {
-				return fmt.Errorf("failed to generate %s: %w", f.Target, err)
+			result, genErr := manager.GenerateFileForComponent(component, f)
+			if genErr != nil {
+				return fmt.Errorf("failed to generate %s: %w", f.Target, genErr)
 			}
 			results = append(results, result)
 		}
@@ -320,9 +348,18 @@ func runConfigGenerate(component string) func(*cobra.Command, []string) error {
 func runConfigShow(component string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ioHelper := ioutils.IO(cmd)
-		files, _, err := loadComponentFiles(component)
+		files, err := loadComponentFiles(component)
 		if err != nil {
 			return err
+		}
+
+		if len(files) == 0 {
+			if ioHelper.IsStructured() {
+				return ioHelper.WriteOutput([]struct{}{})
+			}
+			fmt.Fprintf(os.Stdout, "%s has no files: block — nothing to show\n",
+				output.Info(component))
+			return nil
 		}
 
 		genDir, err := config.GeneratedDir()
@@ -341,12 +378,12 @@ func runConfigShow(component string) func(*cobra.Command, []string) error {
 			expanded := configfile.ExpandPath(f.Target)
 			genPath := filepath.Join(genDir, component, filepath.Base(expanded))
 
-			content, err := os.ReadFile(genPath)
-			if err != nil {
+			content, readErr := os.ReadFile(genPath)
+			if readErr != nil {
 				entries = append(entries, ShowEntry{
 					File:    genPath,
 					Format:  f.Format,
-					Content: fmt.Sprintf("(not found: %s)", err),
+					Content: fmt.Sprintf("(not found: %s)", readErr),
 				})
 				continue
 			}

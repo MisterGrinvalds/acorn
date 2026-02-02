@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -115,16 +116,7 @@ Examples:
 	RunE: runGhosttyRestore,
 }
 
-// ghosttyConfigCmd shows config path
-var ghosttyConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Show or edit Ghostty config",
-	Long: `Show the Ghostty config file path.
-
-Examples:
-  acorn ghostty config`,
-	RunE: runGhosttyConfig,
-}
+// ghosttyConfigCmd is provided by the universal config router
 
 // ghosttyInstallCmd installs Ghostty
 var ghosttyInstallCmd = &cobra.Command{
@@ -152,7 +144,7 @@ func init() {
 	ghosttyCmd.AddCommand(ghosttyBackupCmd)
 	ghosttyCmd.AddCommand(ghosttyBackupsCmd)
 	ghosttyCmd.AddCommand(ghosttyRestoreCmd)
-	ghosttyCmd.AddCommand(ghosttyConfigCmd)
+	ghosttyCmd.AddCommand(configcmd.NewConfigRouter("ghostty"))
 
 	// Persistent flags
 	ghosttyCmd.PersistentFlags().BoolVar(&ghosttyDryRun, "dry-run", false,
@@ -308,12 +300,6 @@ func runGhosttyRestore(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stdout, "%s Config restored from: %s\n", output.Success("✓"), args[0])
 	fmt.Fprintln(os.Stdout, "Press Cmd+Shift+, (macOS) or Ctrl+Shift+, (Linux) to reload.")
 
-	return nil
-}
-
-func runGhosttyConfig(cmd *cobra.Command, args []string) error {
-	helper := ghostty.NewHelper(ghosttyVerbose)
-	fmt.Fprintln(os.Stdout, helper.GetConfigPath())
 	return nil
 }
 

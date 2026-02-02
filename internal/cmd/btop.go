@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/sysadm/btop"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -141,6 +142,7 @@ func init() {
 	btopCmd.AddCommand(btopInstallCmd)
 	btopCmd.AddCommand(btopLaunchCmd)
 	btopCmd.AddCommand(btopGenerateCmd)
+	btopCmd.AddCommand(configcmd.NewConfigRouter("btop"))
 
 	// Theme subcommands
 	btopCmd.AddCommand(btopThemesCmd)

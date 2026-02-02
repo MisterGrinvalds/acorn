@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mistergrinvalds/acorn/internal/components/mail/neomutt"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -255,6 +256,7 @@ func init() {
 
 	// Generate command
 	neomuttCmd.AddCommand(neomuttGenerateCmd)
+	neomuttCmd.AddCommand(configcmd.NewConfigRouter("neomutt"))
 
 	// Account add subcommands
 	neomuttAccountsCmd.AddCommand(neomuttAccountAddCmd)

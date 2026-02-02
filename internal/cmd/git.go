@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -106,6 +107,7 @@ func init() {
 	gitCmd.AddCommand(gitFindCmd)
 	gitCmd.AddCommand(gitCleanBranchesCmd)
 	gitCmd.AddCommand(gitReposDirCmd)
+	gitCmd.AddCommand(configcmd.NewConfigRouter("git"))
 
 	// Persistent flags
 	gitCmd.PersistentFlags().BoolVarP(&gitVerbose, "verbose", "v", false,
