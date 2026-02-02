@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ide/vscode"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -150,13 +151,6 @@ Examples:
 	RunE: runVscodeExtEssentials,
 }
 
-// vscodeConfigCmd is the parent for config commands
-var vscodeConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Configuration management commands",
-	Long:  `Commands for managing VS Code configuration.`,
-}
-
 // vscodeConfigSyncCmd syncs config
 var vscodeConfigSyncCmd = &cobra.Command{
 	Use:   "sync",
@@ -171,18 +165,7 @@ Examples:
 	RunE: runVscodeConfigSync,
 }
 
-// vscodeConfigPathCmd shows config paths
-var vscodeConfigPathCmd = &cobra.Command{
-	Use:   "path",
-	Short: "Show VS Code configuration paths",
-	Long: `Display the paths to VS Code configuration files.
-
-Examples:
-  acorn vscode config path
-  acorn vscode config path -o json`,
-	Aliases: []string{"paths"},
-	RunE:    runVscodeConfigPath,
-}
+// vscodeConfigPathCmd is now provided by the universal config router
 
 func init() {
 	ideCmd.AddCommand(vscodeCmd)
@@ -192,7 +175,9 @@ func init() {
 	vscodeCmd.AddCommand(vscodeWorkspaceCmd)
 	vscodeCmd.AddCommand(vscodeProjectCmd)
 	vscodeCmd.AddCommand(vscodeExtCmd)
-	vscodeCmd.AddCommand(vscodeConfigCmd)
+	vscodeConfigRouter := configcmd.NewConfigRouter("vscode")
+	vscodeConfigRouter.AddCommand(vscodeConfigSyncCmd)
+	vscodeCmd.AddCommand(vscodeConfigRouter)
 
 	// Project subcommands
 	vscodeProjectCmd.AddCommand(vscodeProjectNewCmd)
@@ -202,10 +187,6 @@ func init() {
 	vscodeExtCmd.AddCommand(vscodeExtInstallCmd)
 	vscodeExtCmd.AddCommand(vscodeExtExportCmd)
 	vscodeExtCmd.AddCommand(vscodeExtEssentialsCmd)
-
-	// Config subcommands
-	vscodeConfigCmd.AddCommand(vscodeConfigSyncCmd)
-	vscodeConfigCmd.AddCommand(vscodeConfigPathCmd)
 
 	// Persistent flags
 	vscodeCmd.PersistentFlags().BoolVar(&vscodeDryRun, "dry-run", false,
@@ -394,22 +375,4 @@ func runVscodeConfigSync(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runVscodeConfigPath(cmd *cobra.Command, args []string) error {
-	ioHelper := ioutils.IO(cmd)
-	helper := vscode.NewHelper(vscodeVerbose, vscodeDryRun)
-	paths := helper.GetConfigPaths()
-
-	if ioHelper.IsStructured() {
-		return ioHelper.WriteOutput(paths)
-	}
-
-	// Table format
-	fmt.Fprintf(os.Stdout, "%s\n\n", output.Info("VS Code Configuration Paths"))
-	fmt.Fprintf(os.Stdout, "User Directory:  %s\n", paths.UserDir)
-	fmt.Fprintf(os.Stdout, "Settings:        %s\n", paths.Settings)
-	fmt.Fprintf(os.Stdout, "Keybindings:     %s\n", paths.Keybindings)
-	fmt.Fprintf(os.Stdout, "Extensions:      %s\n", paths.Extensions)
-	fmt.Fprintf(os.Stdout, "Workspaces:      %s\n", paths.WorkspaceDir)
-
-	return nil
-}
+// runVscodeConfigPath has been replaced by the universal config router: acorn vscode config path

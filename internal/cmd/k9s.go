@@ -5,8 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/k9s"
-	"github.com/mistergrinvalds/acorn/internal/utils/config"
-	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +17,6 @@ var (
 	k9sCommand   string
 	k9sReadonly  bool
 	k9sHeadless  bool
-	k9sDryRun    bool
 )
 
 // k9sCmd represents the k9s command group
@@ -78,10 +76,10 @@ Examples:
 	RunE:    runK9sKeys,
 }
 
-// k9sConfigCmd edits config
-var k9sConfigCmd = &cobra.Command{
-	Use:   "config [type]",
-	Short: "Edit k9s configuration",
+// k9sEditCmd opens k9s config files in editor
+var k9sEditCmd = &cobra.Command{
+	Use:   "edit [type]",
+	Short: "Edit k9s configuration in editor",
 	Long: `Open k9s configuration files in your editor.
 
 Config types:
@@ -94,12 +92,11 @@ Config types:
 Creates default config files if they don't exist.
 
 Examples:
-  acorn k9s config
-  acorn k9s config plugins
-  acorn k9s config hotkeys`,
-	Aliases: []string{"edit"},
-	Args:    cobra.MaximumNArgs(1),
-	RunE:    runK9sConfig,
+  acorn k9s edit
+  acorn k9s edit plugins
+  acorn k9s edit hotkeys`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runK9sConfig,
 }
 
 // k9sInfoCmd shows k9s info
@@ -152,26 +149,7 @@ Examples:
 	RunE:    runK9sNamespaces,
 }
 
-// k9sGenerateCmd generates k9s config files
-var k9sGenerateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generate k9s configuration files",
-	Long: `Generate k9s configuration files from component template.
-
-Generates the following files:
-  - ~/.config/k9s/config.yaml    (main config with skin)
-  - ~/.config/k9s/aliases.yaml   (resource aliases)
-  - ~/.config/k9s/plugins.yaml   (custom plugins)
-  - ~/.config/k9s/hotkeys.yaml   (keyboard shortcuts)
-  - ~/.config/k9s/views.yaml     (custom column layouts)
-  - ~/.config/k9s/skins/         (catppuccin themes)
-
-Examples:
-  acorn k9s generate
-  acorn k9s generate --dry-run`,
-	Aliases: []string{"gen", "init"},
-	RunE:    runK9sGenerate,
-}
+// k9s generate is now provided by the universal config router: acorn k9s config generate
 
 func init() {
 	devopsCmd.AddCommand(k9sCmd)
@@ -180,16 +158,12 @@ func init() {
 	k9sCmd.AddCommand(k9sStatusCmd)
 	k9sCmd.AddCommand(k9sLaunchCmd)
 	k9sCmd.AddCommand(k9sKeysCmd)
-	k9sCmd.AddCommand(k9sConfigCmd)
+	k9sCmd.AddCommand(configcmd.NewConfigRouter("k9s"))
+	k9sCmd.AddCommand(k9sEditCmd)
 	k9sCmd.AddCommand(k9sInfoCmd)
 	k9sCmd.AddCommand(k9sSkinsCmd)
 	k9sCmd.AddCommand(k9sContextsCmd)
 	k9sCmd.AddCommand(k9sNamespacesCmd)
-	k9sCmd.AddCommand(k9sGenerateCmd)
-
-	// Generate command flags
-	k9sGenerateCmd.Flags().BoolVar(&k9sDryRun, "dry-run", false,
-		"Show what would be generated without writing files")
 
 	// Persistent flags
 	k9sCmd.PersistentFlags().BoolVarP(&k9sVerbose, "verbose", "v", false,
@@ -389,54 +363,4 @@ func runK9sNamespaces(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runK9sGenerate(cmd *cobra.Command, args []string) error {
-	// Load the k9s component config
-	loader := config.NewComponentLoader()
-	componentConfig, err := loader.LoadBase("k9s")
-	if err != nil {
-		return fmt.Errorf("failed to load k9s component config: %w", err)
-	}
-
-	if len(componentConfig.Files) == 0 {
-		return fmt.Errorf("no files configured for k9s component")
-	}
-
-	// Create config file manager (write directly to target paths, not generated dir)
-	manager := &configfile.Manager{}
-	if k9sDryRun {
-		manager = configfile.NewManagerWithGeneratedDir("", true)
-	}
-
-	fmt.Println("Generating k9s configuration files...")
-	if k9sDryRun {
-		fmt.Println("(dry-run mode - no files will be written)")
-	}
-	fmt.Println()
-
-	var generated []*configfile.GeneratedFile
-	for _, fc := range componentConfig.Files {
-		result, err := manager.GenerateFileForComponent("k9s", fc)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  Error generating %s: %v\n", fc.Target, err)
-			continue
-		}
-		generated = append(generated, result)
-
-		target := configfile.ExpandPath(fc.Target)
-		if k9sDryRun {
-			fmt.Printf("  Would generate: %s\n", target)
-		} else {
-			fmt.Printf("  Generated: %s\n", target)
-		}
-	}
-
-	fmt.Println()
-	if k9sDryRun {
-		fmt.Printf("Would generate %d files\n", len(generated))
-	} else {
-		fmt.Printf("Generated %d files\n", len(generated))
-		fmt.Println("\nNote: Restart k9s for changes to take effect.")
-	}
-
-	return nil
-}
+// runK9sGenerate has been replaced by the universal config router: acorn k9s config generate

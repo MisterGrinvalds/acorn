@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tmuxpkg "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -114,13 +115,6 @@ var tmuxTPMPluginsUpdateCmd = &cobra.Command{
 Examples:
   acorn tmux tpm plugins-update`,
 	RunE: runTmuxTPMPluginsUpdate,
-}
-
-// tmuxConfigCmd is the parent for config subcommands
-var tmuxConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Configuration management",
-	Long:  `Commands for managing tmux configuration.`,
 }
 
 // tmuxConfigReloadCmd reloads the config
@@ -279,7 +273,9 @@ func init() {
 	tmuxCmd.AddCommand(tmuxInstallCmd)
 	tmuxCmd.AddCommand(tmuxSessionCmd)
 	tmuxCmd.AddCommand(tmuxTPMCmd)
-	tmuxCmd.AddCommand(tmuxConfigCmd)
+	tmuxConfigRouter := configcmd.NewConfigRouter("tmux")
+	tmuxConfigRouter.AddCommand(tmuxConfigReloadCmd)
+	tmuxCmd.AddCommand(tmuxConfigRouter)
 	tmuxCmd.AddCommand(tmuxSmugCmd)
 
 	// Session subcommands
@@ -290,9 +286,6 @@ func init() {
 	tmuxTPMCmd.AddCommand(tmuxTPMUpdateCmd)
 	tmuxTPMCmd.AddCommand(tmuxTPMPluginsInstallCmd)
 	tmuxTPMCmd.AddCommand(tmuxTPMPluginsUpdateCmd)
-
-	// Config subcommands
-	tmuxConfigCmd.AddCommand(tmuxConfigReloadCmd)
 
 	// Smug subcommands
 	tmuxSmugCmd.AddCommand(tmuxSmugListCmd)
