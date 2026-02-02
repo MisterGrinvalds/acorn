@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/ai/huggingface"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -108,6 +109,7 @@ func init() {
 	hfCmd.AddCommand(hfPipelinesCmd)
 	hfCmd.AddCommand(hfCacheCmd)
 	hfCmd.AddCommand(hfClearCmd)
+	hfCmd.AddCommand(configcmd.NewConfigRouter("huggingface"))
 
 	// Persistent flags
 	hfCmd.PersistentFlags().BoolVarP(&hfVerbose, "verbose", "v", false,

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/infisical"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -173,6 +174,7 @@ func init() {
 	infisicalCmd.AddCommand(infisicalRunCmd)
 	infisicalCmd.AddCommand(infisicalExportCmd)
 	infisicalCmd.AddCommand(infisicalScanCmd)
+	infisicalCmd.AddCommand(configcmd.NewConfigRouter("infisical"))
 
 	// Environment flag for multiple commands
 	infisicalSecretsCmd.Flags().StringVarP(&infisicalEnv, "env", "e", "", "Environment (dev, staging, production)")

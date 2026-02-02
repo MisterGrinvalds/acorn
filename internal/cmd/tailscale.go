@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/network/tailscale"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -173,6 +174,7 @@ func init() {
 	tailscaleCmd.AddCommand(tailscaleUpCmd)
 	tailscaleCmd.AddCommand(tailscaleDownCmd)
 	tailscaleCmd.AddCommand(tailscaleNetcheckCmd)
+	tailscaleCmd.AddCommand(configcmd.NewConfigRouter("tailscale"))
 
 	// Persistent flags
 	tailscaleCmd.PersistentFlags().BoolVarP(&tailscaleVerbose, "verbose", "v", false,

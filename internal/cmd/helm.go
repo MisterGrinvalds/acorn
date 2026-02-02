@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/devops/helm"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -291,6 +292,7 @@ func init() {
 	helmCmd.AddCommand(helmLintCmd)
 	helmCmd.AddCommand(helmCreateCmd)
 	helmCmd.AddCommand(helmPluginsCmd)
+	helmCmd.AddCommand(configcmd.NewConfigRouter("helm"))
 
 	// Persistent flags (output format is inherited from root command)
 	helmCmd.PersistentFlags().BoolVarP(&helmVerbose, "verbose", "v", false,

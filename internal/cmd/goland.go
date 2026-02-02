@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/ide/goland"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -91,6 +92,7 @@ func init() {
 	golandCmd.AddCommand(golandLaunchCmd)
 	golandCmd.AddCommand(golandOpenCmd)
 	golandCmd.AddCommand(golandCLILinkCmd)
+	golandCmd.AddCommand(configcmd.NewConfigRouter("goland"))
 
 	// Open flags
 	golandOpenCmd.Flags().IntVar(&golandLine, "line", 0, "Line number to jump to")

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/terraform"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -210,6 +211,7 @@ func init() {
 	terraformCmd.AddCommand(tfStateCmd)
 	terraformCmd.AddCommand(tfRefreshCmd)
 	terraformCmd.AddCommand(tfInstallCmd)
+	terraformCmd.AddCommand(configcmd.NewConfigRouter("terraform"))
 
 	// Init flags
 	tfInitCmd.Flags().BoolVar(&tfUpgrade, "upgrade", false, "Upgrade providers")

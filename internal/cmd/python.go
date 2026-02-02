@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/programming/python"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -228,6 +229,7 @@ func init() {
 
 	// Setup subcommands
 	pythonCmd.AddCommand(pythonSetupCmd)
+	pythonCmd.AddCommand(configcmd.NewConfigRouter("python"))
 	pythonSetupCmd.AddCommand(pythonSetupIPythonCmd)
 	pythonSetupCmd.AddCommand(pythonSetupDevtoolsCmd)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/datagrip"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -104,6 +105,7 @@ func init() {
 
 	// CLI subcommands
 	datagripCmd.AddCommand(datagripCLICmd)
+	datagripCmd.AddCommand(configcmd.NewConfigRouter("datagrip"))
 	datagripCLICmd.AddCommand(datagripCLICreateCmd)
 
 	// Flags

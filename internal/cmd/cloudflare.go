@@ -8,6 +8,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -350,6 +351,7 @@ func init() {
 
 	// Init subcommands
 	cfCmd.AddCommand(cfInitCmd)
+	cfCmd.AddCommand(configcmd.NewConfigRouter("cloudflare"))
 	cfInitCmd.AddCommand(cfInitWorkerCmd)
 	cfInitCmd.AddCommand(cfInitPagesCmd)
 

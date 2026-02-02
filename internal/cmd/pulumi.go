@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/cloud/pulumi"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -200,6 +201,7 @@ func init() {
 	pulumiCmd.AddCommand(pulumiOutputsCmd)
 	pulumiCmd.AddCommand(pulumiNewCmd)
 	pulumiCmd.AddCommand(pulumiInstallCmd)
+	pulumiCmd.AddCommand(configcmd.NewConfigRouter("pulumi"))
 
 	// Login flags
 	pulumiLoginCmd.Flags().StringVar(&pulumiBackend, "backend", "", "Backend URL")

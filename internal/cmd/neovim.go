@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/ide/neovim"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -94,6 +95,7 @@ func init() {
 	nvimCmd.AddCommand(nvimUpdateCmd)
 	nvimCmd.AddCommand(nvimCleanCmd)
 	nvimCmd.AddCommand(nvimPluginCmd)
+	nvimCmd.AddCommand(configcmd.NewConfigRouter("neovim"))
 
 	// Persistent flags
 	nvimCmd.PersistentFlags().BoolVarP(&nvimVerbose, "verbose", "v", false,

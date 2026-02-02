@@ -8,6 +8,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -254,6 +255,7 @@ func init() {
 
 	// Resource Group subcommands
 	azureCmd.AddCommand(azureRGCmd)
+	azureCmd.AddCommand(configcmd.NewConfigRouter("azure"))
 	azureRGCmd.AddCommand(azureRGListCmd)
 
 	// Persistent flags

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/postman"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -130,6 +131,7 @@ func init() {
 	postmanCmd.AddCommand(postmanCollectionsCmd)
 	postmanCmd.AddCommand(postmanEnvironmentsCmd)
 	postmanCmd.AddCommand(postmanImportCmd)
+	postmanCmd.AddCommand(configcmd.NewConfigRouter("postman"))
 
 	// Run flags
 	postmanRunCmd.Flags().StringVarP(&postmanEnvironment, "environment", "e", "",

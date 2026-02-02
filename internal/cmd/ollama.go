@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/ai/ollama"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -176,6 +177,7 @@ func init() {
 	ollamaCmd.AddCommand(ollamaStopCmd)
 	ollamaCmd.AddCommand(ollamaInstallCmd)
 	ollamaCmd.AddCommand(ollamaExamplesCmd)
+	ollamaCmd.AddCommand(configcmd.NewConfigRouter("ollama"))
 
 	// Persistent flags
 	ollamaCmd.PersistentFlags().BoolVarP(&ollamaVerbose, "verbose", "v", false,

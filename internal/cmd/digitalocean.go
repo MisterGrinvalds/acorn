@@ -8,6 +8,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -243,6 +244,7 @@ func init() {
 
 	// Database subcommands
 	doCmd.AddCommand(doDBCmd)
+	doCmd.AddCommand(configcmd.NewConfigRouter("digitalocean"))
 	doDBCmd.AddCommand(doDBListCmd)
 
 	// Persistent flags

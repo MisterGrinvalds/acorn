@@ -6,6 +6,7 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/argocd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -254,6 +255,7 @@ func init() {
 	argocdCmd.AddCommand(argocdClustersCmd)
 	argocdCmd.AddCommand(argocdReposCmd)
 	argocdCmd.AddCommand(argocdProjectsCmd)
+	argocdCmd.AddCommand(configcmd.NewConfigRouter("argocd"))
 
 	// Persistent flags (output format is inherited from root command)
 	argocdCmd.PersistentFlags().BoolVarP(&argocdVerbose, "verbose", "v", false,

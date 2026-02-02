@@ -8,6 +8,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/vault"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -154,6 +155,7 @@ func init() {
 	vaultCmd.AddCommand(vaultLoginCmd)
 	vaultCmd.AddCommand(vaultRenewCmd)
 	vaultCmd.AddCommand(vaultEnvCmd)
+	vaultCmd.AddCommand(configcmd.NewConfigRouter("vault"))
 
 	// Persistent flags
 	vaultCmd.PersistentFlags().BoolVarP(&vaultVerbose, "verbose", "v", false,

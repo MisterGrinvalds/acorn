@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/programming/uv"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -313,6 +314,7 @@ func init() {
 
 	// Cache subcommands
 	uvCmd.AddCommand(uvCacheCmd)
+	uvCmd.AddCommand(configcmd.NewConfigRouter("uv"))
 	uvCacheCmd.AddCommand(uvCacheInfoCmd)
 	uvCacheCmd.AddCommand(uvCacheCleanCmd)
 	uvCacheCmd.AddCommand(uvCachePruneCmd)

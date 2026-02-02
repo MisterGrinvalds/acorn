@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/vcs/github"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -185,6 +186,7 @@ func init() {
 	ghCmd.AddCommand(ghCommitCmd)
 	ghCmd.AddCommand(ghBranchCmd)
 	ghCmd.AddCommand(ghPushCmd)
+	ghCmd.AddCommand(configcmd.NewConfigRouter("github"))
 
 	// PR subcommands
 	ghPRCmd.AddCommand(ghPRCreateCmd)

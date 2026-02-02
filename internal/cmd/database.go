@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/database"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -139,6 +140,7 @@ func init() {
 	dbCmd.AddCommand(dbStartAllCmd)
 	dbCmd.AddCommand(dbStopAllCmd)
 	dbCmd.AddCommand(dbListCmd)
+	dbCmd.AddCommand(configcmd.NewConfigRouter("database"))
 
 	// Persistent flags
 	dbCmd.PersistentFlags().BoolVar(&dbDryRun, "dry-run", false,

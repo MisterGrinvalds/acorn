@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/jq"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -220,6 +221,7 @@ func init() {
 	jqCmd.AddCommand(jqSortCmd)
 	jqCmd.AddCommand(jqUniqueCmd)
 	jqCmd.AddCommand(jqFlattenCmd)
+	jqCmd.AddCommand(configcmd.NewConfigRouter("jq"))
 
 	// Persistent flags (output format is inherited from root command)
 	jqCmd.PersistentFlags().BoolVarP(&jqVerbose, "verbose", "v", false,

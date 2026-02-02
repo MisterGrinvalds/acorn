@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/identity/keycloak"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -146,6 +147,7 @@ func init() {
 	keycloakCmd.AddCommand(keycloakRealmsCmd)
 	keycloakCmd.AddCommand(keycloakExportCmd)
 	keycloakCmd.AddCommand(keycloakImportCmd)
+	keycloakCmd.AddCommand(configcmd.NewConfigRouter("keycloak"))
 
 	// Start flags
 	keycloakStartCmd.Flags().IntVar(&keycloakPort, "port", 8080, "Port to expose")

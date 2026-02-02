@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/programming/golang"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -191,6 +192,7 @@ func init() {
 	goCmd.AddCommand(goCleanCmd)
 	goCmd.AddCommand(goEnvCmd)
 	goCmd.AddCommand(goCobraCmd)
+	goCmd.AddCommand(configcmd.NewConfigRouter("go"))
 
 	// Cobra subcommands
 	goCobraCmd.AddCommand(goCobraNewCmd)

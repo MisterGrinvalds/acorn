@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/data/postgres"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -174,6 +175,7 @@ func init() {
 	postgresCmd.AddCommand(pgDumpCmd)
 	postgresCmd.AddCommand(pgRestoreCmd)
 	postgresCmd.AddCommand(pgInstallCmd)
+	postgresCmd.AddCommand(configcmd.NewConfigRouter("postgres"))
 
 	// Start flags
 	pgStartCmd.Flags().BoolVar(&pgUseDocker, "docker", false, "Use Docker instead of local")

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/automation/n8n"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -143,6 +144,7 @@ func init() {
 	n8nCmd.AddCommand(n8nExportCmd)
 	n8nCmd.AddCommand(n8nImportCmd)
 	n8nCmd.AddCommand(n8nExportCredsCmd)
+	n8nCmd.AddCommand(configcmd.NewConfigRouter("n8n"))
 
 	// Start flags
 	n8nStartCmd.Flags().BoolVar(&n8nUseDocker, "docker", false, "Use Docker instead of npm")

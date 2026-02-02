@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/programming/node"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -214,6 +215,7 @@ func init() {
 	nodeCmd.AddCommand(nodeFindCmd)
 	nodeCmd.AddCommand(nodeCleanAllCmd)
 	nodeCmd.AddCommand(nodeCacheCmd)
+	nodeCmd.AddCommand(configcmd.NewConfigRouter("node"))
 
 	// NVM subcommands
 	nvmCmd.AddCommand(nvmStatusCmd)

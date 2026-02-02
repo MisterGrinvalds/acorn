@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/devops/docker"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -244,6 +245,7 @@ func init() {
 	dockerCmd.AddCommand(dockerRmCmd)
 	dockerCmd.AddCommand(dockerCleanCmd)
 	dockerCmd.AddCommand(dockerComposeCmd)
+	dockerCmd.AddCommand(configcmd.NewConfigRouter("docker"))
 
 	// Compose subcommands
 	dockerComposeCmd.AddCommand(dockerComposeUpCmd)

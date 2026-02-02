@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/devops/kubernetes"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -127,6 +128,7 @@ func init() {
 	k8sCmd.AddCommand(k8sPodsCmd)
 	k8sCmd.AddCommand(k8sAllCmd)
 	k8sCmd.AddCommand(k8sCleanCmd)
+	k8sCmd.AddCommand(configcmd.NewConfigRouter("kubernetes"))
 
 	// Persistent flags (output format is inherited from root command)
 	k8sCmd.PersistentFlags().BoolVarP(&k8sVerbose, "verbose", "v", false,

@@ -7,6 +7,7 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/components/artifacts/jfrog"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -233,6 +234,7 @@ func init() {
 
 	// Docker subcommands
 	jfrogCmd.AddCommand(jfrogDockerCmd)
+	jfrogCmd.AddCommand(configcmd.NewConfigRouter("jfrog"))
 	jfrogDockerCmd.AddCommand(jfrogDockerPushCmd)
 	jfrogDockerCmd.AddCommand(jfrogDockerPullCmd)
 
