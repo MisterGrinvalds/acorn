@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/ai/opencode"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -104,6 +105,7 @@ func init() {
 	opencodeCmd.AddCommand(opencodeProvidersCmd)
 	opencodeCmd.AddCommand(opencodeInstallCmd)
 	opencodeCmd.AddCommand(opencodeUpgradeCmd)
+	opencodeCmd.AddCommand(configcmd.NewConfigRouter("opencode"))
 
 	// Persistent flags
 	opencodeCmd.PersistentFlags().BoolVar(&opencodeDryRun, "dry-run", false,
