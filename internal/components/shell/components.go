@@ -5,79 +5,51 @@ import (
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 )
 
-// componentOrder defines the order components should be loaded.
-// This is critical - bootstrap and xdg must be first as other components depend on them.
-var componentOrder = []string{
-	// Bootstrap/core (MUST be first - sets up environment)
-	"bootstrap", // Shell detection, platform detection, XDG vars, Homebrew
-	"xdg",       // XDG helper functions, shell history setup
-	"theme",     // Colors (depends on CURRENT_PLATFORM from bootstrap)
-	"core",      // Shell options, prompt, keybindings (depends on theme)
+// defaultBootstrap is the fallback bootstrap order when no scaffold is available.
+// These components MUST load first — they set up the shell environment.
+var defaultBootstrap = []string{
+	"bootstrap", "xdg", "theme", "core",
+}
 
-	// Infrastructure
-	"sync", // Dotfiles sync aliases and functions
-
-	// Development tools
-	"go",
-	"python",
-	"r",
-	"node",
-	"vscode",
-	"intellij",
-	"neovim",
-
-	// Terminal and shell
-	"tmux",
-	"fzf",
-	"ghostty",
-	"iterm2",
-	"karabiner",
-
-	// Version control
-	"git",
-	"github",
-
-	// Cloud and infrastructure
-	"cloudflare",
-	"kubernetes",
-	"database",
-	"postgres",
-	"tailscale",
-	"pulumi",
-	"terraform",
-	"vault",
-
-	// Containers
-	"docker",
-	"docker-compose",
-	"lazydocker",
-
-	// AI and ML
-	"claude",
-	"huggingface",
-	"ollama",
-
-	// Data and API tools
+// defaultOptional is the fallback optional component order when no scaffold is available.
+var defaultOptional = []string{
+	"sync",
+	"go", "python", "r", "node", "vscode", "intellij", "neovim",
+	"tmux", "fzf", "ghostty", "iterm2", "karabiner",
+	"git", "github",
+	"cloudflare", "kubernetes", "database", "postgres", "tailscale", "pulumi", "terraform", "vault",
+	"docker", "docker-compose", "lazydocker",
+	"claude", "huggingface", "ollama",
 	"posting",
-
-	// Utilities
-	"tools",
-	"secrets",
-	"wget",
+	"tools", "secrets", "wget",
 }
 
 // RegisterAllComponents registers all known components with the manager.
-// Components are registered in a specific order to ensure dependencies are met.
+// Uses the scaffold's resolved shell order (bootstrap first, then optional).
 func RegisterAllComponents(m *Manager) {
-	for _, name := range componentOrder {
+	order := GetComponentOrder()
+	for _, name := range order {
 		registerComponentWithFiles(m, name)
 	}
 }
 
-// GetComponentOrder returns the ordered list of component names.
-// Used by shell.go to generate the entrypoint with correct sourcing order.
+// GetComponentOrder returns the ordered list of component names for shell generation.
+//
+// Resolution:
+//  1. Bootstrap components always come first (from scaffold or default).
+//  2. Optional components follow — either explicitly listed in the scaffold,
+//     or auto-derived from all scaffold groups in declaration order.
+//  3. If no scaffold is found, falls back to hardcoded defaults.
 func GetComponentOrder() []string {
-	return componentOrder
+	s, err := config.LoadScaffold()
+	if err == nil && s != nil {
+		return s.ResolveShellOrder()
+	}
+	// No scaffold — use hardcoded defaults
+	result := make([]string, 0, len(defaultBootstrap)+len(defaultOptional))
+	result = append(result, defaultBootstrap...)
+	result = append(result, defaultOptional...)
+	return result
 }
 
 // registerComponentWithFiles loads and registers a component with its file specs.
