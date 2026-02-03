@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
+	"github.com/mistergrinvalds/acorn/internal/components/filesync"
+	"github.com/mistergrinvalds/acorn/internal/components/shell"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"

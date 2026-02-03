@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	migrateutil "github.com/mistergrinvalds/acorn/internal/components/io/migrate"
+	migrateutil "github.com/mistergrinvalds/acorn/internal/components/migrate"
 	"github.com/mistergrinvalds/acorn/internal/utils/component"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"

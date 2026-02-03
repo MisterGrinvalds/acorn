@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	// Import component packages to register their config file writers
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
-	_ "github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+	_ "github.com/mistergrinvalds/acorn/internal/components/ghostty"
+	_ "github.com/mistergrinvalds/acorn/internal/components/iterm2"
+	_ "github.com/mistergrinvalds/acorn/internal/components/tmux"
+	_ "github.com/mistergrinvalds/acorn/internal/components/git"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/configfile"

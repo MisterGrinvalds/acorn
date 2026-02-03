@@ -9,7 +9,7 @@ import (
 
 	"github.com/mistergrinvalds/acorn/internal/utils/configfile"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
+	"github.com/mistergrinvalds/acorn/internal/components/shell"
 	"github.com/spf13/cobra"
 )
 
