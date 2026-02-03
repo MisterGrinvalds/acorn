@@ -6,10 +6,10 @@ import (
 	"os"
 
 	// Import component packages to register their config file writers
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/iterm2"
-	_ "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
-	_ "github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+	_ "github.com/mistergrinvalds/acorn/internal/components/ghostty"
+	_ "github.com/mistergrinvalds/acorn/internal/components/git"
+	_ "github.com/mistergrinvalds/acorn/internal/components/iterm2"
+	_ "github.com/mistergrinvalds/acorn/internal/components/tmux"
 
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/io"
@@ -48,6 +48,11 @@ Built with love from a collection of battle-tested shell scripts.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	// Build the router tree from scaffold configuration.
+	// This must run after all init() functions have completed so that
+	// all components have registered themselves in the registry.
+	buildRouter()
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
