@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/programming/golang"
+	"github.com/mistergrinvalds/acorn/internal/components/golang"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -181,7 +182,6 @@ Examples:
 }
 
 func init() {
-	programmingCmd.AddCommand(goCmd)
 
 	// Add subcommands
 	goCmd.AddCommand(goNewCmd)
@@ -345,4 +345,11 @@ func runGoCobraAdd(cmd *cobra.Command, args []string) error {
 
 	fmt.Fprintf(os.Stdout, "%s Command '%s' added\n", output.Success("✓"), args[0])
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "golang",
+		RegisterCmd: func() *cobra.Command { return goCmd },
+	})
 }

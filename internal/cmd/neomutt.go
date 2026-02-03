@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/components/mail/neomutt"
+	"github.com/mistergrinvalds/acorn/internal/components/neomutt"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -234,7 +235,6 @@ Examples:
 }
 
 func init() {
-	mailCmd.AddCommand(neomuttCmd)
 
 	// Add subcommands
 	neomuttCmd.AddCommand(neomuttStatusCmd)
@@ -541,4 +541,11 @@ func extractAccountName(email string) string {
 		return parts[1] + "-" + parts[0]
 	}
 	return email
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "neomutt",
+		RegisterCmd: func() *cobra.Command { return neomuttCmd },
+	})
 }

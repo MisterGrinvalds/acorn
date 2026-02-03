@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/posting"
+	"github.com/mistergrinvalds/acorn/internal/components/posting"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -149,7 +150,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(postingCmd)
 
 	// Add subcommands
 	postingCmd.AddCommand(postingStatusCmd)
@@ -341,4 +341,11 @@ func runPostingUninstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "posting",
+		RegisterCmd: func() *cobra.Command { return postingCmd },
+	})
 }

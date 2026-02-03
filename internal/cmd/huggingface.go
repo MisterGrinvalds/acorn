@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ai/huggingface"
+	"github.com/mistergrinvalds/acorn/internal/components/huggingface"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -101,7 +102,6 @@ Examples:
 }
 
 func init() {
-	aiCmd.AddCommand(hfCmd)
 
 	// Add subcommands
 	hfCmd.AddCommand(hfStatusCmd)
@@ -264,4 +264,11 @@ func runHfClear(cmd *cobra.Command, args []string) error {
 
 	fmt.Fprintf(os.Stdout, "%s Cache cleared\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "huggingface",
+		RegisterCmd: func() *cobra.Command { return hfCmd },
+	})
 }

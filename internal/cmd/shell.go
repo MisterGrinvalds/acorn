@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/shell"
+	"github.com/mistergrinvalds/acorn/internal/components/shell"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -161,7 +162,6 @@ Examples:
 }
 
 func init() {
-	terminalCmd.AddCommand(shellCmd)
 
 	// Add subcommands
 	shellCmd.AddCommand(shellStatusCmd)
@@ -534,4 +534,11 @@ func runShellList(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stdout, "\nTotal: %d components\n", len(status.Components))
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "shell",
+		RegisterCmd: func() *cobra.Command { return shellCmd },
+	})
 }

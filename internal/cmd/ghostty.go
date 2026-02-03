@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/ghostty"
+	"github.com/mistergrinvalds/acorn/internal/components/ghostty"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
@@ -134,7 +135,6 @@ Examples:
 }
 
 func init() {
-	terminalCmd.AddCommand(ghosttyCmd)
 
 	// Add subcommands
 	ghosttyCmd.AddCommand(ghosttyInfoCmd)
@@ -368,4 +368,11 @@ func runGhosttyInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "ghostty",
+		RegisterCmd: func() *cobra.Command { return ghosttyCmd },
+	})
 }

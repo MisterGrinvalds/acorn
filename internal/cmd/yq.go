@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/yq"
+	"github.com/mistergrinvalds/acorn/internal/components/yq"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -239,7 +240,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(yqCmd)
 
 	// Add subcommands
 	yqCmd.AddCommand(yqStatusCmd)
@@ -674,4 +674,11 @@ func runYqDocsSplit(cmd *cobra.Command, args []string) error {
 		fmt.Println(doc)
 	}
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "yq",
+		RegisterCmd: func() *cobra.Command { return yqCmd },
+	})
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ide/goland"
+	"github.com/mistergrinvalds/acorn/internal/components/goland"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -85,7 +86,6 @@ Examples:
 }
 
 func init() {
-	ideCmd.AddCommand(golandCmd)
 
 	// Add subcommands
 	golandCmd.AddCommand(golandStatusCmd)
@@ -192,4 +192,11 @@ func runGolandCLILink(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s CLI launcher created\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "goland",
+		RegisterCmd: func() *cobra.Command { return golandCmd },
+	})
 }

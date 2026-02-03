@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/programming/node"
+	"github.com/mistergrinvalds/acorn/internal/components/node"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
-	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
 )
 
@@ -204,10 +205,6 @@ Examples:
 var nodeCacheClean bool
 
 func init() {
-	programmingCmd.AddCommand(nodeCmd)
-	programmingCmd.AddCommand(nvmCmd)
-	programmingCmd.AddCommand(pnpmCmd)
-
 	// Node subcommands
 	nodeCmd.AddCommand(nodeStatusCmd)
 	nodeCmd.AddCommand(nodeDetectCmd)
@@ -573,4 +570,25 @@ func runPnpmInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name:        "node",
+		RegisterCmd: func() *cobra.Command { return nodeCmd },
+	})
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "nvm",
+		RegisterCmd: func() *cobra.Command { return nvmCmd },
+	})
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "pnpm",
+		RegisterCmd: func() *cobra.Command { return pnpmCmd },
+	})
 }

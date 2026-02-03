@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ai/claude"
-	"github.com/mistergrinvalds/acorn/internal/components/io/filesync"
+	"github.com/mistergrinvalds/acorn/internal/components/claude"
+	"github.com/mistergrinvalds/acorn/internal/components/filesync"
 	"github.com/mistergrinvalds/acorn/internal/utils/config"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
@@ -326,7 +327,6 @@ Examples:
 }
 
 func init() {
-	aiCmd.AddCommand(claudeCmd)
 
 	// Add subcommands
 	claudeCmd.AddCommand(claudeInfoCmd)
@@ -1128,4 +1128,11 @@ func runClaudeInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "claude",
+		RegisterCmd: func() *cobra.Command { return claudeCmd },
+	})
 }

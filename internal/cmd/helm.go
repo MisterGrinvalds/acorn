@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/helm"
+	"github.com/mistergrinvalds/acorn/internal/components/helm"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -271,7 +272,6 @@ Examples:
 }
 
 func init() {
-	devopsCmd.AddCommand(helmCmd)
 
 	// Add subcommands
 	helmCmd.AddCommand(helmStatusCmd)
@@ -648,4 +648,11 @@ func runHelmPlugins(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "helm",
+		RegisterCmd: func() *cobra.Command { return helmCmd },
+	})
 }

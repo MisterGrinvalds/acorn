@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/database"
+	"github.com/mistergrinvalds/acorn/internal/components/database"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -130,7 +131,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(dbCmd)
 
 	// Add subcommands
 	dbCmd.AddCommand(dbStatusCmd)
@@ -270,4 +270,11 @@ func runDbList(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stdout, "Service management requires Homebrew (macOS).")
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "database",
+		RegisterCmd: func() *cobra.Command { return dbCmd },
+	})
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/secrets"
+	"github.com/mistergrinvalds/acorn/internal/components/secrets"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -131,7 +132,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(secretsCmd)
 
 	// Add subcommands
 	secretsCmd.AddCommand(secretsStatusCmd)
@@ -353,4 +353,11 @@ func joinEnvVars(vars []string) string {
 		result += ", " + vars[i]
 	}
 	return result
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "secrets",
+		RegisterCmd: func() *cobra.Command { return secretsCmd },
+	})
 }

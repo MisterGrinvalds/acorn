@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/lazydocker"
+	"github.com/mistergrinvalds/acorn/internal/components/lazydocker"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
@@ -84,7 +85,6 @@ Examples:
 }
 
 func init() {
-	devopsCmd.AddCommand(lazydockerCmd)
 
 	// Add subcommands
 	lazydockerCmd.AddCommand(lazydockerStatusCmd)
@@ -157,4 +157,11 @@ func runLazydockerKeys(cmd *cobra.Command, args []string) error {
 func runLazydockerConfig(cmd *cobra.Command, args []string) error {
 	helper := lazydocker.NewHelper(lazydockerVerbose)
 	return helper.OpenConfig()
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "lazydocker",
+		RegisterCmd: func() *cobra.Command { return lazydockerCmd },
+	})
 }

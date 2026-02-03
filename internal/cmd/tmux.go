@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	tmuxpkg "github.com/mistergrinvalds/acorn/internal/components/terminal/tmux"
+	tmuxpkg "github.com/mistergrinvalds/acorn/internal/components/tmux"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
@@ -266,7 +267,6 @@ Examples:
 }
 
 func init() {
-	terminalCmd.AddCommand(tmuxCmd)
 
 	// Main subcommands
 	tmuxCmd.AddCommand(tmuxInfoCmd)
@@ -683,4 +683,11 @@ func runTmuxInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "tmux",
+		RegisterCmd: func() *cobra.Command { return tmuxCmd },
+	})
 }

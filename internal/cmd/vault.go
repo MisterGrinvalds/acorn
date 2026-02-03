@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/vault"
+	"github.com/mistergrinvalds/acorn/internal/components/vault"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -144,7 +145,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(vaultCmd)
 
 	// Add subcommands
 	vaultCmd.AddCommand(vaultStatusCmd)
@@ -354,4 +354,11 @@ func runVaultEnv(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stdout, "  export VAULT_ADDR=%s\n", addr)
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "vault",
+		RegisterCmd: func() *cobra.Command { return vaultCmd },
+	})
 }

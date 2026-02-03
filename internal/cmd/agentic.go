@@ -87,7 +87,6 @@ Examples:
 }
 
 func init() {
-	devCmd.AddCommand(agenticCmd)
 
 	// Add subcommands
 	agenticCmd.AddCommand(agenticAuditCmd)
@@ -339,4 +338,8 @@ func formatCompliant(compliant, total int) string {
 		return output.Warning(s)
 	}
 	return output.Error(s)
+}
+
+func init() {
+	devCmd.AddCommand(agenticCmd)
 }

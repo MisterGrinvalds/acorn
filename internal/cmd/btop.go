@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/sysadm/btop"
+	"github.com/mistergrinvalds/acorn/internal/components/btop"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -135,7 +136,6 @@ Examples:
 }
 
 func init() {
-	sysadmCmd.AddCommand(btopCmd)
 
 	// Add subcommands
 	btopCmd.AddCommand(btopStatusCmd)
@@ -308,4 +308,11 @@ func runBtopThemesCurrent(cmd *cobra.Command, args []string) error {
 
 	fmt.Fprintf(os.Stdout, "Current theme: %s\n", currentTheme)
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "btop",
+		RegisterCmd: func() *cobra.Command { return btopCmd },
+	})
 }

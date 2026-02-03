@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/programming/python"
+	"github.com/mistergrinvalds/acorn/internal/components/python"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -211,7 +212,6 @@ Examples:
 }
 
 func init() {
-	programmingCmd.AddCommand(pythonCmd)
 
 	// Venv subcommands
 	pythonCmd.AddCommand(pythonVenvCmd)
@@ -449,4 +449,11 @@ func runPythonSetupDevtools(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stdout, "%s Development tools installed\n", output.Success("✓"))
 	fmt.Fprintln(os.Stdout, "  Installed: ruff, mypy, pytest, pytest-cov, pre-commit")
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "python",
+		RegisterCmd: func() *cobra.Command { return pythonCmd },
+	})
 }

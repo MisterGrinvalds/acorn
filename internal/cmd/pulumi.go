@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/cloud/pulumi"
+	"github.com/mistergrinvalds/acorn/internal/components/pulumi"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -186,7 +187,6 @@ Examples:
 }
 
 func init() {
-	cloudCmd.AddCommand(pulumiCmd)
 
 	// Add subcommands
 	pulumiCmd.AddCommand(pulumiStatusCmd)
@@ -391,4 +391,11 @@ func runPulumiInstall(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Pulumi installed\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "pulumi",
+		RegisterCmd: func() *cobra.Command { return pulumiCmd },
+	})
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ide/vscode"
+	"github.com/mistergrinvalds/acorn/internal/components/vscode"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -168,7 +169,6 @@ Examples:
 // vscodeConfigPathCmd is now provided by the universal config router
 
 func init() {
-	ideCmd.AddCommand(vscodeCmd)
 
 	// Add subcommands
 	vscodeCmd.AddCommand(vscodeWorkspacesCmd)
@@ -376,3 +376,10 @@ func runVscodeConfigSync(cmd *cobra.Command, args []string) error {
 }
 
 // runVscodeConfigPath has been replaced by the universal config router: acorn vscode config path
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "vscode",
+		RegisterCmd: func() *cobra.Command { return vscodeCmd },
+	})
+}

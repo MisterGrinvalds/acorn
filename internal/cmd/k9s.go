@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/k9s"
+	"github.com/mistergrinvalds/acorn/internal/components/k9s"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
@@ -152,7 +153,6 @@ Examples:
 // k9s generate is now provided by the universal config router: acorn k9s config generate
 
 func init() {
-	devopsCmd.AddCommand(k9sCmd)
 
 	// Add subcommands
 	k9sCmd.AddCommand(k9sStatusCmd)
@@ -364,3 +364,10 @@ func runK9sNamespaces(cmd *cobra.Command, args []string) error {
 }
 
 // runK9sGenerate has been replaced by the universal config router: acorn k9s config generate
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "k9s",
+		RegisterCmd: func() *cobra.Command { return k9sCmd },
+	})
+}

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ai/ollama"
+	"github.com/mistergrinvalds/acorn/internal/components/ollama"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -164,7 +165,6 @@ Examples:
 }
 
 func init() {
-	aiCmd.AddCommand(ollamaCmd)
 
 	// Add subcommands
 	ollamaCmd.AddCommand(ollamaStatusCmd)
@@ -346,4 +346,11 @@ func runOllamaExamples(cmd *cobra.Command, args []string) error {
 	helper := ollama.NewHelper(ollamaVerbose, ollamaDryRun)
 	fmt.Fprintln(os.Stdout, helper.GetExamples())
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "ollama",
+		RegisterCmd: func() *cobra.Command { return ollamaCmd },
+	})
 }

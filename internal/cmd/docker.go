@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/docker"
+	"github.com/mistergrinvalds/acorn/internal/components/docker"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -231,7 +232,6 @@ var (
 )
 
 func init() {
-	devopsCmd.AddCommand(dockerCmd)
 
 	// Add subcommands
 	dockerCmd.AddCommand(dockerStatusCmd)
@@ -533,4 +533,11 @@ func truncateStr(s string, max int) string {
 		return s
 	}
 	return s[:max-3] + "..."
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "docker",
+		RegisterCmd: func() *cobra.Command { return dockerCmd },
+	})
 }

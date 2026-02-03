@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/programming/uv"
+	"github.com/mistergrinvalds/acorn/internal/components/uv"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -286,7 +287,6 @@ Examples:
 }
 
 func init() {
-	programmingCmd.AddCommand(uvCmd)
 
 	// Add subcommands
 	uvCmd.AddCommand(uvStatusCmd)
@@ -539,4 +539,11 @@ func runUvVenv(cmd *cobra.Command, args []string) error {
 		name = args[0]
 	}
 	return helper.Venv(name)
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "uv",
+		RegisterCmd: func() *cobra.Command { return uvCmd },
+	})
 }

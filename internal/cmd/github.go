@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/vcs/github"
+	"github.com/mistergrinvalds/acorn/internal/components/github"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -176,7 +177,6 @@ Examples:
 }
 
 func init() {
-	vcsCmd.AddCommand(ghCmd)
 
 	// Add subcommands
 	ghCmd.AddCommand(ghStatusCmd)
@@ -317,4 +317,11 @@ func runGhBranch(cmd *cobra.Command, args []string) error {
 func runGhPush(cmd *cobra.Command, args []string) error {
 	helper := github.NewHelper(ghVerbose, ghDryRun)
 	return helper.PushBranch()
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "github",
+		RegisterCmd: func() *cobra.Command { return ghCmd },
+	})
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/cloud/cloudflare"
+	"github.com/mistergrinvalds/acorn/internal/components/cloudflare"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -318,7 +319,6 @@ Examples:
 }
 
 func init() {
-	cloudCmd.AddCommand(cfCmd)
 
 	// Add subcommands
 	cfCmd.AddCommand(cfInstallCmd)
@@ -714,4 +714,11 @@ func runCfInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "cloudflare",
+		RegisterCmd: func() *cobra.Command { return cfCmd },
+	})
 }

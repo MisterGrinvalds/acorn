@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/cloud/terraform"
+	"github.com/mistergrinvalds/acorn/internal/components/terraform"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -195,7 +196,6 @@ Examples:
 }
 
 func init() {
-	cloudCmd.AddCommand(terraformCmd)
 
 	// Add subcommands
 	terraformCmd.AddCommand(tfStatusCmd)
@@ -434,4 +434,11 @@ func runTfInstall(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Terraform installed\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "terraform",
+		RegisterCmd: func() *cobra.Command { return terraformCmd },
+	})
 }

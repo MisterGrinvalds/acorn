@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/identity/keycloak"
+	"github.com/mistergrinvalds/acorn/internal/components/keycloak"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -136,7 +137,6 @@ Examples:
 }
 
 func init() {
-	identityCmd.AddCommand(keycloakCmd)
 
 	// Add subcommands
 	keycloakCmd.AddCommand(keycloakStatusCmd)
@@ -291,4 +291,11 @@ func runKeycloakImport(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Realm imported\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "keycloak",
+		RegisterCmd: func() *cobra.Command { return keycloakCmd },
+	})
 }

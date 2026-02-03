@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/ide/neovim"
+	"github.com/mistergrinvalds/acorn/internal/components/neovim"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -88,7 +89,6 @@ Examples:
 }
 
 func init() {
-	ideCmd.AddCommand(nvimCmd)
 
 	// Add subcommands
 	nvimCmd.AddCommand(nvimHealthCmd)
@@ -188,4 +188,11 @@ func runNvimPlugin(cmd *cobra.Command, args []string) error {
 	helper := neovim.NewHelper(nvimVerbose)
 	fmt.Fprintln(os.Stdout, helper.GetPluginInfo())
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "neovim",
+		RegisterCmd: func() *cobra.Command { return nvimCmd },
+	})
 }

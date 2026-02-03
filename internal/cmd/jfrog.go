@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/artifacts/jfrog"
+	"github.com/mistergrinvalds/acorn/internal/components/jfrog"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -212,7 +213,6 @@ Examples:
 }
 
 func init() {
-	artifactsCmd.AddCommand(jfrogCmd)
 
 	// Add subcommands
 	jfrogCmd.AddCommand(jfrogStatusCmd)
@@ -417,4 +417,11 @@ func runJfrogDockerPush(cmd *cobra.Command, args []string) error {
 func runJfrogDockerPull(cmd *cobra.Command, args []string) error {
 	helper := newJfrogHelper()
 	return helper.DockerPull(args[0], args[1])
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "jfrog",
+		RegisterCmd: func() *cobra.Command { return jfrogCmd },
+	})
 }

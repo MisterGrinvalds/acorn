@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/infisical"
+	"github.com/mistergrinvalds/acorn/internal/components/infisical"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -161,7 +162,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(infisicalCmd)
 
 	// Add subcommands
 	infisicalCmd.AddCommand(infisicalStatusCmd)
@@ -331,4 +331,11 @@ func runInfisicalScan(cmd *cobra.Command, args []string) error {
 		path = args[0]
 	}
 	return helper.Scan(path)
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "infisical",
+		RegisterCmd: func() *cobra.Command { return infisicalCmd },
+	})
 }

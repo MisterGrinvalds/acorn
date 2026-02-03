@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"bufio"
 	"fmt"
 	"os"
@@ -71,7 +72,6 @@ Examples:
 }
 
 func init() {
-	aiCmd.AddCommand(aiGenerateCmd)
 
 	aiGenerateCmd.Flags().BoolVarP(&aiGenerateList, "list", "l", false,
 		"Show counts without generating")
@@ -424,4 +424,11 @@ func countFiles(path string, pattern string) (int, error) {
 		return nil
 	})
 	return count, err
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "ai-generate",
+		RegisterCmd: func() *cobra.Command { return aiGenerateCmd },
+	})
 }

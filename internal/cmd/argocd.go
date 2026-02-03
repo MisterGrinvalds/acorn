@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/argocd"
+	"github.com/mistergrinvalds/acorn/internal/components/argocd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	"github.com/spf13/cobra"
@@ -237,7 +238,6 @@ Examples:
 }
 
 func init() {
-	devopsCmd.AddCommand(argocdCmd)
 
 	// Add subcommands
 	argocdCmd.AddCommand(argocdStatusCmd)
@@ -624,4 +624,11 @@ func truncateArgo(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "argocd",
+		RegisterCmd: func() *cobra.Command { return argocdCmd },
+	})
 }

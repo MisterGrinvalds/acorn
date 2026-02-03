@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/cloud/digitalocean"
+	"github.com/mistergrinvalds/acorn/internal/components/digitalocean"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -218,7 +219,6 @@ Examples:
 }
 
 func init() {
-	cloudCmd.AddCommand(doCmd)
 
 	// Add subcommands
 	doCmd.AddCommand(doInstallCmd)
@@ -587,4 +587,11 @@ func runDoInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "digitalocean",
+		RegisterCmd: func() *cobra.Command { return doCmd },
+	})
 }

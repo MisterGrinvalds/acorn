@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/terminal/fzf"
+	"github.com/mistergrinvalds/acorn/internal/components/fzf"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -87,7 +88,6 @@ Examples:
 }
 
 func init() {
-	terminalCmd.AddCommand(fzfCmd)
 
 	// Add subcommands
 	fzfCmd.AddCommand(fzfStatusCmd)
@@ -224,4 +224,11 @@ func runFzfTheme(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stdout, helper.GetThemeColors())
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "fzf",
+		RegisterCmd: func() *cobra.Command { return fzfCmd },
+	})
 }

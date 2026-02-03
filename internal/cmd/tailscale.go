@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/network/tailscale"
+	"github.com/mistergrinvalds/acorn/internal/components/tailscale"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -162,7 +163,6 @@ var (
 )
 
 func init() {
-	networkCmd.AddCommand(tailscaleCmd)
 
 	// Add subcommands
 	tailscaleCmd.AddCommand(tailscaleStatusCmd)
@@ -439,4 +439,11 @@ func truncateString(s string, max int) string {
 		return s
 	}
 	return s[:max-3] + "..."
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "tailscale",
+		RegisterCmd: func() *cobra.Command { return tailscaleCmd },
+	})
 }

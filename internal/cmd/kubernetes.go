@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/kubernetes"
+	"github.com/mistergrinvalds/acorn/internal/components/kubernetes"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -119,7 +120,6 @@ Examples:
 }
 
 func init() {
-	devopsCmd.AddCommand(k8sCmd)
 
 	// Add subcommands
 	k8sCmd.AddCommand(k8sInfoCmd)
@@ -300,4 +300,11 @@ func runK8sClean(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "kubernetes",
+		RegisterCmd: func() *cobra.Command { return k8sCmd },
+	})
 }

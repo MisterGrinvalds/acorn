@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/vcs/git"
+	"github.com/mistergrinvalds/acorn/internal/components/git"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -99,7 +100,6 @@ Examples:
 }
 
 func init() {
-	vcsCmd.AddCommand(gitCmd)
 
 	// Add subcommands
 	gitCmd.AddCommand(gitInfoCmd)
@@ -235,4 +235,11 @@ func runGitReposDir(cmd *cobra.Command, args []string) error {
 	helper := git.NewHelper(gitVerbose)
 	fmt.Fprintln(os.Stdout, helper.GetReposDir())
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "git",
+		RegisterCmd: func() *cobra.Command { return gitCmd },
+	})
 }

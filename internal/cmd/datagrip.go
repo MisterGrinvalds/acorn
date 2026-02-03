@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/datagrip"
+	"github.com/mistergrinvalds/acorn/internal/components/datagrip"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -96,7 +97,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(datagripCmd)
 
 	// Add subcommands
 	datagripCmd.AddCommand(datagripStatusCmd)
@@ -195,4 +195,11 @@ func runDatagripOpen(cmd *cobra.Command, args []string) error {
 func runDatagripCLICreate(cmd *cobra.Command, args []string) error {
 	helper := newDatagripHelper()
 	return helper.CreateCLILink()
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "datagrip",
+		RegisterCmd: func() *cobra.Command { return datagripCmd },
+	})
 }

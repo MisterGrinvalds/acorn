@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/postgres"
+	"github.com/mistergrinvalds/acorn/internal/components/postgres"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -162,7 +163,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(postgresCmd)
 
 	// Add subcommands
 	postgresCmd.AddCommand(pgStatusCmd)
@@ -353,4 +353,11 @@ func runPgInstall(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s PostgreSQL installed\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "postgres",
+		RegisterCmd: func() *cobra.Command { return postgresCmd },
+	})
 }

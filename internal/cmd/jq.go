@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/jq"
+	"github.com/mistergrinvalds/acorn/internal/components/jq"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -206,7 +207,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(jqCmd)
 
 	// Add subcommands
 	jqCmd.AddCommand(jqStatusCmd)
@@ -517,4 +517,11 @@ func runJqFlatten(cmd *cobra.Command, args []string) error {
 
 	fmt.Print(result.Output)
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "jq",
+		RegisterCmd: func() *cobra.Command { return jqCmd },
+	})
 }

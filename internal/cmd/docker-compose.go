@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/devops/docker"
+	"github.com/mistergrinvalds/acorn/internal/components/docker"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -174,7 +175,6 @@ Examples:
 }
 
 func init() {
-	devopsCmd.AddCommand(composeCmd)
 
 	// Add subcommands
 	composeCmd.AddCommand(composeStatusCmd)
@@ -376,4 +376,11 @@ func runComposeConfig(cmd *cobra.Command, args []string) error {
 	}
 
 	return helper.ComposeConfig(composeFile)
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "docker-compose",
+		RegisterCmd: func() *cobra.Command { return composeCmd },
+	})
 }

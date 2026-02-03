@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/automation/n8n"
+	"github.com/mistergrinvalds/acorn/internal/components/n8n"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -133,7 +134,6 @@ Examples:
 }
 
 func init() {
-	automationCmd.AddCommand(n8nCmd)
 
 	// Add subcommands
 	n8nCmd.AddCommand(n8nStatusCmd)
@@ -288,4 +288,11 @@ func runN8nExportCreds(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Credentials exported\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "n8n",
+		RegisterCmd: func() *cobra.Command { return n8nCmd },
+	})
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/cloud/aws"
+	"github.com/mistergrinvalds/acorn/internal/components/aws"
 	"github.com/mistergrinvalds/acorn/internal/utils/installer"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
@@ -249,7 +250,6 @@ Examples:
 }
 
 func init() {
-	cloudCmd.AddCommand(awsCmd)
 
 	// Add subcommands
 	awsCmd.AddCommand(awsInstallCmd)
@@ -674,4 +674,11 @@ func runAwsInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "aws",
+		RegisterCmd: func() *cobra.Command { return awsCmd },
+	})
 }

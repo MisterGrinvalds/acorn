@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/mistergrinvalds/acorn/internal/components"
 	"fmt"
 	"os"
 
-	"github.com/mistergrinvalds/acorn/internal/components/data/postman"
+	"github.com/mistergrinvalds/acorn/internal/components/postman"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
@@ -121,7 +122,6 @@ Examples:
 }
 
 func init() {
-	dataCmd.AddCommand(postmanCmd)
 
 	// Add subcommands
 	postmanCmd.AddCommand(postmanStatusCmd)
@@ -280,4 +280,11 @@ func runPostmanImport(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Fprintf(os.Stdout, "%s Collection imported\n", output.Success("✓"))
 	return nil
+}
+
+func init() {
+	components.Register(&components.Registration{
+		Name: "postman",
+		RegisterCmd: func() *cobra.Command { return postmanCmd },
+	})
 }
