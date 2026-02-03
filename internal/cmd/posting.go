@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/data/posting"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -74,18 +75,17 @@ Examples:
 	RunE: runPostingLocate,
 }
 
-// postingConfigCmd opens config file
-var postingConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Edit config file",
+// postingEditCmd opens native posting config in editor
+var postingEditCmd = &cobra.Command{
+	Use:   "edit",
+	Short: "Edit posting config file in editor",
 	Long: `Open Posting config file in the default editor.
 
 Uses $EDITOR environment variable, defaults to vim.
 
 Examples:
-  acorn data posting config`,
-	Aliases: []string{"edit"},
-	RunE:    runPostingConfig,
+  acorn data posting edit`,
+	RunE: runPostingConfig,
 }
 
 // postingCollectionsCmd lists collections
@@ -155,7 +155,8 @@ func init() {
 	postingCmd.AddCommand(postingStatusCmd)
 	postingCmd.AddCommand(postingLaunchCmd)
 	postingCmd.AddCommand(postingLocateCmd)
-	postingCmd.AddCommand(postingConfigCmd)
+	postingCmd.AddCommand(postingEditCmd)
+	postingCmd.AddCommand(configcmd.NewConfigRouter("posting"))
 	postingCmd.AddCommand(postingCollectionsCmd)
 	postingCmd.AddCommand(postingInstallCmd)
 	postingCmd.AddCommand(postingInstallUVCmd)

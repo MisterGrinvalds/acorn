@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/docker"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -158,17 +159,18 @@ Examples:
 	RunE: runComposeExec,
 }
 
-// composeConfigCmd validates compose config
-var composeConfigCmd = &cobra.Command{
-	Use:   "config",
+// composeValidateCmd validates compose config (passthrough to docker compose config)
+var composeValidateCmd = &cobra.Command{
+	Use:   "validate",
 	Short: "Validate compose configuration",
-	Long: `Validate and view Docker Compose configuration.
+	Long: `Validate and view resolved Docker Compose configuration.
+
+Runs 'docker compose config' to resolve and validate the compose file.
 
 Examples:
-  acorn docker-compose config
-  acorn docker-compose config -f docker-compose.dev.yml`,
-	Aliases: []string{"validate"},
-	RunE:    runComposeConfig,
+  acorn docker-compose validate
+  acorn docker-compose validate -f docker-compose.dev.yml`,
+	RunE: runComposeConfig,
 }
 
 func init() {
@@ -184,7 +186,8 @@ func init() {
 	composeCmd.AddCommand(composeBuildCmd)
 	composeCmd.AddCommand(composePullCmd)
 	composeCmd.AddCommand(composeExecCmd)
-	composeCmd.AddCommand(composeConfigCmd)
+	composeCmd.AddCommand(composeValidateCmd)
+	composeCmd.AddCommand(configcmd.NewConfigRouter("docker-compose"))
 
 	// Persistent flags
 	composeCmd.PersistentFlags().BoolVarP(&composeVerbose, "verbose", "v", false,

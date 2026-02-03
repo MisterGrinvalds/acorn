@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/terminal/fzf"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/mistergrinvalds/acorn/internal/utils/output"
 	"github.com/spf13/cobra"
@@ -43,15 +44,18 @@ Examples:
 	RunE: runFzfStatus,
 }
 
-// fzfConfigCmd shows fzf config
-var fzfConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Show FZF configuration",
+// fzfEnvCmd shows fzf runtime environment configuration
+var fzfEnvCmd = &cobra.Command{
+	Use:   "env",
+	Short: "Show FZF runtime environment",
 	Long: `Show current FZF configuration from environment variables.
 
+Displays FZF_DEFAULT_COMMAND, FZF_DEFAULT_OPTS, and other
+runtime environment variables that control FZF behavior.
+
 Examples:
-  acorn fzf config
-  acorn fzf config -o json`,
+  acorn fzf env
+  acorn fzf env -o json`,
 	RunE: runFzfConfig,
 }
 
@@ -87,8 +91,9 @@ func init() {
 
 	// Add subcommands
 	fzfCmd.AddCommand(fzfStatusCmd)
-	fzfCmd.AddCommand(fzfConfigCmd)
+	fzfCmd.AddCommand(fzfEnvCmd)
 	fzfCmd.AddCommand(fzfFunctionsCmd)
+	fzfCmd.AddCommand(configcmd.NewConfigRouter("fzf"))
 	fzfCmd.AddCommand(fzfThemeCmd)
 
 	// Persistent flags

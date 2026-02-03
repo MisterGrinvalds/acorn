@@ -83,6 +83,10 @@ Examples:
 		RunE:    runConfigShow(component),
 	}
 
+	// Add --dry-run flag to generate command so it works even if the
+	// parent command doesn't define one as a persistent flag.
+	generateCmd.Flags().Bool("dry-run", false, "Preview generated content without writing files")
+
 	configCmd.AddCommand(pathCmd)
 	configCmd.AddCommand(sourceCmd)
 	configCmd.AddCommand(generateCmd)

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mistergrinvalds/acorn/internal/components/devops/lazydocker"
+	"github.com/mistergrinvalds/acorn/internal/utils/configcmd"
 	ioutils "github.com/mistergrinvalds/acorn/internal/utils/io"
 	"github.com/spf13/cobra"
 )
@@ -69,18 +70,17 @@ Examples:
 	RunE:    runLazydockerKeys,
 }
 
-// lazydockerConfigCmd edits config
-var lazydockerConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Edit lazydocker configuration",
+// lazydockerEditCmd opens native lazydocker config in editor
+var lazydockerEditCmd = &cobra.Command{
+	Use:   "edit",
+	Short: "Edit lazydocker configuration in editor",
 	Long: `Open lazydocker configuration file in your editor.
 
 Creates a default config file if one doesn't exist.
 
 Examples:
-  acorn lazydocker config`,
-	Aliases: []string{"edit"},
-	RunE:    runLazydockerConfig,
+  acorn lazydocker edit`,
+	RunE: runLazydockerConfig,
 }
 
 func init() {
@@ -90,7 +90,8 @@ func init() {
 	lazydockerCmd.AddCommand(lazydockerStatusCmd)
 	lazydockerCmd.AddCommand(lazydockerLaunchCmd)
 	lazydockerCmd.AddCommand(lazydockerKeysCmd)
-	lazydockerCmd.AddCommand(lazydockerConfigCmd)
+	lazydockerCmd.AddCommand(lazydockerEditCmd)
+	lazydockerCmd.AddCommand(configcmd.NewConfigRouter("lazydocker"))
 
 	// Persistent flags
 	lazydockerCmd.PersistentFlags().BoolVarP(&lazydockerVerbose, "verbose", "v", false,
