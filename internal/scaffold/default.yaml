@@ -1,0 +1,183 @@
+name: "default"
+description: "Default acorn scaffold — all available components"
+
+# Shell script generation order.
+#
+# bootstrap: Components that MUST load first (environment setup, platform
+#            detection, XDG directories, theme, core shell config).
+#            These always take precedence and are non-optional.
+#
+# optional:  Additional components for shell script generation.
+#            If this key is OMITTED entirely, all components from the
+#            groups below are auto-included in group declaration order.
+#            If specified, only the listed components get shell scripts,
+#            in exactly this order.
+shell_order:
+  bootstrap:
+    - bootstrap   # Shell detection, platform detection, XDG vars, Homebrew
+    - xdg         # XDG helper functions, shell history setup
+    - theme       # Colors (depends on CURRENT_PLATFORM from bootstrap)
+    - core        # Shell options, prompt, keybindings (depends on theme)
+  optional:
+    # Infrastructure
+    - sync
+    # Development tools
+    - go
+    - python
+    - r
+    - node
+    - vscode
+    - intellij
+    - neovim
+    # Terminal and shell
+    - tmux
+    - fzf
+    - ghostty
+    - iterm2
+    - karabiner
+    # Version control
+    - git
+    - github
+    # Cloud and infrastructure
+    - cloudflare
+    - kubernetes
+    - database
+    - postgres
+    - tailscale
+    - pulumi
+    - terraform
+    - vault
+    # Containers
+    - docker
+    - docker-compose
+    - lazydocker
+    # AI and ML
+    - claude
+    - huggingface
+    - ollama
+    # Data and API tools
+    - posting
+    # Utilities
+    - tools
+    - secrets
+    - wget
+
+groups:
+  devops:
+    description: "DevOps and infrastructure"
+    aliases: [infra, d]
+    components:
+      - docker
+      - docker-compose
+      - kubernetes
+      - helm
+      - k9s
+      - argocd
+      - lazydocker
+
+  ai:
+    description: "AI and ML tools"
+    aliases: [ml]
+    components:
+      - claude
+      - ollama
+      - huggingface
+      - opencode
+      - ai-generate
+
+  cloud:
+    description: "Cloud provider tools"
+    aliases: []
+    components:
+      - aws
+      - azure
+      - cloudflare
+      - digitalocean
+      - pulumi
+      - terraform
+
+  data:
+    description: "Data, databases and API tools"
+    aliases: [db]
+    components:
+      - database
+      - datagrip
+      - infisical
+      - jq
+      - postgres
+      - posting
+      - postman
+      - secrets
+      - vault
+      - yq
+
+  ide:
+    description: "IDE and editor tools"
+    aliases: [editor]
+    components:
+      - neovim
+      - vscode
+      - goland
+
+  terminal:
+    description: "Terminal and shell tools"
+    aliases: [term]
+    components:
+      - fzf
+      - ghostty
+      - tmux
+      - shell
+
+  programming:
+    description: "Programming languages and runtimes"
+    aliases: [prog, lang]
+    components:
+      - golang
+      - node
+      - nvm
+      - pnpm
+      - python
+      - uv
+
+  vcs:
+    description: "Version control"
+    aliases: [git]
+    components:
+      - git
+      - github
+
+  network:
+    description: "Networking tools"
+    aliases: [net]
+    components:
+      - tailscale
+
+  identity:
+    description: "Identity and access management"
+    aliases: [iam]
+    components:
+      - keycloak
+
+  sysadm:
+    description: "System administration"
+    aliases: [sys]
+    components:
+      - btop
+
+  mail:
+    description: "Email tools"
+    aliases: [email]
+    components:
+      - neomutt
+
+  artifacts:
+    description: "Artifact management"
+    aliases: []
+    components:
+      - jfrog
+
+  automation:
+    description: "Automation tools"
+    aliases: [auto]
+    components:
+      - n8n
